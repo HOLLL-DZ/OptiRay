@@ -8,7 +8,7 @@ OptiRay работает на Go, управляет подписками и с�
 
 ![Главный экран OptiRay](docs/images/optiray-main.png)
 
-> Версия **1.0.2** — тестовый выпуск. На скриншоте скрыты ссылки подписок и идентифицирующие данные.
+> Версия **1.0.3** — тестовый выпуск. На скриншоте скрыты ссылки подписок и идентифицирующие данные.
 
 ## Возможности
 
@@ -29,13 +29,13 @@ Keenetic с установленной Entware и доступом к её ко�
 
 ## Установка и обновление
 
-Пакеты: [релиз 1.0.2](https://github.com/HOLLL-DZ/OptiRay/releases/tag/v1.0.2).
+Пакеты: [релиз 1.0.3](https://github.com/HOLLL-DZ/OptiRay/releases/tag/v1.0.3).
 
 ```sh
 opkg update && opkg install curl ca-bundle &&
-curl -fL https://github.com/HOLLL-DZ/OptiRay/releases/download/v1.0.2/install.sh \
+curl -fL https://github.com/HOLLL-DZ/OptiRay/releases/download/v1.0.3/install.sh \
   -o /tmp/install-optiray-go.sh &&
-sh /tmp/install-optiray-go.sh https://github.com/HOLLL-DZ/OptiRay/releases/download/v1.0.2
+sh /tmp/install-optiray-go.sh https://github.com/HOLLL-DZ/OptiRay/releases/download/v1.0.3
 ```
 
 Установщик выбирает пакет, проверяет SHA256, устанавливает зависимости и запускает службу. В конце выводится адрес интерфейса, например `http://192.168.1.1:3883` или `http://192.168.10.1:3883` — в зависимости от адреса роутера.
@@ -102,7 +102,7 @@ go vet ./...
 
 Нашли ошибку — создайте Issue по шаблону. Предлагаете функцию — опишите сценарий использования. Не публикуйте ссылки подписок, HWID, пароли, ключи и полные бэкапы.
 
-- [Изменения 1.0.2](go-optiray/CHANGELOG.md)
+- [Изменения 1.0.3](go-optiray/CHANGELOG.md)
 - [Участие в разработке](CONTRIBUTING.md)
 - [Сообщение об уязвимости](SECURITY.md)
 

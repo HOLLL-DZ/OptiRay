@@ -48,12 +48,26 @@ function flagFallback(img) {
         img.style.display = 'none';
     }
 }
+var subscriptionRefreshBusy = false;
+
+document.addEventListener('keydown', function(event) {
+    var input = event.target;
+    if (event.key !== 'Enter' || event.isComposing || !input.matches ||
+        !input.matches('form[action="/manage"] .sub-url-input')) return;
+    // Prevent implicit form submission from activating Add/Delete instead.
+    event.preventDefault();
+    if (event.repeat || subscriptionRefreshBusy || !input.value.trim()) return;
+    var button = input.form.querySelector('.btn-refresh-icon');
+    if (button) refreshSubsIcon(button);
+});
+
 async function refreshSubsIcon(btn) {
-    if (!btn || btn.disabled) return;
+    if (!btn || btn.disabled || subscriptionRefreshBusy) return;
     try { clearAllPingCache(); } catch(e) {}
     try { stopPing(); } catch(e) {}
     var form = document.querySelector('form[action="/manage"]');
     if (!form) { alert('Форма не найдена'); return; }
+    subscriptionRefreshBusy = true;
     var fd = new FormData(form);
     fd.set('action', 'update');
     var params = new URLSearchParams();
@@ -75,11 +89,12 @@ async function refreshSubsIcon(btn) {
 }
 
 async function refreshSubs(btn) {
-    if (!btn || btn.disabled) return;
+    if (!btn || btn.disabled || subscriptionRefreshBusy) return;
     try { clearAllPingCache(); } catch(e) {}
     try { stopPing(); } catch(e) {}
     var form = document.querySelector('form[action="/manage"]');
     if (!form) { alert('Форма не найдена'); return; }
+    subscriptionRefreshBusy = true;
     var fd = new FormData(form);
     fd.set('action', 'update');
     var params = new URLSearchParams();
