@@ -27,13 +27,13 @@ Keenetic с установленной Entware и доступом к её ко�
 
 ## Установка и обновление
 
-Текущий сервер распространения: `http://example.com/optiray_go`.
+Пакеты: [релиз 1.0.2](https://github.com/HOLLL-DZ/OptiRay/releases/tag/v1.0.2).
 
 ```sh
 opkg update && opkg install curl ca-bundle &&
-curl -fL http://example.com/optiray_go/install.sh \
+curl -fL https://github.com/HOLLL-DZ/OptiRay/releases/download/v1.0.2/install.sh \
   -o /tmp/install-optiray-go.sh &&
-sh /tmp/install-optiray-go.sh http://example.com/optiray_go
+sh /tmp/install-optiray-go.sh https://github.com/HOLLL-DZ/OptiRay/releases/download/v1.0.2
 ```
 
 Установщик выбирает пакет, проверяет SHA256, устанавливает зависимости и запускает службу. В конце выводится адрес интерфейса, например `http://192.168.1.1:3883` или `http://192.168.10.1:3883` — в зависимости от адреса роутера.
