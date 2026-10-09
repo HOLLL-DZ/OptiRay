@@ -1,0 +1,54 @@
+package main
+
+import (
+	"os"
+	"path/filepath"
+	"testing"
+	"time"
+)
+
+func TestSettingsRoundTripPreservesFields(t *testing.T) {
+	dir := t.TempDir()
+	initial := Object{"custom_future_setting": Object{"enabled": true}, "selected": "active-sid", "hwid": "existing-hwid", "subscriptions": []any{Object{"id": 7, "name": "Test", "servers": []any{Object{"sid": "active-sid", "outbound": Object{"protocol": "vless", "custom": true}}}}}}
+	if e := writeObject(filepath.Join(dir, "subs.json"), initial); e != nil {
+		t.Fatal(e)
+	}
+	s, e := newStore(dir)
+	if e != nil {
+		t.Fatal(e)
+	}
+	if e = s.change(func(d Object) error { d["proxy_name"] = "OptiRay_Admin"; return nil }); e != nil {
+		t.Fatal(e)
+	}
+	again, e := newStore(dir)
+	if e != nil {
+		t.Fatal(e)
+	}
+	d := again.snapshot()
+	if str(d["hwid"]) != "existing-hwid" || str(d["selected"]) != "active-sid" || !boolean(obj(d["custom_future_setting"])["enabled"]) {
+		t.Fatal("settings lost")
+	}
+	srv, _ := findServer(d, "active-sid", "")
+	if !boolean(obj(srv["outbound"])["custom"]) {
+		t.Fatal("outbound field lost")
+	}
+}
+func TestCorruptSettingsAreNotOverwritten(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "subs.json")
+	_ = os.WriteFile(path, []byte("{broken"), 0600)
+	if _, e := newStore(dir); e == nil {
+		t.Fatal("invalid settings accepted")
+	}
+	b, _ := os.ReadFile(path)
+	if string(b) != "{broken" {
+		t.Fatal("corrupt settings overwritten")
+	}
+}
+func TestBackupFilename(t *testing.T) {
+	got := backupName("OptiRay_Admin", "settings+optirout+xrayrout", "json", time.Date(2026, 10, 8, 9, 2, 0, 0, time.UTC))
+	want := "OptiRay_Admin-settings+optirout+xrayrout_08-10-2026_0902.json"
+	if got != want {
+		t.Fatalf("%s", got)
+	}
+}

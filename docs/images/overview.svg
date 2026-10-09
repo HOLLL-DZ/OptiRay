@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="390" viewBox="0 0 960 390">
+ <rect width="960" height="390" rx="24" fill="#f3f7fd"/>
+ <rect x="28" y="28" width="904" height="334" rx="18" fill="#fff" stroke="#dce5f2"/>
+ <g font-family="Arial,sans-serif">
+  <circle cx="66" cy="71" r="17" fill="#edf4ff" stroke="#bad0fa"/>
+  <path d="M66 58v13m-8-8a11 11 0 1 0 16 0" fill="none" stroke="#2677ef" stroke-width="2" stroke-linecap="round"/>
+  <text x="95" y="77" fill="#1b2638" font-size="24">OptiRay</text><text x="192" y="77" fill="#778499" font-size="20">Manager</text>
+  <rect x="738" y="52" width="163" height="38" rx="11" fill="#eff5ff" stroke="#bed3fa"/>
+  <circle cx="756" cy="71" r="4" fill="#2677ef"/><text x="771" y="76" fill="#2677ef" font-size="14">OptiRay вкл.</text>
+  <path d="M52 112h850" stroke="#e3e8ef"/>
+  <text x="53" y="144" fill="#34435b" font-size="14">Подписки · Избранное · Проверка серверов · Маршрутизация</text>
+  <rect x="52" y="163" width="850" height="168" rx="13" fill="#f5f9ff" stroke="#b8d0f4"/>
+  <text x="70" y="191" fill="#233955" font-size="14">Демонстрационная подписка</text><text x="707" y="191" fill="#2677ef" font-size="13">Правила OptiRout / Xray</text>
+  <g fill="#fff" stroke="#dce5ef"><rect x="68" y="208" width="258" height="105" rx="11"/><rect x="347" y="208" width="258" height="105" rx="11"/><rect x="626" y="208" width="258" height="105" rx="11"/></g>
+  <g fill="#263b55" font-size="14"><text x="85" y="235">Демо сервер · VLESS</text><text x="364" y="235">Демо сервер · Hysteria</text><text x="643" y="235">Бэкап настроек и правил</text></g>
+  <g fill="#eff5ff" stroke="#c2d6fa"><rect x="85" y="265" width="129" height="30" rx="8"/><rect x="364" y="265" width="129" height="30" rx="8"/><rect x="643" y="265" width="145" height="30" rx="8"/></g>
+  <g fill="#2677ef" font-size="13"><text x="101" y="285">Подключить</text><text x="380" y="285">Подключить</text><text x="657" y="285">Скачать копию</text></g>
+ </g>
+</svg>

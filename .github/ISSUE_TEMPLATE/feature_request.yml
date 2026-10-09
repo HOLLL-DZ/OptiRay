@@ -1,0 +1,16 @@
+name: Предложение
+description: Предложить новую функцию
+title: "[Feature] "
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Какую задачу нужно решить?
+    validations:
+      required: true
+  - type: textarea
+    id: behavior
+    attributes:
+      label: Как должна работать функция?
+    validations:
+      required: true

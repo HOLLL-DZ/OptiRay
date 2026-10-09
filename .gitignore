@@ -1,0 +1,27 @@
+# Generated packages and local runtime data
+go-optiray/build/
+releases/
+backups/
+diagnostics/
+router/
+research/toolchain/
+*.log
+*.pid
+*.sock
+*.ipk
+*.zip
+*.tar.gz
+*.exe
+*.test
+.env
+.env.*
+!.env.example
+subs.json
+hwid.txt
+auth.json
+install-state/
+__pycache__/
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

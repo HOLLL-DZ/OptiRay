@@ -1,0 +1,10 @@
+OptiRout routing engine for OptiRay.
+Derived from MagiTrickle 0.8.2, commit 8c8bd1234062261ffc61f5113e7dbdc4cb227c24.
+Original project: https://github.com/MagiTrickle/MagiTrickle
+Original authors and contributors are preserved in AUTHORS.optirout.
+License: GNU GPL version 3, verbatim in LICENSE.optirout.
+
+OptiRay modifications: OptiRout naming, native JSON storage under OptiRay,
+atomic configuration writes, separate Unix API, standalone HTTP WebUI removed.
+Corresponding modified source is included in optirout-source.tar.gz.
+Routing algorithms remain based on the original project.

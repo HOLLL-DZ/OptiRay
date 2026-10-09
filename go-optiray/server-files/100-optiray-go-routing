@@ -1,0 +1,5 @@
+#!/bin/sh
+# OptiRay Go owned netfilter hook. Native Unix HTTP; no socat/Python.
+ROOT=/opt/etc/optiray-go
+[ -S "$ROOT/routing/engine.sock" ] || exit 0
+exec "$ROOT/bin/optiray" --data-dir "$ROOT" --netfilter-hook --hook-type "$type" --hook-table "$table"

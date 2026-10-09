@@ -1,0 +1,50 @@
+{
+  "schema_version": 3,
+  "subscriptions": [
+    {
+      "id": 1,
+      "name": "Подписка #1",
+      "url": "",
+      "use_hwid": false,
+      "color": "#2b8a3e",
+      "servers": []
+    }
+  ],
+  "favorites": [],
+  "selected": "",
+  "test_url": "http://cp.cloudflare.com/generate_204",
+  "ping_timeout": 3.0,
+  "ping_tcp_concurrency": 5,
+  "ping_real_concurrency": 2,
+  "ping_sample_delay_ms": 300,
+  "hwid": "",
+  "subscription_client_profile": "happ",
+  "proxy_name": "OptiRay",
+  "proxy_port": 3080,
+  "proxy_host": "192.168.1.1",
+  "routing_url": "http://192.168.1.1/controlPanel/policy",
+  "enable_logging": true,
+  "auto_select_source": "all",
+  "show_ping_all": true,
+  "show_test_button": true,
+  "test_button_url": "https://youtube.com/",
+  "show_test_float": false,
+  "update_force_restart": true,
+  "routing_use_external": false,
+  "routing_engine": "optirout",
+  "optirout_save_backups": true,
+  "xray_save_backups": true,
+  "backup_include_xray": true,
+  "routing": {
+    "enabled": false,
+    "block_rules": "",
+    "direct_rules": "",
+    "proxy_rules": "",
+    "direct_default": false,
+    "groups_ui": {
+      "block": [],
+      "direct": [],
+      "proxy": []
+    }
+  }
+}

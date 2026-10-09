@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>OptiRay Manager</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="alternate icon" href="/favicon.ico">
+    <script>
+        (function() {
+            var st = localStorage.getItem('optiray_theme') ||
+                (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            document.documentElement.setAttribute('data-theme', st);
+        })();
+    </script>
+    <link rel="stylesheet" href="/assets/style.css">
+    <script>
+        window.OPTIRAY_OPTIROUT_SAVE_BACKUPS = __OPTIROUT_SAVE_BACKUPS_JS__;
+    </script>
+    <script></script>
+</head>
+<body class="text-style-1">
+    <div class="header-top">
+        <h3 class="header-title"><svg class="header-brand-icon" viewBox="0 0 36 36" fill="none" stroke="currentColor" aria-hidden="true"><circle cx="18" cy="18" r="16" stroke-width="1.6"/><path d="M9 15a9 9 0 0 1 16-3l-1-5m1 5-5-1M27 21a9 9 0 0 1-16 3l1 5m-1-5 5 1" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="18" cy="18" r="2" fill="currentColor" stroke="none"/></svg><span class="header-identity"><span class="header-heading"><span class="header-name"><span class="header-brand">OptiRay</span><span class="header-manager">Manager</span></span><span class="header-version" aria-label="Версия __APP_VER__">__APP_VER__</span></span></span><span class="header-proxy-name" title="Имя прокси: __PROXY_NAME__">PROXY: __PROXY_NAME__</span></h3>
+        <div class="header-right">
+            <div class="active-status-card" style="--active-subscription-color:__ACTIVE_SUB_COLOR__;">
+                <div class="status-column">
+                    <div id="active-status-dot" class="status-dot __ACTIVE_DOT_CLASS__"></div>
+                    <span id="active-core-badge" class="core-badge __ACTIVE_CORE_CLASS__" style="__ACTIVE_CORE_HIDDEN__">__ACTIVE_CORE__</span>
+                </div>
+                <div class="active-status-text">
+                    <div class="active-status-caption">
+                        Подключено: <span id="active-sub-name">__ACTIVE_SUB_NAME__</span>
+                    </div>
+                    <div class="active-server-line"><span id="active-server-flag">__ACTIVE_SERVER_FLAG__</span><div id="active-srv-name" class="active-status-server" title="__ACTIVE_SERVER_NAME__">__ACTIVE_SERVER_NAME__</div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <form method="POST" action="/manage">
+        <div class="subs-header-row">
+            <button type="button" class="btn-toggle-subs" onclick="toggleSubsCollapse()" id="subs_collapse_btn">
+                <span id="subs_arrow">▼</span>
+                <span>Подписки:</span>
+                <span id="subs_count_badge">__SUBS_COUNT__</span>
+            </button>
+            <div class="subs-header-actions"><input type="checkbox" id="optiray_power" __OPTIRAY_ENABLED__ style="display:none!important" aria-hidden="true"><button type="button" class="power-status-button btn-settings-icon main-power-button" data-power-target="optiray_power" aria-pressed="false" onclick="powerButtonClick(this)"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v9M6.4 5.6a8 8 0 1 0 11.2 0"/></svg><span>__OPTIRAY_POWER_LABEL__</span><span class="power-status-dot" aria-hidden="true"></span></button><span id="optiray_power_status" role="status" aria-live="polite"></span>
+                <button type="button" class="btn-settings-icon btn-refresh-icon" onclick="refreshSubsIcon(this)" title="Обновить подписки" aria-label="Обновить подписки"><svg class="action-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 7v5h-5M4 17v-5h5"/><path d="M6.1 7a7 7 0 0 1 11.6-1L20 9M4 15l2.3 3A7 7 0 0 0 17.9 17"/></svg></button>
+                <a href="__ROUTING_URL__" target="_blank" rel="noopener noreferrer" onclick="handleRoutingClick(this); return false;" data-routing-engine="__ROUTING_ENGINE__" data-routing-external="__ROUTING_USE_EXTERNAL_VAL__" data-routing-url="__ROUTING_URL__" class="btn-settings-icon" title="Маршрутизация" aria-label="Маршрутизация"><svg class="action-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="5" height="5" rx="1.4"/><rect x="16" y="3" width="5" height="5" rx="1.4"/><rect x="9.5" y="16" width="5" height="5" rx="1.4"/><path d="M5.5 8v3h13V8M12 11v5"/></svg></a>
+                <button type="button" class="btn-settings-icon" onclick="openSettingsModal()" title="Настройки" aria-label="Настройки"><svg class="action-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 3-.5 2.5-2 1.2L4 6 2 9.5l2 1.8v1.4l-2 1.8L4 18l2.5-.7 2 1.2L9 21h6l.5-2.5 2-1.2 2.5.7 2-3.5-2-1.8v-1.4l2-1.8L20 6l-2.5.7-2-1.2L15 3Z"/><circle cx="12" cy="12" r="3"/></svg></button>
+            </div>
+        </div>
+        <div id="subs_names_container" class="subs-names" style="display:none;">__SUB_NAMES__</div>
+        <div id="subs_container">__SUB_INPUTS__</div>
+        <div id="subs_add_row" style="margin-top:10px;">
+            <button type="submit" name="action" value="add" class="btn core-btn core-btn-install btn-add">+ Добавить подписку</button>
+        </div>
+
+        <div id="settings_modal" role="dialog" aria-modal="true" aria-labelledby="settings_dialog_title" class="modal-overlay" onclick="if(event.target === this) closeSettingsModal();">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div><h4 id="settings_dialog_title" class="modal-title">Настройки OptiRay</h4><div class="settings-header-description">Подключение, проверка и обслуживание</div></div>
+                    <div style="display:flex;gap:8px;align-items:center;">
+                        <button type="button" class="theme-toggle-btn" onclick="toggleTheme()" title="Сменить тему">
+                            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                        </button>
+                        <button type="button" class="modal-close" onclick="closeSettingsModal()"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="m6 6 12 12M6 18 18 6"/></svg></button>
+                    </div>
+                </div>
+
+<div class="settings-workspace"><nav class="settings-sidebar" aria-label="Разделы настроек"><button type="button" class="settings-nav-item" data-settings-tab="connection" aria-controls="settings_panel_connection" onclick="selectSettingsTab('connection')">Подключение</button><button type="button" class="settings-nav-item" data-settings-tab="cores" aria-controls="settings_panel_cores" onclick="selectSettingsTab('cores')">Ядра</button><button type="button" class="settings-nav-item" data-settings-tab="testing" aria-controls="settings_panel_testing" onclick="selectSettingsTab('testing')">Проверка серверов</button><button type="button" class="settings-nav-item" data-settings-tab="appearance" aria-controls="settings_panel_appearance" onclick="selectSettingsTab('appearance')">Интерфейс</button><button type="button" class="settings-nav-item" data-settings-tab="security" aria-controls="settings_panel_security" onclick="selectSettingsTab('security')">Безопасность</button><button type="button" class="settings-nav-item" data-settings-tab="maintenance" aria-controls="settings_panel_maintenance" onclick="selectSettingsTab('maintenance')">Обслуживание</button><button type="button" class="settings-nav-item" data-settings-tab="backups" aria-controls="settings_panel_backups" onclick="selectSettingsTab('backups')">Резервное копирование и сброс</button></nav><div class="settings-scroll"><section id="settings_panel_connection" class="settings-panel" aria-labelledby="settings_heading_connection"><h3 id="settings_heading_connection">Подключение</h3><p class="settings-description">Параметры прокси Keenetic и идентификатор устройства.</p><div class="modal-section-title">Keenetic прокси</div>
+                <div class="xray-manager-box">
+                    <div class="setting-field"><label class="setting-label">Имя подключения:</label><input type="text" name="proxy_name" value="__PROXY_NAME__" class="setting-input"></div>
+                    <div class="setting-field">
+                        <label class="setting-label">IP роутера и порт:</label>
+                        <div style="display:flex;gap:8px;flex:1;">
+                            <input type="text" name="proxy_host" value="__PROXY_HOST__" class="setting-input" style="min-width:120px;" placeholder="192.168.1.1">
+                            <input type="number" name="proxy_port" value="__PROXY_PORT__" class="setting-input" style="width:80px;min-width:80px;">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-section-title">Клиент для подписки</div>
+                <div class="xray-manager-box">
+                    <div class="setting-field">
+                        <label class="setting-label" for="subscription_client_profile">User-Agent:</label>
+                        <select id="subscription_client_profile" aria-label="Клиент для подписки" name="subscription_client_profile" class="setting-input" style="min-width:0;max-width:100%;">
+                            <option value="happ" __UA_HAPP_SELECTED__>Happ 4.7.1 / Android 16</option>
+                            <option value="optiray" __UA_OPTIRAY_SELECTED__>OptiRay __APP_VER__ / Keenetic</option>
+                            <option value="incy" __UA_INCY_SELECTED__>Incy 3.7.0 / Android 16</option>
+                        </select>
+                    </div>
+                    <p class="settings-description">Профиль для загрузки и обновления подписок. HWID сохраняется. Данные устройства передаются вместе с выбранным User-Agent.</p>
+                </div>
+
+                <div class="modal-section-title">HWID</div>
+                <div class="xray-manager-box">
+                    <div class="setting-field" style="align-items:flex-start;">
+                        <label class="setting-label" style="margin-top:10px;">HWID устройства:</label>
+                        <div class="hwid-editor" style="display:flex;flex-direction:column;flex:1;gap:8px;min-width:200px;">
+                            <div class="hwid-input-row">
+                                <button type="button" onclick="genNewHwid()" class="settings-hwid-generate" title="Сгенерировать новый HWID" aria-label="Сгенерировать новый HWID">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 7v5h-5M4 17v-5h5"/><path d="M6.1 7a7 7 0 0 1 11.6-1L20 9M4 15l2.3 3A7 7 0 0 0 17.9 17"/></svg>
+                                </button>
+                                <input type="text" id="hwid_input" name="hwid" value="__HWID_VAL__" class="setting-input" style="font-family:var(--text-font-family);width:100%;">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                </section><section id="settings_panel_cores" class="settings-panel" aria-labelledby="settings_heading_cores" hidden><h3 id="settings_heading_cores">Ядра</h3><p class="settings-description">Установка и управление прокси-ядрами. Действия применяются сразу.</p><div class="modal-section-title">Xray-core</div>
+                <div class="xray-manager-box">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+                        <span style="font-size:var(--text-size);font-weight:var(--text-weight);color: var(--text-2) !important;">Статус:</span>
+                        <span id="xray_installed_badge" class="badge-ver missing">Загрузка...</span>
+                    </div>
+                    <div class="core-controls">
+                        <select id="xray_version_select" class="core-select"><option value="">Поиск версий...</option></select>
+                        <div class="core-buttons">
+                            <button type="button" onclick="installXrayVersion(this)" class="btn core-btn core-btn-install">Установить</button>
+                            <button type="button" onclick="uninstallXray(this)" class="btn core-btn core-btn-remove">Удалить ядро</button>
+                        </div>
+                    </div>
+                    <div id="xray_versions_notice" class="core-versions-notice" role="status" hidden></div>
+                </div>
+
+                <div class="modal-section-title">Hysteria (для hysteria/hysteria2)</div>
+                <div class="xray-manager-box">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+                        <span style="font-size:var(--text-size);font-weight:var(--text-weight);color: var(--text-2) !important;">Статус:</span>
+                        <span id="hysteria_installed_badge" class="badge-ver missing">Загрузка...</span>
+                    </div>
+                    <div class="core-buttons">
+                        <button type="button" onclick="installHysteria(this)" class="btn core-btn core-btn-install">Установить</button>
+                        <button type="button" onclick="uninstallHysteria(this)" class="btn core-btn core-btn-remove">Удалить ядро</button>
+                    </div>
+                </div>
+
+                </section><section id="settings_panel_testing" class="settings-panel" aria-labelledby="settings_heading_testing" hidden><h3 id="settings_heading_testing">Проверка серверов</h3><p class="settings-description">Замеры задержки и автоматический выбор сервера.</p><div class="modal-section-title">Замеры задержки</div>
+                <div class="xray-manager-box">
+                    <div class="setting-field"><label class="setting-label">Тестовый URL:</label><input type="text" name="test_url" value="__TEST_URL__" class="setting-input"></div>
+                    <div class="setting-field"><label class="setting-label">Таймаут (сек):</label><input type="number" step="0.5" id="ping_timeout_input" name="ping_timeout" value="__PING_TIMEOUT__" style="width:90px;padding:8px;"></div>
+                    <div class="setting-field"><label class="setting-label">Потоков TCP-пинга:</label><input type="number" min="1" max="20" id="ping_tcp_conc_input" name="ping_tcp_concurrency" value="__PING_TCP_CONC__" style="width:90px;padding:8px;"></div>
+                    <div class="setting-field"><label class="setting-label">Потоков HTTP-пинга:</label><input type="number" min="1" max="10" id="ping_real_conc_input" name="ping_real_concurrency" value="__PING_REAL_CONC__" style="width:90px;padding:8px;"></div>
+                    <div class="setting-field"><label class="setting-label">Пауза между замерами (мс):</label><input type="number" min="0" max="5000" step="50" id="ping_sample_delay_input" name="ping_sample_delay_ms" value="__PING_SAMPLE_DELAY_MS__" style="width:90px;padding:8px;"></div>
+                    <div style="font-size:var(--text-size);color:var(--text-2);margin-top:4px;padding-left:4px;">Больше потоков — быстрее пинг, но выше нагрузка на CPU роутера. Пауза снижает конкуренцию и даёт более точные замеры.</div>
+                </div>
+
+                <div class="modal-section-title">Автовыбор сервера</div>
+                <div class="xray-manager-box">
+                    <div style="font-size:var(--text-size);color:var(--text-2);margin-bottom:8px;">
+                        Источник для кнопки «Автовыбор» в подписке:
+                    </div>
+                    <label style="display:flex;align-items:center;gap:8px;margin-bottom:6px;cursor:pointer;font-size:var(--text-size);">
+                        <input type="radio" name="auto_select_source" value="all" __ASRC_ALL__ style="cursor:pointer;">
+                        Все серверы подписки
+                    </label>
+                    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:var(--text-size);">
+                        <input type="radio" name="auto_select_source" value="favorites" __ASRC_FAVS__ style="cursor:pointer;">
+                        Только избранные (♥)
+                    </label>
+                </div>
+
+                </section><section id="settings_panel_appearance" class="settings-panel" aria-labelledby="settings_heading_appearance" hidden><h3 id="settings_heading_appearance">Интерфейс</h3><p class="settings-description">Отображение элементов и поведение панели.</p><div class="modal-section-title">Интерфейс</div>
+                <div class="xray-manager-box">
+                    <div class="setting-field">
+                        <label class="setting-label" style="display:flex;align-items:center;gap:8px;width:auto;cursor:pointer;">
+                            <input type="checkbox" name="show_ping_all" value="1" __SHOW_PING_ALL__ style="cursor:pointer;">
+                            Показывать общие кнопки проверки серверов
+                        </label>
+                    </div>
+                    <div style="font-size:var(--text-size);color:var(--text-2);margin-top:4px;padding-left:4px;">
+                        Показывает кнопки «Избранные», «TCP-пинг», «HTTP-пинг» и «Остановить» над списком серверов. Проверка выполняется для всех подписок.
+                    </div>
+
+                    <div style="height:1px;background:var(--line);margin:12px 0 10px;"></div>
+
+                    <div class="setting-field">
+                        <label class="setting-label" style="display:flex;align-items:center;gap:8px;width:auto;cursor:pointer;">
+                            <input type="checkbox" name="show_test_button" value="1" __SHOW_TEST_BUTTON__ style="cursor:pointer;">
+                            Включить кнопку «Тест» у подписки
+                        </label>
+                    </div>
+                    <div class="setting-field">
+                        <label class="setting-label" style="display:flex;align-items:center;gap:8px;width:auto;cursor:pointer;">
+                            <input type="checkbox" name="show_test_float" value="1" __SHOW_TEST_FLOAT__ style="cursor:pointer;">
+                            Включить плавающую кнопку «Тест»
+                        </label>
+                    </div>
+                    <div class="setting-field">
+                        <label class="setting-label">Адрес сайта Теста:</label>
+                        <input type="text" name="test_button_url" value="__TEST_BUTTON_URL__" class="setting-input" placeholder="https://example.com">
+                    </div>
+                    <div style="font-size:var(--text-size);color:var(--text-2);margin-top:4px;padding-left:4px;">
+                        Кнопка «Тест» открывает указанный адрес в новой вкладке.
+                    </div>
+                </div>
+
+                
+
+                </section><section id="settings_panel_security" class="settings-panel" aria-labelledby="settings_heading_security" hidden><h3 id="settings_heading_security">Безопасность</h3><p class="settings-description">Доступ к панели управления.</p><div class="modal-section-title">Безопасность</div>
+                <div class="xray-manager-box">
+                    <div class="setting-field">
+                        <label class="setting-label" style="display:flex;align-items:center;gap:8px;width:auto;cursor:pointer;">
+                            <input type="checkbox" name="auth_enabled" value="1" __AUTH_ENABLED__ style="cursor:pointer;">
+                            Требовать логин и пароль
+                        </label>
+                    </div>
+                    <div class="setting-field">
+                        <label class="setting-label">Логин:</label>
+                        <input type="text" name="auth_user" value="__AUTH_USER__" class="setting-input" style="font-family:var(--text-font-family);" autocomplete="off">
+                    </div>
+                    <div class="setting-field">
+                        <label class="setting-label">Пароль:</label>
+                        <input type="password" name="auth_pass" value="" placeholder="Оставить пустым — не менять" class="setting-input" style="font-family:var(--text-font-family);" autocomplete="new-password">
+                    </div>
+                    <div style="font-size:var(--text-size);color:var(--text-2);margin-top:6px;padding-left:4px;">
+                        Хранится в <code>/opt/etc/optiray/auth.json</code>. Удаление файла вернёт вход admin/admin.
+                    </div>
+                </div>
+
+</section><section id="settings_panel_maintenance" class="settings-panel" aria-labelledby="settings_heading_maintenance" hidden><h3 id="settings_heading_maintenance">Обслуживание</h3><p class="settings-description">Обновление подписок и журнал.</p><p class="settings-description">OptiRout создан на основе MagiTrickle. <a href="/api/optirout_license" target="_blank" rel="noopener">Авторы и лицензия GPLv3</a></p><div class="modal-section-title">Обновление подписок</div>
+                <div class="xray-manager-box">
+                    <div class="setting-field">
+                        <label class="setting-label" style="display:flex;align-items:center;gap:8px;width:auto;cursor:pointer;">
+                            <input type="checkbox" name="update_force_restart" value="1" __UPDATE_FORCE_RESTART__ style="cursor:pointer;">
+                            Принудительно перезапускать ядро
+                        </label>
+                    </div>
+                    <div style="font-size:var(--text-size);color:var(--text-2);margin-top:4px;padding-left:4px;">
+                        Всегда переписывать конфиг и перезапускать Xray/Hysteria после
+                        обновления подписок — даже если конфигурация активного сервера
+                        не изменилась. Выключите, чтобы избежать кратковременного разрыва
+                        соединения при каждом обновлении.
+                    </div>
+                </div>
+
+                <div class="modal-section-title">Логирование</div>
+                <div class="setting-field">
+                    <label class="setting-label" style="display:flex;align-items:center;gap:8px;width:auto;cursor:pointer;">
+                        <input type="checkbox" name="enable_logging" value="1" __LOGGING_CHECKED__ style="cursor:pointer;">
+                        Вести лог запросов (для отладки)
+                    </label>
+                </div>
+
+</section><section id="settings_panel_backups" class="settings-panel" aria-labelledby="settings_heading_backups" hidden>
+<h3 id="settings_heading_backups">Резервное копирование и сброс</h3>
+<p class="settings-description">Сохранение, восстановление и сброс настроек OptiRay.</p>
+                <div class="backup-box settings-backup-grid">
+    <div class="settings-backup-card">
+        <div class="settings-backup-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4m-5 5 5-5 5 5M4 16v4h16v-4"/></svg></div>
+        <h4>Восстановить настройки</h4>
+        <p>Выберите ранее сохранённый JSON-файл. Он заменит текущие настройки.</p>
+        <button type="button" class="btn settings-restore-button" onclick="document.getElementById('settings_restore_file').click()">Выбрать файл</button>
+        <input id="settings_restore_file" type="file" accept=".json" onchange="restoreBackupFromFile(this)" style="display:none;">
+    </div>
+    <div class="settings-backup-card">
+        <div class="settings-backup-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m-5-5 5 5 5-5M4 16v4h16v-4"/></svg></div>
+        <h4>Сохранить настройки</h4>
+        <p>Скачайте JSON-файл с подписками и настройками OptiRay. Правила маршрутизации добавляются по отмеченным опциям.</p>
+        <label class="setting-label" style="display:flex;align-items:flex-start;gap:8px;width:auto;cursor:pointer;margin:0 0 18px;">
+            <input type="checkbox" name="optirout_save_backups" value="1" __OPTIROUT_SAVE_BACKUPS__ style="flex-shrink:0;margin-top:4px;">
+            Сохранять резервные копии правил OptiRout
+        </label>
+        <label class="setting-label" style="display:flex;align-items:flex-start;gap:8px;width:auto;cursor:pointer;margin:0 0 18px;">
+            <input type="checkbox" name="backup_include_xray" value="1" __BACKUP_INCLUDE_XRAY__ style="flex-shrink:0;margin-top:4px;">
+            Добавлять правила маршрутизации Xray в копию
+        </label>
+        <button type="button" onclick="downloadBackup()" class="btn">Скачать копию</button>
+    </div>
+    <div class="settings-reset-card">
+        <div><h4>Сброс настроек</h4><p>Верните настройки OptiRay к значениям по умолчанию. Сначала сохраните резервную копию.</p></div>
+        <button type="button" onclick="resetToDefaults()" class="btn backup-btn-reset">Сбросить настройки</button>
+    </div>
+</div>
+</section></div></div>
+                <div class="modal-footer-btns"><span class="settings-footer-version modal-app-version">OptiRay __APP_VER__</span>
+                    <button type="button" onclick="closeSettingsModal()" class="btn modal-footer-btn modal-footer-cancel">Отмена</button>
+                    <button type="submit" name="action" value="save_settings" class="btn core-btn core-btn-install">Сохранить</button>
+                </div>
+            </div>
+        </div>
+        <div id="routing_modal" class="modal-overlay" onclick="if(event.target === this) closeRoutingModal();">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">OptiRay Routing</h4>
+                    <div class="routing-header-actions">
+                        <div class="rt-io-group">
+                            <button type="button" onclick="document.getElementById('routing_import_file').click()" class="btn-settings-icon rt-import-export-btn mt-io-import" style="background: var(--btn-primary-bg) !important; color: var(--btn-primary-text) !important; border: 1px solid var(--btn-primary-border) !important;" title="Импорт правил из Excel" aria-label="Импорт правил из Excel"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V3m-4 4 4-4 4 4"/><path d="M4 14v5a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-5"/></svg></button>
+                            <button type="button" onclick="routingExport()" class="btn-settings-icon rt-import-export-btn mt-io-export" style="background: var(--btn-info-bg) !important; color: var(--btn-info-text) !important; border: 1px solid var(--btn-info-border) !important;" title="Экспорт правил в Excel" aria-label="Экспорт правил в Excel"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v13m-4-4 4 4 4-4"/><path d="M4 14v5a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-5"/></svg></button>
+                            <input type="file" id="routing_import_file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" onchange="routingImportFile(this)" style="display:none;">
+                        </div>
+                        <button type="submit" id="routing_save_btn" name="action" value="save_settings" class="btn core-btn core-btn-install">Сохранить</button>
+                    </div>
+                    <button type="button" class="modal-close" onclick="closeRoutingModal()"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="m6 6 12 12M6 18 18 6"/></svg></button>
+                </div>
+                <div class="xray-manager-box rt-routing-root">
+                    <input type="hidden" name="routing_groups_json" id="routing_groups_json" data-init="__ROUTING_GROUPS_JSON__">
+                    <div class="setting-field">
+                        <input type="checkbox" id="xray_routing_enabled" name="routing_enabled" value="1" __ROUTING_ENABLED__ style="display:none!important" aria-hidden="true"><button type="button" class="power-status-button modal-power-button" data-power-target="xray_routing_enabled" aria-pressed="false" onclick="powerButtonClick(this)"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v9M6.4 5.6a8 8 0 1 0 11.2 0"/></svg><span>Xray Routing выкл.</span><span class="power-status-dot" aria-hidden="true"></span></button>
+                    </div>
+                    <div style="font-size:var(--text-size);color:var(--text-2);margin-bottom:10px;padding-left:4px;">
+                        По одному правилу в строке. Определяется автоматически:
+                        <code>example.com</code> → домен, <code>*.ru</code> → суффикс,
+                        <code>1.2.3.0/24</code> → IP-сеть, <code>1.2.3.4</code> → IP,
+                        <code>1.2.3.4-1.2.3.10</code> → диапазон IPv4,
+                        <code>2001:db8::/32</code> → IPv6-сеть. Можно задать явно:
+                        <code>domain:</code>, <code>full:</code>, <code>regexp:</code>,
+                        <code>geosite:</code>, <code>geoip:</code>. Строки с <code>#</code> — игнорируются.
+                    </div>
+
+                    <div class="setting-field" style="flex-direction:column;align-items:stretch;">
+                        <label class="setting-label" style="width:auto;margin-bottom:2px;font-weight:var(--text-weight);">
+                            Блокировать
+                            <span class="rt-cat-count" id="rt_count_block">групп: 0 · правил: 0</span>
+                        </label>
+                        <div class="rt-groups" id="rt_groups_block"></div>
+                        <div class="rt-add-group-row">
+                            <button type="button" class="rt-add-group" data-cat="block">+ Добавить группу</button>
+                            <button type="button" class="rt-add-group-paste" data-cat="block" title="Вставить группу из буфера (первая строка — название, далее правила)" aria-label="Вставить группу из буфера"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="5" width="14" height="16" rx="2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6m-6 4h4"/></svg></button>
+                        </div>
+                        <textarea name="routing_block_rules" class="setting-input" rows="4"
+                                  style="font-family:var(--text-font-family);font-size:var(--text-size);min-height:80px;white-space:pre;resize:vertical;">__ROUTING_BLOCK_RULES__</textarea>
+                    </div>
+
+                    <div class="setting-field" style="flex-direction:column;align-items:stretch;">
+                        <label class="setting-label" style="width:auto;margin-bottom:2px;font-weight:var(--text-weight);">
+                            Напрямую
+                            <span class="rt-cat-count" id="rt_count_direct">групп: 0 · правил: 0</span>
+                        </label>
+                        <div class="rt-groups" id="rt_groups_direct"></div>
+                        <div class="rt-add-group-row">
+                            <button type="button" class="rt-add-group" data-cat="direct">+ Добавить группу</button>
+                            <button type="button" class="rt-add-group-paste" data-cat="direct" title="Вставить группу из буфера (первая строка — название, далее правила)" aria-label="Вставить группу из буфера"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="5" width="14" height="16" rx="2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6m-6 4h4"/></svg></button>
+                        </div>
+                        <textarea name="routing_direct_rules" class="setting-input" rows="4"
+                                  style="font-family:var(--text-font-family);font-size:var(--text-size);min-height:80px;white-space:pre;resize:vertical;">__ROUTING_DIRECT_RULES__</textarea>
+                    </div>
+
+                    <div class="setting-field" style="flex-direction:column;align-items:stretch;">
+                        <label class="setting-label" style="width:auto;margin-bottom:2px;font-weight:var(--text-weight);">
+                            Через прокси
+                            <span class="rt-cat-count" id="rt_count_proxy">групп: 0 · правил: 0</span>
+                        </label>
+                        <div class="rt-groups" id="rt_groups_proxy"></div>
+                        <div class="rt-add-group-row">
+                            <button type="button" class="rt-add-group" data-cat="proxy">+ Добавить группу</button>
+                            <button type="button" class="rt-add-group-paste" data-cat="proxy" title="Вставить группу из буфера (первая строка — название, далее правила)" aria-label="Вставить группу из буфера"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="5" width="14" height="16" rx="2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6m-6 4h4"/></svg></button>
+                        </div>
+                        <textarea name="routing_proxy_rules" class="setting-input" rows="4"
+                                  style="font-family:var(--text-font-family);font-size:var(--text-size);min-height:80px;white-space:pre;resize:vertical;">__ROUTING_PROXY_RULES__</textarea>
+                    </div>
+
+                                        <div class="setting-field" style="flex-direction:column;align-items:stretch;margin-top:12px;padding-top:12px;border-top:1px solid var(--line);">
+                        <div style="font-weight:var(--text-weight);margin-bottom:8px;">Что делать с сайтами, не попавшими ни в один список:</div>
+                        <label style="display:flex;align-items:flex-start;gap:8px;cursor:pointer;font-size:var(--text-size);margin-bottom:8px;">
+                            <input type="radio" name="routing_mode" value="proxy_default" __ROUTING_MODE_PROXY__ style="cursor:pointer;margin-top:2px;">
+                            <span><b>Блок → Напрямую → Прокси</b><br><span style="color:var(--text-2);font-size:var(--text-size);">Всё, что не попало ни в один список, идёт <b>через прокси</b></span></span>
+                        </label>
+                        <label style="display:flex;align-items:flex-start;gap:8px;cursor:pointer;font-size:var(--text-size);">
+                            <input type="radio" name="routing_mode" value="direct_default" __ROUTING_MODE_DIRECT__ style="cursor:pointer;margin-top:2px;">
+                            <span><b>Блок → Прокси → Напрямую</b><br><span style="color:var(--text-2);font-size:var(--text-size);">Всё, что не попало ни в один список, идёт <b>напрямую</b></span></span>
+                        </label>
+                        <div style="font-size:var(--text-size);color:var(--text-2);margin-top:8px;padding-left:4px;">
+                            Блокировка применяется всегда, в обоих режимах.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    <div id="mt_modal" role="dialog" aria-modal="true" aria-labelledby="mt_dialog_title" class="modal-overlay"
+         onclick="if(event.target === this) closeMtModal();">
+        <div class="modal-content">
+            <div class="mt-sticky-top">
+            <div class="modal-header">
+                <div><div class="mt-title-line"><h4 id="mt_dialog_title" class="modal-title">Маршрутизация</h4><div id="mt_status_bar" class="mt-status">Загрузка...</div></div></div>
+                <div class="routing-header-actions">
+                    <div class="rt-io-group">
+                        <button type="button" onclick="document.getElementById('mt_import_file').click()" class="btn-settings-icon rt-import-export-btn mt-io-import" title="Импорт из Excel" aria-label="Импорт">
+                            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V3m-4 4 4-4 4 4"/><path d="M4 14v5a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-5"/></svg>
+                        </button>
+                        <button type="button" onclick="mtExport()" class="btn-settings-icon rt-import-export-btn mt-io-export" title="Экспорт в Excel" aria-label="Экспорт">
+                            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v13m-4-4 4 4 4-4"/><path d="M4 14v5a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-5"/></svg>
+                        </button>
+                        <input type="file" id="mt_import_file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" onchange="mtImportFile(this)" style="display:none;">
+                    </div>
+                    <button type="button" onclick="mtOpenBackups()" class="btn-settings-icon rt-import-export-btn mt-io-backup" title="Восстановить из бэкапа" aria-label="Восстановить из бэкапа">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="5" rx="1.5"/><path d="M5 8v11a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8m-8 5h2"/></svg>
+                    </button>
+                    
+                </div>
+                <button type="button" class="modal-close" onclick="closeMtModal()"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="m6 6 12 12M6 18 18 6"/></svg></button>
+            </div>
+            <div class="mt-sticky-bar">
+                
+
+                <div class="mt-search-toolbar">
+<input type="search" id="mt_group_search" placeholder="Поиск групп и правил" aria-label="Поиск групп и правил" oninput="mtFilterGroups()">
+<select id="mt_group_filter" aria-label="Фильтр групп" onchange="mtFilterGroups()"><option value="all">Все</option><option value="enabled">Включённые</option><option value="disabled">Выключенные</option></select>
+<span id="mt_filter_count" aria-live="polite"></span></div>
+<div class="mt-groups-toolbar"><input type="checkbox" id="mt_enabled" style="display:none!important" aria-hidden="true"><button type="button" class="power-status-button modal-power-button" data-power-target="mt_enabled" aria-pressed="false" onclick="powerButtonClick(this)"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v9M6.4 5.6a8 8 0 1 0 11.2 0"/></svg><span>OptiRout вкл.</span><span class="power-status-dot" aria-hidden="true"></span></button>
+                    <button type="button" class="mt-add-group" onclick="mtAddGroup()" title="Добавить группу правил" aria-label="Добавить группу правил"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 4H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-6M7 9h5M7 13h5M7 17h3M18 2v8M14 6h8"/></svg></button>
+
+                    <button type="button"
+                            class="mt-global-iface-btn"
+                            onclick="mtOpenGlobalIface(this)"
+                            title="Установить интерфейс для всех групп"
+                            aria-label="Установить интерфейс для всех групп">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c5 5 5 13 0 18-5-5-5-13 0-18Z"/></svg>
+                    </button>
+
+                    <button type="button"
+                            class="mt-paste-group-btn"
+                            onclick="mtOpenPasteModal(this)"
+                            title="Вставить группу из буфера"
+                            aria-label="Вставить группу из буфера">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="5" width="14" height="16" rx="2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6m-6 4h4"/></svg>
+                    </button>
+
+                    <button type="button"
+                            class="mt-reload-btn"
+                            onclick="mtReloadConfig(this)"
+                            title="Перезагрузить конфиг из файла"
+                            aria-label="Перезагрузить конфиг">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 7v5h-5M4 17v-5h5"/><path d="M6.2 6.2A8 8 0 0 1 20 12M4 12a8 8 0 0 0 13.8 5.8"/></svg>
+                    </button>
+                </div>
+            </div>
+            </div>
+            <div class="xray-manager-box rt-routing-root mt-root">
+                <div class="mt-global collapsed" id="mt_global_box" style="display:none;">
+                    <div class="mt-global-title" onclick="document.getElementById('mt_global_box').classList.toggle('collapsed');">Глобальные настройки</div>
+                    <div class="mt-global-body">
+                        <div class="mt-row">
+                            <label>Мониторить интерфейсы (link):</label>
+                            <div id="mt_link_container" style="flex:1;display:flex;flex-wrap:wrap;gap:6px;"></div>
+                        </div>
+                        <div class="mt-row"><label>showAllInterfaces:</label><input type="checkbox" id="mt_show_all"></div>
+                        <div class="mt-row"><label>DNS-proxy порт:</label><input type="number" id="mt_dns_port" min="1" max="65535" style="max-width:120px;"></div>
+                        <div class="mt-row"><label>Веб-UI порт:</label><input type="number" id="mt_web_port" min="1" max="65535" style="max-width:120px;"></div>
+                        <div class="mt-row"><label>logLevel:</label>
+                            <select id="mt_loglevel" style="max-width:180px;">
+                                <option value="debug">debug</option>
+                                <option value="info">info</option>
+                                <option value="warn">warn</option>
+                                <option value="error">error</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="mt_groups_container"></div><div id="mt_filter_empty" hidden>Ничего не найдено. Измените поиск или фильтр.</div><details class="mt-maintenance"><summary>Обслуживание</summary>
+                <label style="display:flex;align-items:center;gap:8px;margin:16px 0 8px;cursor:pointer;color:var(--text);">
+                    <input type="checkbox" id="mt_backup_enabled" __OPTIROUT_SAVE_BACKUPS__ onchange="mtSetBackupEnabled(this)">
+                    Сохранять резервные копии конфигурации OptiRout
+                </label>
+                <p>При включении сохраняются копии перед изменением конфигурации и отображается кнопка восстановления. Хранятся последние 10 копий. Настройка применяется сразу.</p>
+                <button type="button"
+                        onclick="mtResetRules(this)"
+                        class="btn mt-reset-btn"
+                        title="Удалить все правила, восстановить config.json по умолчанию и перезапустить OptiRout">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M5 6l1 14a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1l1-14M10 10v7m4-7v7"/></svg>
+                    Сбросить правила
+                </button>
+                <p>Восстановление конфигурации OptiRout по умолчанию.</p></details>
+            </div>
+            <div class="mt-modal-footer"><span class="mt-footer-version modal-app-version">OptiRay __APP_VER__</span><span id="mt_dirty_notice" aria-live="polite"></span><button type="button" class="btn mt-cancel-btn" onclick="closeMtModal()">Отмена</button><button type="button" onclick="saveUnifiedRouting()" id="mt_save_btn" class="btn core-btn core-btn-install">Сохранить</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dropdown для выбора глобального интерфейса -->
+    <div id="mt_global_iface_dd" class="mt-global-iface-dd" style="display:none;"></div>
+
+    <div id="mt_bulk_rules_modal" class="modal-overlay"
+         onclick="if(event.target === this) closeMtBulkRulesModal();">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">Добавить правила списком</h4>
+                <button type="button" class="modal-close"
+                        onclick="closeMtBulkRulesModal()"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="m6 6 12 12M6 18 18 6"/></svg></button>
+            </div>
+            <div class="setting-field" style="flex-direction: column; align-items: stretch;">
+                <div>
+                    Вставьте правила — по одному в строке. Разделители: перенос строки,
+                    таб или точка с запятой (можно скопировать столбец прямо из Excel).
+                    Пустые строки, комментарии (<code>#</code>) и дубликаты внутри
+                    вставки будут пропущены.
+                </div>
+                <div class="paste-mode-toggle" role="group" aria-label="Режим вставки правил"><input type="checkbox" id="mt_bulk_rules_modal_replace" hidden><button type="button" aria-pressed="true" onclick="selectPasteMode(this,false)">Добавить</button><button type="button" aria-pressed="false" onclick="selectPasteMode(this,true)">Заменить</button></div>
+                <textarea id="mt_bulk_rules_textarea" class="setting-input"
+                          rows="10" spellcheck="false"
+                          placeholder="example.com"
+                          style="font-family:var(--text-font-family); font-size:var(--text-size); min-height: 200px; resize: vertical;"></textarea>
+                <div id="mt_bulk_rules_hint"></div>
+            </div>
+            <div class="modal-footer-btns">
+                <button type="button" onclick="closeMtBulkRulesModal()"
+                        class="btn modal-footer-btn modal-footer-cancel">Отмена</button>
+                <button type="button" onclick="mtApplyBulkRules()"
+                        class="btn core-btn core-btn-install">Добавить</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="paste_group_modal" class="modal-overlay"
+         onclick="if(event.target === this) closePasteGroupModal();">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">Вставить группу из буфера</h4>
+                <button type="button" class="modal-close" onclick="closePasteGroupModal()"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="m6 6 12 12M6 18 18 6"/></svg></button>
+            </div>
+            <div class="setting-field" style="flex-direction: column; align-items: stretch;">
+                <div>
+                    Первая строка — <b>название группы</b>, далее по одной строке — <b>правила</b>.
+                    Пустые строки и комментарии (<code>#</code>) пропускаются.
+                    Вставьте текст через Ctrl+V и нажмите «Добавить».
+                </div>
+                <div class="paste-mode-toggle" role="group" aria-label="Режим вставки правил"><input type="checkbox" id="paste_group_modal_replace" hidden><button type="button" aria-pressed="true" onclick="selectPasteMode(this,false)">Добавить</button><button type="button" aria-pressed="false" onclick="selectPasteMode(this,true)">Заменить</button></div>
+                <textarea id="paste_group_textarea" class="setting-input"
+                          rows="10" spellcheck="false"
+                          placeholder="Вставьте сюда (Ctrl+V)…"
+                          style="font-family:var(--text-font-family); font-size:var(--text-size); min-height: 200px; resize: vertical; white-space: pre;"></textarea>
+                <div id="paste_group_hint"></div>
+            </div>
+            <div class="modal-footer-btns">
+                <button type="button" onclick="closePasteGroupModal()"
+                        class="btn modal-footer-btn modal-footer-cancel">Отмена</button>
+                <button type="button" onclick="applyPasteGroupAny()"
+                        class="btn core-btn core-btn-install">Добавить</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="bulk_rules_modal" class="modal-overlay"
+         onclick="if(event.target === this) closeBulkRulesModal();">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">Добавить правила списком</h4>
+                <button type="button" class="modal-close"
+                        onclick="closeBulkRulesModal()"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="m6 6 12 12M6 18 18 6"/></svg></button>
+            </div>
+            <div class="setting-field" style="flex-direction: column; align-items: stretch;">
+                <div>
+                    Вставьте правила — по одному в строке. Можно скопировать столбец прямо из Excel / Google Sheets:
+                    разделители — перенос строки, таб или точка с запятой. Пустые строки, комментарии
+                    (<code>#</code>) и дубликаты внутри вставки будут пропущены.
+                </div>
+                <div class="paste-mode-toggle" role="group" aria-label="Режим вставки правил"><input type="checkbox" id="bulk_rules_modal_replace" hidden><button type="button" aria-pressed="true" onclick="selectPasteMode(this,false)">Добавить</button><button type="button" aria-pressed="false" onclick="selectPasteMode(this,true)">Заменить</button></div>
+                <textarea id="bulk_rules_textarea" class="setting-input"
+                          rows="10" spellcheck="false"
+                          placeholder="example.com"
+                          style="font-family:var(--text-font-family); font-size:var(--text-size); min-height: 200px; resize: vertical;"></textarea>
+                <div id="bulk_rules_hint"></div>
+            </div>
+            <div class="modal-footer-btns">
+                <button type="button" onclick="closeBulkRulesModal()"
+                        class="btn modal-footer-btn modal-footer-cancel">Отмена</button>
+                <button type="button" onclick="applyBulkRules()"
+                        class="btn core-btn core-btn-install">Добавить</button>
+            </div>
+        </div>
+    </div>
+
+    </form>
+
+    <hr class="subscriptions-divider">
+    <div class="global-ping-wrapper" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:10px;">
+        
+        <div id="global_ping_row" style="display:flex;gap:8px;flex-wrap:wrap;__GLOBAL_PING_HIDDEN__">
+            <button type="button" onclick="pingAllFavs('real')" class="btn btn-pingfav" title="HTTP-проверка всех избранных серверов"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8Z"/></svg><span>Избранные</span></button>
+            <button type="button" onclick="pingAll('tcp')" class="btn btn-pingtcp" title="Проверить TCP-соединение с серверами"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16m-4-4 4 4-4 4M20 17H4m4-4-4 4 4 4"/></svg><span>TCP-пинг</span></button>
+            <button type="button" onclick="pingAll('real')" class="btn btn-pingall" title="Проверить доступ к тестовому URL через серверы"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c5 5 5 13 0 18-5-5-5-13 0-18Z"/></svg><span>HTTP-пинг</span></button>
+            <button type="button" onclick="stopPing()" class="btn btn-stop" title="Остановить текущие проверки"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="5" width="14" height="14" rx="2"/></svg><span>Остановить</span></button>
+        </div>
+    </div>
+    <div class="server-browser-toolbar">
+<input type="search" id="server_search" aria-label="Поиск серверов" placeholder="Поиск сервера или подписки" oninput="browseServers()">
+<select id="server_filter" aria-label="Фильтр серверов" onchange="browseServers()"><option value="all">Все серверы</option><option value="favorites">Избранные</option><option value="available">Доступные по замеру</option></select>
+<select id="server_sort" aria-label="Сортировка серверов" onchange="browseServers()"><option value="original">Исходный порядок</option><option value="name">По названию</option><option value="latency">По задержке</option></select>
+<div class="server-view-switch" aria-label="Вид списка"><button type="button" data-server-view="list" onclick="setServerView('list')">Список</button><button type="button" data-server-view="cards" onclick="setServerView('cards')">Карточки</button></div>
+<span id="server_results_count" aria-live="polite"></span></div>
+<div id="server_results_empty" hidden>Серверы не найдены. Измените поиск или фильтр.</div>
+<div id="servers_container" class="server-view-list">__CARDS_HTML__</div>
+    __TEST_FLOAT_BTN__
+    <button type="button" id="scroll_top_btn" class="btn-scroll-top" onclick="scrollToTop()" title="Наверх" aria-label="Прокрутить страницу наверх"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5m-6 6 6-6 6 6"/></svg></button>
+
+    <div id="update_overlay" class="update-overlay">
+        <div class="update-spinner-card" role="status" aria-live="polite">
+            <div class="update-spinner vpn-tunnel vpn-sync" aria-hidden="true"><svg viewBox="0 0 144 72" fill="none"><path class="vpn-lane" d="M4 27h42M4 45h42M98 27h42M98 45h42"/><path class="sync-arrow sync-arrow-top" d="M51 16a29 29 0 0 1 42 4m0-8v8h-8"/><path class="sync-arrow sync-arrow-bottom" d="M93 56a29 29 0 0 1-42-4m0 8v-8h8"/><rect class="sync-server" x="56" y="24" width="32" height="9" rx="3"/><rect class="sync-server" x="56" y="39" width="32" height="9" rx="3"/><circle class="sync-led sync-led-a" cx="62" cy="28.5" r="1.5"/><circle class="sync-led sync-led-b" cx="62" cy="43.5" r="1.5"/><path class="sync-lines" d="M69 28.5h12M69 43.5h12"/><circle class="vpn-packet vpn-packet-a" cx="8" cy="27" r="3"/><circle class="vpn-packet vpn-packet-b" cx="8" cy="45" r="3"/><circle class="vpn-packet vpn-packet-c" cx="105" cy="27" r="3"/><circle class="vpn-packet vpn-packet-d" cx="105" cy="45" r="3"/></svg></div>
+            <div class="update-text">Обновление подписок...</div>
+            <div class="update-subtext">Получение списка серверов</div>
+        </div>
+    </div>
+    <div id="wait_modal" class="wait-modal-overlay">
+        <div class="wait-modal-card" role="dialog" aria-modal="true" aria-labelledby="wait_modal_title" aria-describedby="wait_modal_subtext">
+            <div class="update-spinner vpn-tunnel vpn-connect" aria-hidden="true"><svg viewBox="0 0 144 72" fill="none"><path class="vpn-lane" d="M4 27h38M4 45h38M102 27h38M102 45h38"/><circle class="vpn-orbit" cx="72" cy="36" r="29"/><path class="vpn-shield" d="M72 15 89 22v14c0 12-8 19-17 23-9-4-17-11-17-23V22Z"/><path class="vpn-check" d="m64 36 6 6 11-13"/><circle class="vpn-packet vpn-packet-a" cx="8" cy="27" r="3"/><circle class="vpn-packet vpn-packet-b" cx="8" cy="45" r="3"/><circle class="vpn-packet vpn-packet-c" cx="105" cy="27" r="3"/><circle class="vpn-packet vpn-packet-d" cx="105" cy="45" r="3"/></svg></div>
+            <div id="wait_modal_title" class="wait-modal-title">Подключение...</div>
+            <div id="wait_modal_subtext" class="wait-modal-subtext" aria-live="polite">Ожидание готовности туннеля</div>
+            <button type="button" id="wait_modal_cancel"
+                    class="btn modal-footer-btn modal-footer-cancel"
+                    style="margin-top:6px;padding:6px 14px;font-size:var(--text-size);"
+                    onclick="if(window.cancelWarmup)cancelWarmup();">Отмена</button>
+        </div>
+    </div>
+
+
+<script>
+/* optiray: MT paste modal fix v8 */
+(function(){
+'use strict';
+function isWs(c){ var n=(c||'').charCodeAt(0); return n===9||n===10||n===13||n===32||n===160; }
+function trim(s){ s=String(s==null?'':s); var a=0,b=s.length; while(a<b&&isWs(s.charAt(a)))a++; while(b>a&&isWs(s.charAt(b-1)))b--; return s.slice(a,b); }
+function splitLines(raw){
+  var s=String(raw==null?'':raw), out=[], cur='', LF=String.fromCharCode(10), CR=String.fromCharCode(13);
+  for (var i=0;i<s.length;i++){ var c=s.charAt(i);
+    if (c===LF){ out.push(cur); cur=''; } else if (c!==CR){ cur+=c; } }
+  out.push(cur); return out;
+}
+function openMtPasteModal(btn){
+  var m=document.getElementById('paste_group_modal');
+  var ta=document.getElementById('paste_group_textarea');
+  var hint=document.getElementById('paste_group_hint');
+  if(!m||!ta){ return; }
+  ta.value='';
+  if(hint) hint.textContent='Первая строка — название группы, далее по одной строке — правила. Ctrl+Enter — добавить.';
+  window.__mt_paste_ctx={ isMt:true, btn:btn||null };
+  m.style.display='flex';
+  setTimeout(function(){ try{ ta.focus(); }catch(e){} },60);
+}
+window.mtOpenPasteModal = openMtPasteModal;
+window.mtPasteGroupFromClipboard = openMtPasteModal;
+function newId(){
+  if (typeof window._mtNewId==='function'){ try{ return window._mtNewId(); }catch(e){} }
+  var s=''; for(var i=0;i<8;i++){ s+=Math.floor(Math.random()*16).toString(16); } return s;
+}
+function applyMtPaste(){
+  var ta=document.getElementById('paste_group_textarea');
+  var hint=document.getElementById('paste_group_hint');
+  if(!ta) return;
+  var lines=splitLines(ta.value), name='', rules=[];
+  for (var i=0;i<lines.length;i++){
+    var v=trim(lines[i]);
+    if(!v) continue;
+    if (v.charAt(0)==='#') continue;
+    if(!name){ name=v; continue; }
+    rules.push(v);
+  }
+  if(!name && !rules.length){ if(hint) hint.textContent='Пусто — нечего добавлять.'; return; }
+  try{ if(typeof window._mtCollectFromUi==='function') window._mtCollectFromUi(true); }catch(e){}
+  var st=window.MT_STATE, cfg=st&&st.config;
+  if(!cfg){ if(hint) hint.textContent='Конфиг OptiRout не загружен.'; return; }
+  cfg.groups = cfg.groups || [];
+  var newRules=[];
+  for (var j=0;j<rules.length;j++){
+    var rv=rules[j], type='namespace';
+    if (typeof window.mtParseImportedRule==='function'){ var detected=window.mtParseImportedRule(rv); rv=detected.rule; type=detected.type; }
+    newRules.push({ id:newId(), name:'', type:type, rule:rv, enable:true });
+  }
+  if(!newRules.length) newRules.push({ id:newId(), name:'', type:'namespace', rule:'', enable:true });
+  var iface0='t2s0';
+  try{
+    if(st.interfaces && st.interfaces.length){
+      var n0=(typeof window._mtIfaceName==='function')?window._mtIfaceName(st.interfaces[0]):st.interfaces[0];
+      if(n0) iface0=n0;
+    }
+  }catch(e){}
+  var existingGroup=cfg.groups.find(function(g){ return g.name===name; });
+  if(existingGroup){
+    existingGroup.rules=document.getElementById('paste_group_modal_replace').checked ? newRules : (existingGroup.rules||[]).concat(newRules);
+    existingGroup.collapsed=false;
+  }else{
+  cfg.groups.unshift({ id:newId(), name:name||'Новая группа', color:randomRoutingGroupColor(), interface:iface0, enable:true, rules:newRules });
+  }
+  if (typeof window.mtRenderGroups==='function') window.mtRenderGroups();
+  try{ st.dirty=true; }catch(e){}
+  var m=document.getElementById('paste_group_modal');
+  if(m) m.style.display='none';
+  window.__mt_paste_ctx=null;
+  if (typeof window._mtSetStatus==='function') window._mtSetStatus('Вставлена группа "'+(name||'Новая группа')+'" ('+rules.length+' правил)','ok');
+  if (typeof window.__mtScanDups==='function') setTimeout(window.__mtScanDups,150);
+}
+window.applyPasteGroupMt = applyMtPaste;
+window.applyPasteGroupAny = function(){
+  if (window.__mt_paste_ctx && window.__mt_paste_ctx.isMt){ applyMtPaste(); return; }
+  if (typeof window.__origApplyPasteGroup==='function') return window.__origApplyPasteGroup.apply(this,arguments);
+};
+if (typeof window.applyPasteGroup==='function' && !window.__origApplyPasteGroup){
+  window.__origApplyPasteGroup = window.applyPasteGroup;
+  window.applyPasteGroup = window.applyPasteGroupAny;
+}
+console.log('optiray: MT paste modal fix v8 installed');
+})();
+</script>
+<script src="/assets/app.js"></script></body>
+</html>

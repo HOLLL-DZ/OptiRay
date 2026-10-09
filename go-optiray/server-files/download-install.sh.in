@@ -1,0 +1,39 @@
+#!/bin/sh
+# Download and install Go; the package handles startup and legacy migration.
+set -eu
+VERSION='@VERSION@'
+BASE=${1:-${OPTIRAY_GO_REPO_URL:-}}
+[ -n "$BASE" ] || { echo 'Usage: sh install.sh https://your-server/path/to/go-release' >&2; exit 1; }
+case "$BASE" in http://*|https://*) ;; *) echo 'Expected HTTP(S) release URL' >&2; exit 1;; esac
+BASE=${BASE%/}
+[ "$(id -u)" = 0 ] || { echo 'Run as root' >&2; exit 1; }
+if ! command -v curl >/dev/null 2>&1 || [ ! -r /opt/etc/ssl/certs/ca-certificates.crt ]; then
+ command -v opkg >/dev/null || { echo 'Entware opkg is missing' >&2; exit 1; }
+ opkg update && opkg install curl ca-bundle || { echo 'Cannot install download dependencies' >&2; exit 1; }
+fi
+for tool in curl sha256sum tar mktemp; do command -v "$tool" >/dev/null || { echo "Missing utility: $tool" >&2; exit 1; }; done
+case "$(uname -m)" in aarch64) ARCH=arm64;; mips*) ARCH=mipsle;; *) echo 'Unsupported router architecture' >&2; exit 1;; esac
+umask 077
+TEMP_ROOT=${OPTIRAY_INSTALL_TMPDIR:-/tmp}
+case "$TEMP_ROOT" in /*) ;; *) echo 'Temporary directory must be absolute' >&2; exit 1;; esac
+mkdir -p "$TEMP_ROOT"
+# Reserve enough RAM for the compressed archive and unpacked current release.
+TEMP_FREE=$(df -Pk "$TEMP_ROOT" | awk 'END {print $4}')
+[ "$TEMP_FREE" -ge 65536 ] || { echo "Нужно минимум 64 МиБ для загрузки и распаковки в $TEMP_ROOT. Используйте OPTIRAY_INSTALL_TMPDIR на USB." >&2; exit 1; }
+WORK=$(mktemp -d "$TEMP_ROOT/optiray-go-install.XXXXXX")
+cleanup() { rm -rf "$WORK"; }
+trap cleanup EXIT
+trap 'exit 1' INT TERM HUP
+FILE="OptiRay-Go-$VERSION-$ARCH.tar.gz"
+curl -fL --connect-timeout 10 --max-time 180 "$BASE/$FILE" -o "$WORK/$FILE"
+curl -fL --connect-timeout 10 --max-time 30 "$BASE/$FILE.sha256" -o "$WORK/$FILE.sha256"
+# Only the pinned filename may be checked; do not trust paths in a remote manifest.
+EXPECTED=$(awk -v file="$FILE" 'NF==2 && $2==file && length($1)==64 && $1 !~ /[^0-9a-f]/ {print $1}' "$WORK/$FILE.sha256")
+[ "${#EXPECTED}" = 64 ] || { echo 'Invalid archive checksum manifest' >&2; exit 1; }
+ACTUAL=$(sha256sum "$WORK/$FILE" | awk '{print $1}')
+[ "$ACTUAL" = "$EXPECTED" ] || { echo 'Archive checksum mismatch' >&2; exit 1; }
+mkdir "$WORK/package"
+tar -xzf "$WORK/$FILE" -C "$WORK/package"
+[ "$(cat "$WORK/package/VERSION")" = "$VERSION" ] || { echo 'Package version mismatch' >&2; exit 1; }
+rm -f "$WORK/$FILE" "$WORK/$FILE.sha256"
+OPTIRAY_INSTALL_TMPDIR="$TEMP_ROOT" sh "$WORK/package/install.sh"

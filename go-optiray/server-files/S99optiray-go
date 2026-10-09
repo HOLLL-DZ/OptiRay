@@ -1,0 +1,48 @@
+#!/bin/sh
+# OptiRay Go owned service. Never uses killall or Python.
+ROOT=/opt/etc/optiray-go
+BIN=$ROOT/bin/optiray
+PID=$ROOT/run/manager.pid
+owned() {
+    SERVICE_PID=$(cat "$PID" 2>/dev/null)
+    case "$SERVICE_PID" in ''|*[!0-9]*) return 1;; esac
+    kill -0 "$SERVICE_PID" 2>/dev/null || return 1
+    SERVICE_EXE=$(readlink "/proc/$SERVICE_PID/exe" 2>/dev/null)
+    [ "$SERVICE_EXE" = "$BIN" ] || [ "$SERVICE_EXE" = "$BIN (deleted)" ]
+}
+start() {
+    [ -f "$ROOT/.optiray-go-install" ] || return 1
+    if owned; then echo "OptiRay Go already running"; return 0; fi
+    if [ -f "$PID" ]; then
+ SERVICE_STALE_PID=$(cat "$PID" 2>/dev/null)
+ case "$SERVICE_STALE_PID" in ''|*[!0-9]*) ;; *) if kill -0 "$SERVICE_STALE_PID" 2>/dev/null; then echo 'PID belongs to another process; refusing duplicate start' >&2; return 1; fi;; esac
+ fi
+ mkdir -p "$ROOT/run"
+ if [ -z "${SSL_CERT_FILE:-}" ] && [ -z "${SSL_CERT_DIR:-}" ] && [ -r /opt/etc/ssl/certs/ca-certificates.crt ]; then
+  export SSL_CERT_FILE=/opt/etc/ssl/certs/ca-certificates.crt
+ fi
+ trap '' HUP
+    "$BIN" --data-dir "$ROOT" --ui-dir "$ROOT/ui" --listen :3883 --enable-core --enable-routing --enable-keenetic >> "$ROOT/manager.log" 2>&1 &
+    SERVICE_NEW_PID=$!
+    echo "$SERVICE_NEW_PID" > "$PID"
+    sleep 1
+    owned || { echo 'OptiRay Go startup failed; see manager.log' >&2; return 1; }
+}
+stop() {
+    if owned; then
+        kill -TERM "$SERVICE_PID" || return 1
+        SERVICE_WAIT=0
+        while kill -0 "$SERVICE_PID" 2>/dev/null; do
+            SERVICE_WAIT=$((SERVICE_WAIT+1))
+            [ "$SERVICE_WAIT" -lt 30 ] || { echo 'Graceful shutdown timed out; do not remove routing files' >&2; return 1; }
+            sleep 1
+        done
+    elif [ -f "$PID" ]; then
+        SERVICE_PID=$(cat "$PID" 2>/dev/null)
+        case "$SERVICE_PID" in ''|*[!0-9]*) ;; *)
+            if kill -0 "$SERVICE_PID" 2>/dev/null; then echo 'PID belongs to another process; refusing stop' >&2; return 1; fi;; esac
+    fi
+    [ ! -f "$ROOT/shutdown-error" ] || { echo 'Routing shutdown error recorded; inspect shutdown-error' >&2; return 1; }
+    rm -f "$PID"
+}
+case "$1" in start) start;; stop) stop;; restart) stop && start;; status) if owned; then echo "Running: $SERVICE_PID"; else echo Stopped; exit 1; fi;; *) echo 'Usage: S99optiray-go start|stop|restart|status'; exit 1;; esac
