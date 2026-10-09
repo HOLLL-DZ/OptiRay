@@ -2,7 +2,7 @@
 
 **Веб-интерфейс для Xray, Hysteria и маршрутизации на Keenetic с Entware.**
 
-[Telegram: OptiRay | Keenetic](https://t.me/optiray_project) — релизы, инструкции и новости разработки.
+[Канал Telegram](https://t.me/optiray_project) — релизы и новости · [Обсуждение и отзывы](https://t.me/optiray_project_chat)
 
 OptiRay работает на Go, управляет подписками и собственными процессами прокси-ядер, помогает выбирать серверы и настраивать маршрутизацию через OptiRout или правила Xray. Python на роутере не требуется.
 
@@ -96,7 +96,9 @@ go vet ./...
 
 ## Обратная связь
 
-Новости проекта и инструкции: [канал OptiRay в Telegram](https://t.me/optiray_project).
+Вопросы, отзывы и помощь с настройкой: [чат OptiRay](https://t.me/optiray_project_chat).
+
+Релизы, новости и инструкции: [канал OptiRay](https://t.me/optiray_project).
 
 Нашли ошибку — создайте Issue по шаблону. Предлагаете функцию — опишите сценарий использования. Не публикуйте ссылки подписок, HWID, пароли, ключи и полные бэкапы.
 
