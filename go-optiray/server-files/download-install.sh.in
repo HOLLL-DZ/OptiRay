@@ -28,7 +28,7 @@ FILE="OptiRay-Go-$VERSION-$ARCH.tar.gz"
 curl -fL --connect-timeout 10 --max-time 180 "$BASE/$FILE" -o "$WORK/$FILE"
 curl -fL --connect-timeout 10 --max-time 30 "$BASE/$FILE.sha256" -o "$WORK/$FILE.sha256"
 # Only the pinned filename may be checked; do not trust paths in a remote manifest.
-EXPECTED=$(awk -v file="$FILE" 'NF==2 && $2==file && length($1)==64 && $1 !~ /[^0-9a-f]/ {print $1}' "$WORK/$FILE.sha256")
+EXPECTED=$(awk -v file="$FILE" '{ sub(/\r$/, "") } NF==2 && $2==file && length($1)==64 && $1 !~ /[^0-9a-f]/ {print $1}' "$WORK/$FILE.sha256")
 [ "${#EXPECTED}" = 64 ] || { echo 'Invalid archive checksum manifest' >&2; exit 1; }
 ACTUAL=$(sha256sum "$WORK/$FILE" | awk '{print $1}')
 [ "$ACTUAL" = "$EXPECTED" ] || { echo 'Archive checksum mismatch' >&2; exit 1; }
