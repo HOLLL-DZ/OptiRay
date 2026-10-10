@@ -61,6 +61,7 @@ recover() {
  echo "Package configuration failed. Recovery backup: $STATE. Keep this backup and reinstall the package after fixing the cause." >&2
 }
 trap recover EXIT
+printf '%s\n' 'OptiRay Go opkg installation' > "$ROOT/.optiray-go-install"
 LAN=$("$ROOT/bin/optiray" --router-address)
 "$ROOT/bin/optiray" --data-dir "$ROOT" --initialize-install
 "$SERVICE" start
@@ -75,7 +76,14 @@ set -eu
 case "${IPKG_INSTROOT:-}" in ''|/) ;; *) exit 0;; esac
 [ "${1:-}" = remove ] || exit 0
 if [ -f /opt/etc/optiray-go/.optiray-go-install ]; then
- sh /opt/etc/optiray-go/uninstall.sh
+ SERVICE=/opt/etc/init.d/S99optiray-go
+ if [ -f "$SERVICE" ]; then
+  grep -q 'OptiRay Go owned service' "$SERVICE" || exit 1
+  "$SERVICE" stop
+ fi
+ if [ -x /opt/etc/optiray-go/bin/optiray ]; then
+  /opt/etc/optiray-go/bin/optiray --data-dir /opt/etc/optiray-go --remove-managed-proxy
+ fi
 fi
 '''
 
@@ -98,7 +106,8 @@ def archive(entries):
             tar.addfile(member, io.BytesIO(data))
     return out.getvalue()
 
-def build(source, output, version):
+def build(source, output, version, revision):
+    package_version = f"{version}-{revision}"
     output.mkdir(parents=True, exist_ok=True)
     records = []
     for target, abi in [('arm64', 'aarch64-3.10'), ('mipsle', 'mipsel-3.4')]:
@@ -116,8 +125,7 @@ def build(source, output, version):
                     path = 'opt/etc/optiray-go/' + name
                 mode = 0o755 if name.startswith('bin/') or name in ('S99optiray-go', '100-optiray-go-routing', 'uninstall.sh') else 0o644
                 entries.append(('./' + path, tar.extractfile(member).read(), mode))
-        entries.append(('./opt/etc/optiray-go/.optiray-go-install', b'OptiRay Go opkg installation\n', 0o600))
-        control = (f'Package: optiray\nVersion: {version}\nArchitecture: {abi}\n'
+        control = (f'Package: optiray\nVersion: {package_version}\nArchitecture: {abi}\n'
                    'Maintainer: HOLLL-DZ\nSection: net\nPriority: optional\n'
                    'Depends: curl, ca-bundle, iptables, ip-full\n'
                    'License: GPL-3.0\n'
@@ -131,7 +139,7 @@ def build(source, output, version):
         ipk = archive([('debian-binary', b'2.0\n', 0o644),
                        ('control.tar.gz', control_data, 0o644),
                        ('data.tar.gz', archive(entries), 0o644)])
-        filename = f'optiray_{version}_{abi}.ipk'
+        filename = f'optiray_{package_version}_{abi}.ipk'
         (output / filename).write_bytes(ipk)
         records.append(control + f'Filename: {filename}\nSize: {len(ipk)}\n'
                        f'MD5Sum: {hashlib.md5(ipk).hexdigest()}\n'
@@ -145,5 +153,6 @@ if __name__ == '__main__':
     parser.add_argument('--source', type=Path, required=True)
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--version', required=True)
+    parser.add_argument('--revision', type=int, default=1)
     args = parser.parse_args()
-    build(args.source, args.output, args.version)
+    build(args.source, args.output, args.version, args.revision)
