@@ -34,10 +34,18 @@ Keenetic с установленной Entware и доступом к её ко�
 opkg update && opkg install curl ca-bundle wget-ssl &&
 curl -fL https://raw.githubusercontent.com/HOLLL-DZ/OptiRay/main/go-optiray/server-files/setup-repo.sh -o /tmp/setup-optiray-repo.sh &&
 sh /tmp/setup-optiray-repo.sh &&
+export PATH="/opt/bin:/opt/sbin:$PATH" &&
 opkg update && opkg install optiray
 ```
 
-Обновление: `opkg update && opkg upgrade optiray`.
+Обновление:
+
+```sh
+export PATH="/opt/bin:/opt/sbin:$PATH"
+opkg update && opkg upgrade optiray
+```
+
+В новой консоли снова задайте PATH, чтобы opkg использовал wget с HTTPS из Entware.
 
 Удаление: `opkg remove optiray` — удаляет также настройки и ядра OptiRay. Сначала сохраните бэкап.
 
