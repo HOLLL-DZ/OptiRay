@@ -8030,7 +8030,7 @@ body input[type="checkbox"],
 }
 .header-title::before { content:none !important; }
 .header-title .header-brand-icon {
- display:block; width:36px; height:36px; flex:0 0 36px; color:var(--text);
+ display:block; width:36px; height:36px; flex:0 0 36px; border-radius:50%; object-fit:cover; overflow:hidden;
 }
 
 /* Active connection server and core badge typography. */

@@ -26,15 +26,38 @@ Keenetic с установленной Entware и доступом к её ко�
 
 Временные файлы и резервная копия обновления хранятся в `/tmp`. Для роутера с небольшим накопителем нужен достаточный запас оперативной памяти; при необходимости можно указать каталог USB через `OPTIRAY_INSTALL_TMPDIR`.
 
-## Установка и обновление
+## Установка через Entware
 
-Пакеты: [релиз 1.0.3](https://github.com/HOLLL-DZ/OptiRay/releases/tag/v1.0.3).
+Один раз подключите отдельный репозиторий OptiRay (не входит в официальный feed Entware):
+
+```sh
+opkg update && opkg install curl ca-bundle wget-ssl &&
+curl -fL https://raw.githubusercontent.com/HOLLL-DZ/OptiRay/main/go-optiray/server-files/setup-repo.sh -o /tmp/setup-optiray-repo.sh &&
+sh /tmp/setup-optiray-repo.sh &&
+opkg update && opkg install optiray
+```
+
+Обновление: `opkg update && opkg upgrade optiray`.
+
+Удаление: `opkg remove optiray` — удаляет также настройки и ядра OptiRay. Сначала сохраните бэкап.
+
+Настройки при обновлении сохраняются. Новые значения по умолчанию действуют для чистой установки.
+При обновлении служба перезапускается; соединение может кратковременно прерваться.
+Текущая Go-установка через скрипт может перейти на пакетную установку без сброса настроек.
+После перехода используйте opkg для обновления и удаления, чтобы учёт файлов оставался корректным.
+
+Пакетные временные файлы opkg на устройствах с малым накопителем можно перенести в RAM:
+`opkg -t /tmp install optiray` или `opkg -t /tmp upgrade optiray`.
+
+## Установка скриптом
+
+Пакеты: [релиз 1.0.4](https://github.com/HOLLL-DZ/OptiRay/releases/tag/v1.0.4).
 
 ```sh
 opkg update && opkg install curl ca-bundle &&
-curl -fL https://github.com/HOLLL-DZ/OptiRay/releases/download/v1.0.3/install.sh \
+curl -fL https://github.com/HOLLL-DZ/OptiRay/releases/download/v1.0.4/install.sh \
   -o /tmp/install-optiray-go.sh &&
-sh /tmp/install-optiray-go.sh https://github.com/HOLLL-DZ/OptiRay/releases/download/v1.0.3
+sh /tmp/install-optiray-go.sh https://github.com/HOLLL-DZ/OptiRay/releases/download/v1.0.4
 ```
 
 Установщик выбирает пакет, проверяет SHA256, устанавливает зависимости и запускает службу. В конце выводится адрес интерфейса, например `http://192.168.1.1:3883` или `http://192.168.10.1:3883` — в зависимости от адреса роутера.
@@ -101,7 +124,7 @@ go vet ./...
 
 Нашли ошибку — создайте Issue по шаблону. Предлагаете функцию — опишите сценарий использования. Не публикуйте ссылки подписок, HWID, пароли, ключи и полные бэкапы.
 
-- [Изменения 1.0.3](go-optiray/CHANGELOG.md)
+- [Изменения 1.0.4](go-optiray/CHANGELOG.md)
 - [Участие в разработке](CONTRIBUTING.md)
 - [Сообщение об уязвимости](SECURITY.md)
 

@@ -33,6 +33,38 @@ func TestSettingsRoundTripPreservesFields(t *testing.T) {
 		t.Fatal("outbound field lost")
 	}
 }
+
+func TestFreshDefaultsAndExistingPreferences(t *testing.T) {
+	fresh, err := newStore(t.TempDir())
+	if err != nil {
+		t.Fatal(err)
+	}
+	d := fresh.snapshot()
+	if str(d["auto_select_source"]) != "favorites" {
+		t.Fatal("fresh installation must select favorites")
+	}
+	for _, key := range []string{"enable_logging", "optirout_save_backups", "xray_save_backups"} {
+		if boolean(d[key]) {
+			t.Fatalf("fresh installation enables %s", key)
+		}
+	}
+	dir := t.TempDir()
+	if err := writeObject(filepath.Join(dir, "subs.json"), Object{
+		"hwid": "existing", "auto_select_source": "all", "enable_logging": true,
+		"optirout_save_backups": true, "xray_save_backups": true,
+	}); err != nil {
+		t.Fatal(err)
+	}
+	existing, err := newStore(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	d = existing.snapshot()
+	if str(d["auto_select_source"]) != "all" || !boolean(d["enable_logging"]) ||
+		!boolean(d["optirout_save_backups"]) || !boolean(d["xray_save_backups"]) {
+		t.Fatal("existing preferences overwritten by new defaults")
+	}
+}
 func TestCorruptSettingsAreNotOverwritten(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "subs.json")

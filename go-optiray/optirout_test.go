@@ -49,6 +49,9 @@ func TestOptiroutBackupRetention(t *testing.T) {
 	if e != nil {
 		t.Fatal(e)
 	}
+	if e = s.change(func(d Object) error { d["optirout_save_backups"] = true; return nil }); e != nil {
+		t.Fatal(e)
+	}
 	cfg, e := s.loadOptirout()
 	if e != nil {
 		t.Fatal(e)
