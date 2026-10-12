@@ -48,7 +48,8 @@ opkg update && opkg upgrade optiray
 
 Удаление:
 ```sh
-opkg remove optiray```
+opkg remove optiray
+```
 — удаляет пакет, но сохраняет настройки и отдельно установленные ядра.
 
 Полная очистка (сначала сохраните бэкап): `sh /opt/etc/optiray-go/uninstall.sh && opkg remove optiray`.
