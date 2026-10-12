@@ -968,12 +968,13 @@ function _mtSetStatus(text, kind) {
    которое прошивается из settings.optirout_save_backups при рендере страницы. */
 function _mtToggleBackupBtn() {
     var btn = document.querySelector('#mt_modal .rt-import-export-btn.mt-io-backup');
-    if (!btn) return;
     var enabled = (typeof window.OPTIRAY_OPTIROUT_SAVE_BACKUPS === 'undefined')
         ? false
         : !!window.OPTIRAY_OPTIROUT_SAVE_BACKUPS;
-    if (enabled) btn.style.removeProperty('display');
-    else btn.style.setProperty('display', 'none', 'important');
+    if (btn) {
+        if (enabled) btn.style.removeProperty('display');
+        else btn.style.setProperty('display', 'none', 'important');
+    }
     var toggle = document.getElementById('mt_backup_enabled');
     if (toggle) toggle.checked = enabled;
 }
@@ -1008,13 +1009,17 @@ async function openMtModal() {
     MT_STATE.config = null;
     MT_STATE.dirty = false;
     try {
-        var r1 = await fetch('/api/optirout_config');
+        var r1 = await fetch('/api/optirout_config', {cache:'no-store'});
         var d1 = await r1.json();
         if (!d1.ok) {
             _mtSetStatus('Ошибка: ' + (d1.error || 'unknown'), 'err');
             return;
         }
         MT_STATE.config = d1.config;
+        window.OPTIRAY_OPTIROUT_SAVE_BACKUPS = d1.save_backups === true;
+        var settingsBackup = document.querySelector('input[name="optirout_save_backups"]');
+        if (settingsBackup) settingsBackup.checked = window.OPTIRAY_OPTIROUT_SAVE_BACKUPS;
+        _mtToggleBackupBtn();
  var power=document.getElementById("mt_enabled");if(power)power.checked=MT_STATE.config.enabled!==false;
         var r2 = await fetch('/api/optirout_interfaces');
         var d2 = await r2.json();
@@ -1149,9 +1154,11 @@ function _mtRuleHtml(gid, r) {
     return '<div class="mt-rule' + off + '" data-cat="mt" data-gid="' + _mtEsc(gid) + '" data-rid="' + _mtEsc(r.id) + '">'
         + '<span class="mt-rule-drag" title="Перетащить"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="5" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="19" r="1"/></svg></span>'
         + '<label class="rt-check" title="Включить"><input type="checkbox" class="mt-rule-enable"' + (r.enable !== false ? ' checked' : '') + '></label>'
-        + '<select class="mt-rule-type">' + typeOpts + '</select>'
         + '<input type="text" class="mt-rule-input" value="' + _mtEsc(r.rule || '') + '" placeholder="example.com / 1.2.3.0/24">'
+        + '<div class="mt-rule-controls" role="group" aria-label="Тип и удаление правила">'
+        + '<select class="mt-rule-type">' + typeOpts + '</select>'
         + '<button type="button" class="rt-icon-btn rt-rule-del" title="Удалить">' + OPTIRAY_ROUTING_ICONS.delete + '</button>'
+        + '</div>'
         + '</div>';
 }
 
@@ -1169,12 +1176,14 @@ function _mtGroupHtml(g) {
         +   '<label class="rt-check" title="Включить группу"><input type="checkbox" class="mt-group-enable"' + (g.enable !== false ? ' checked' : '') + '></label>'
         +   '<span aria-hidden="true"></span><input type="color" class="mt-group-color" value="' + _mtEsc(g.color || '#888888') + '" title="Цвет">'
         +   '<input type="text" class="mt-group-name" value="' + _mtEsc(g.name || '') + '" placeholder="Имя группы">'
+        +   '<div class="mt-group-controls" role="group" aria-label="Интерфейс и действия группы">'
         +   _mtIfacePickerHtml(g.interface || '', g.id)
         +   '<div class="mt-group-actions">'
         +   '<button type="button" class="rt-icon-btn mt-group-bulk" title="Добавить правила списком">' + OPTIRAY_ROUTING_ICONS.bulk + '</button>'
         +   '<button type="button" class="rt-icon-btn mt-group-copy" title="Копировать группу в буфер">' + OPTIRAY_ROUTING_ICONS.copy + '</button>'
         +   '<button type="button" class="rt-icon-btn routing-group-auto-color" title="Случайный цвет группы" aria-label="Случайный цвет группы">' + OPTIRAY_AUTO_COLOR_ICON + '</button>'
         +   '<button type="button" class="rt-icon-btn rt-group-del" title="Удалить группу">' + OPTIRAY_ROUTING_ICONS.delete + '</button>'
+        +   '</div>'
         +   '</div>'
         +   '<button type="button" class="rt-icon-btn mt-group-toggle" title="Свернуть/Развернуть">'
         +       OPTIRAY_ROUTING_ICONS.toggle
@@ -1452,32 +1461,41 @@ window.mtOpenGlobalIface = function(btn) {
         if (!n) continue;
         var d = _mtIfaceDesc(item) || '';
         var isCur = (n === MT_UI.globalIface);
-        html += '<div class="mt-global-iface-dd-item' + (isCur ? ' is-current' : '') + '"'
+        html += '<button type="button" role="menuitemradio" aria-checked="' + String(isCur) + '" class="mt-global-iface-dd-item' + (isCur ? ' is-current' : '') + '"'
              +  ' data-iface="' + _mtEsc(n) + '">'
              +  '<div class="mt-global-iface-dd-name">' + _mtEsc(n) + '</div>'
              +  (d ? '<div class="mt-global-iface-dd-desc">' + _mtEsc(d) + '</div>' : '')
-             +  '</div>';
+             +  '</button>';
     }
     if (!html) {
         alert('Нет доступных интерфейсов');
         return;
     }
     dd.innerHTML = html;
+    dd.classList.add('is-attached');
+    dd.setAttribute('role','menu');
+    dd.setAttribute('aria-label','Интерфейс для всех групп');
+    btn.setAttribute('aria-haspopup','menu');
+    btn.setAttribute('aria-expanded','true');
 
     /* Позиционируем под кнопкой */
     var rect = btn.getBoundingClientRect();
     dd.style.display = 'block';
+    var buttonTop = rect.top - (btn.offsetHeight - rect.height) / 2;
+    var buttonBottom = buttonTop + btn.offsetHeight;
     var ddH = dd.offsetHeight;
     var ddW = dd.offsetWidth;
-    var spaceBelow = window.innerHeight - rect.bottom;
+    var spaceBelow = window.innerHeight - buttonBottom;
     var top;
     if (spaceBelow >= ddH + 12) {
-        top = rect.bottom + 6;
+        top = buttonBottom;
+        dd.dataset.side = 'below';
     } else {
-        top = rect.top - ddH - 6;
+        top = buttonTop - ddH;
+        dd.dataset.side = 'above';
         if (top < 8) top = 8;
     }
-    var left = rect.left;
+    var left = rect.left - (btn.offsetWidth - rect.width) / 2;
     if (left + ddW > window.innerWidth - 8) {
         left = window.innerWidth - ddW - 8;
     }
@@ -1504,6 +1522,8 @@ function _mtGlobalIfaceOutsideClick(e) {
 function _mtCloseGlobalIface() {
     var dd = document.getElementById('mt_global_iface_dd');
     if (dd) dd.style.display = 'none';
+    var btn = document.querySelector('#mt_modal .mt-global-iface-btn');
+    if (btn) btn.setAttribute('aria-expanded','false');
     document.removeEventListener('click', _mtGlobalIfaceOutsideClick, true);
     window.removeEventListener('scroll', _mtCloseGlobalIface, true);
     window.removeEventListener('resize', _mtCloseGlobalIface, true);
@@ -1552,13 +1572,17 @@ window.mtReloadConfig = async function(btn) {
     if (btn) { btn.disabled = true; }
     _mtSetStatus('Перезагрузка конфига...', '');
     try {
-        var r1 = await fetch('/api/optirout_config');
+        var r1 = await fetch('/api/optirout_config', {cache:'no-store'});
         var d1 = await r1.json();
         if (!d1.ok) {
             _mtSetStatus('Ошибка: ' + (d1.error || 'unknown'), 'err');
             return;
         }
         MT_STATE.config = d1.config;
+        window.OPTIRAY_OPTIROUT_SAVE_BACKUPS = d1.save_backups === true;
+        var settingsBackup = document.querySelector('input[name="optirout_save_backups"]');
+        if (settingsBackup) settingsBackup.checked = window.OPTIRAY_OPTIROUT_SAVE_BACKUPS;
+        _mtToggleBackupBtn();
  var power=document.getElementById("mt_enabled");if(power)power.checked=MT_STATE.config.enabled!==false;
 
         var r2 = await fetch('/api/optirout_interfaces');
@@ -1620,10 +1644,14 @@ window.mtResetRules = async function(btn) {
         }
         /* Перечитываем конфиг и перерисовываем список групп */
         try {
-            var r1 = await fetch('/api/optirout_config');
+            var r1 = await fetch('/api/optirout_config', {cache:'no-store'});
             var d1 = await r1.json();
             if (d1 && d1.ok) {
                 MT_STATE.config = d1.config;
+        window.OPTIRAY_OPTIROUT_SAVE_BACKUPS = d1.save_backups === true;
+        var settingsBackup = document.querySelector('input[name="optirout_save_backups"]');
+        if (settingsBackup) settingsBackup.checked = window.OPTIRAY_OPTIROUT_SAVE_BACKUPS;
+        _mtToggleBackupBtn();
  var power=document.getElementById("mt_enabled");if(power)power.checked=MT_STATE.config.enabled!==false;
                 MT_UI.collapsed = {};
                 mtRenderGroups();
@@ -2462,7 +2490,9 @@ window.applyPasteGroupMt = function() {
             '</label>' +
             '<input type="text" class="rt-rule-input" value="' + esc(v) +
                 '" placeholder="example.com / domain:... / ip:...">' +
+            '<div class="mt-rule-controls xr-rule-controls" role="group" aria-label="Действия правила">' +
             '<button type="button" class="rt-icon-btn rt-rule-del" title="Удалить">' + OPTIRAY_ROUTING_ICONS.delete + '</button>' +
+            '</div>' +
         '</div>';
     }
     function groupHtml(cat, g) {
@@ -4901,7 +4931,11 @@ document.addEventListener('change', function(event) {
  window._mtCloseGroupIface = close;
  function close() {
   if (menu) menu.style.display = 'none';
-  if (trigger) trigger.setAttribute('aria-expanded', 'false');
+  if (trigger) {
+   trigger.setAttribute('aria-expanded', 'false');
+   trigger.classList.remove('is-menu-attached');
+   delete trigger.dataset.menuSide;
+  }
   trigger = null;
  }
  function open(button) {
@@ -4912,7 +4946,7 @@ document.addEventListener('change', function(event) {
   var select = button.closest('.mt-iface-picker').querySelector('.mt-group-iface');
   if (!menu) {
    menu = document.createElement('div'); menu.id = 'mt_group_iface_dd';
-   menu.className = 'mt-global-iface-dd'; menu.setAttribute('role','menu');
+   menu.className = 'mt-global-iface-dd is-attached'; menu.setAttribute('role','menu');
    menu.setAttribute('aria-label','Интерфейс группы'); document.body.appendChild(menu);
   }
   menu.replaceChildren();
@@ -4931,11 +4965,25 @@ document.addEventListener('change', function(event) {
     var restore = trigger; close(); if (restore) restore.focus();
    }); menu.appendChild(item);
   });
-  var rect = button.getBoundingClientRect();
-  menu.style.display = 'block'; menu.style.maxHeight = Math.min(300,innerHeight - 24) + 'px';
-  var height = menu.offsetHeight;
-  menu.style.left = Math.max(12,Math.min(rect.left,innerWidth-menu.offsetWidth-12)) + 'px';
-  menu.style.top = Math.max(12,rect.bottom+height+8 < innerHeight ? rect.bottom+6 : rect.top-height-6) + 'px';
+  button.classList.add('is-menu-attached');
+  var group = button.closest('.mt-group-controls');
+  var rect = (group || button).getBoundingClientRect();
+  menu.style.display = 'block';
+  menu.style.width = 'max-content';
+  menu.style.maxHeight = Math.min(300,innerHeight - 24) + 'px';
+  var optionWidth = Array.from(menu.querySelectorAll('.mt-global-iface-dd-name,.mt-global-iface-dd-desc')).reduce(function(width,label) {
+   return Math.max(width,label.scrollWidth + 48);
+  },0);
+  var width = Math.min(Math.max(button.offsetWidth + 2,220,optionWidth),innerWidth - 24);
+  menu.style.width = width + 'px';
+  var below = Math.max(0,innerHeight - rect.bottom - 12);
+  var above = Math.max(0,rect.top - 12);
+  var side = menu.offsetHeight <= below || below >= above ? 'below' : 'above';
+  menu.dataset.side = side;
+  button.dataset.menuSide = side;
+  menu.style.maxHeight = Math.min(300,side === 'below' ? below : above) + 'px';
+  menu.style.left = Math.max(12,Math.min(rect.left,innerWidth - width - 12)) + 'px';
+  menu.style.top = (side === 'below' ? rect.bottom - 1 : rect.top - menu.offsetHeight + 1) + 'px';
   button.setAttribute('aria-expanded','true');
   (menu.querySelector('[aria-checked="true"]') || menu.firstElementChild).focus();
  }
@@ -4987,6 +5035,7 @@ function browseServers() {
 }
 document.addEventListener('DOMContentLoaded',function(){
  var root=document.getElementById('servers_container');if(!root)return;
+ var toolbar=document.querySelector('.server-browser-toolbar');if(toolbar)toolbar.id='server_browser_toolbar';
  root.querySelectorAll('.sub-section').forEach(function(section){
   var color=section.dataset.subcolor;if(/^#[0-9a-f]{6}$/i.test(color||''))section.style.setProperty('--subscription-color',color);
   var fav=section.querySelector('.btn-sub-fav-ping');if(fav){fav.title='HTTP-проверка избранных серверов';fav.setAttribute('aria-label',fav.title);fav.lastChild.textContent='Избранные';}
@@ -5029,6 +5078,8 @@ document.addEventListener('DOMContentLoaded',function(){
  var root=document.getElementById('servers_container');if(!root)return;
  root.querySelectorAll('.sub-section').forEach(function(section){
   var button=section.querySelector('.btn-toggle-collapse');
+  var test=section.querySelector('.btn-test-site'),actions=section.querySelector('.sub-actions');
+  if(test&&actions)actions.prepend(test);
   if(button){
    var closed=section.classList.contains('collapsed');
    renderSubscriptionToggle(section, button, closed);
@@ -5055,7 +5106,7 @@ document.addEventListener('toggle',function(event){
  var details=event.target;
  if(!details.matches || !details.matches('#mt_modal .mt-maintenance') || !details.open)return;
  requestAnimationFrame(function(){
-  var scroller=details.closest('.unified-xray-editor')||details.closest('.mt-root');if(!scroller)return;
+  var scroller=details.closest('.rt-routing-root')||details.closest('.unified-xray-editor')||details.closest('.mt-root');if(!scroller)return;
   var box=scroller.getBoundingClientRect(),panel=details.getBoundingClientRect();
   var delta=panel.height>scroller.clientHeight-24 ? panel.top-box.top-12 : panel.bottom-box.bottom+12;
   if(delta>0)scroller.scrollTo({top:scroller.scrollTop+delta,behavior:matchMedia('(prefers-reduced-motion:reduce)').matches?'auto':'smooth'});
@@ -5085,7 +5136,7 @@ document.addEventListener('DOMContentLoaded',function(){
  var menu,trigger;
  function close(restore){
   if(menu){menu.hidden=true;menu.style.display='none';}
-  if(trigger){var old=trigger;old.setAttribute('aria-expanded','false');trigger=null;if(restore)old.focus();}
+  if(trigger){var old=trigger;old.setAttribute('aria-expanded','false');old.classList.remove('is-menu-attached');delete old.dataset.menuSide;trigger=null;if(restore)old.focus();}
  }
  function open(button,select){
   if(trigger===button){close(true);return;}
@@ -5094,6 +5145,12 @@ document.addEventListener('DOMContentLoaded',function(){
   if(typeof _mtCloseGroupIface==='function')_mtCloseGroupIface();
   trigger=button;
   if(!menu){menu=document.createElement('div');menu.id='optiray_select_dd';menu.setAttribute('role','menu');document.body.appendChild(menu);}
+  var ruleType = select.matches('select.mt-rule-type');
+  var attached = ruleType || select.id === 'mt_group_filter' || select.id === 'xr_group_filter' || select.id === 'server_filter' || select.id === 'server_sort' || !!select.closest('#settings_modal');
+  menu.classList.toggle('is-attached',attached);
+  menu.classList.toggle('is-rule-type',ruleType);
+  menu.style.removeProperty('width');
+  delete menu.dataset.side;
   menu.replaceChildren();menu.setAttribute('aria-label',select.getAttribute('aria-label')||'Выбор');
   Array.from(select.options).forEach(function(option){
    if(option.dataset.separator === 'true'){var separator=document.createElement('div');separator.className='optiray-select-separator';separator.setAttribute('role','separator');menu.appendChild(separator);}
@@ -5108,9 +5165,29 @@ document.addEventListener('DOMContentLoaded',function(){
   var fullList = select.id === 'xray_version_select';
   menu.style.maxHeight = fullList ? 'none' : Math.min(300,innerHeight-24)+'px';
   menu.style.overflowY = fullList ? 'visible' : 'auto';
-  var rect=button.getBoundingClientRect(),height=menu.offsetHeight;
-  menu.style.left=Math.max(12,Math.min(rect.left,innerWidth-menu.offsetWidth-12))+'px';
-  menu.style.top=Math.max(12,rect.bottom+height+8<innerHeight?rect.bottom+6:rect.top-height-6)+'px';
+  var anchor=ruleType?(button.closest('.mt-rule-controls')||button):button;
+  var rect=anchor.getBoundingClientRect(),height=menu.offsetHeight;
+  if(attached){
+   // Press feedback scales the button; anchor to its unscaled layout box.
+   var width=anchor.offsetWidth,buttonHeight=anchor.offsetHeight;
+   var left=rect.left-(width-rect.width)/2,top=rect.top-(buttonHeight-rect.height)/2,bottom=top+buttonHeight;
+   // Keep the trigger sized to its label while allowing all options to fit.
+   menu.style.width='max-content';
+   var optionWidth=Array.from(menu.querySelectorAll('.mt-global-iface-dd-name')).reduce(function(w,name){return Math.max(w,name.scrollWidth+48);},0);
+   width=Math.min(Math.max(width,optionWidth),innerWidth-24);
+   menu.style.width=width+'px';
+   left=Math.max(12,Math.min(left,innerWidth-width-12));
+   var below=Math.max(0,innerHeight-bottom-12),above=Math.max(0,top-12);
+   var side=below>=menu.scrollHeight||below>=above?'below':'above';
+   menu.dataset.side=side;button.dataset.menuSide=side;button.classList.add('is-menu-attached');
+   menu.style.maxHeight=(side==='below'?below:above)+'px';
+   height=menu.offsetHeight;
+   menu.style.left=left+'px';
+   menu.style.top=(side==='below'?bottom-(ruleType?1:0):top-height+(ruleType?1:0))+'px';
+  }else{
+   menu.style.left=Math.max(12,Math.min(rect.left,innerWidth-menu.offsetWidth-12))+'px';
+   menu.style.top=Math.max(12,rect.bottom+height+8<innerHeight?rect.bottom+6:rect.top-height-6)+'px';
+  }
   button.setAttribute('aria-expanded','true');
   (menu.querySelector('[aria-checked="true"]')||menu.firstElementChild).focus();
  }
@@ -5118,8 +5195,9 @@ document.addEventListener('DOMContentLoaded',function(){
    if(!select||select.dataset.optirayEnhanced)return;
    select.dataset.optirayEnhanced='1';
    var button=document.createElement('button');button.type='button';button.className='optiray-select-trigger';
+   var filterCount=select.id==='mt_group_filter'?document.getElementById('mt_filter_count'):select.id==='xr_group_filter'?document.getElementById('xr_filter_count'):select.id==='server_filter'?document.getElementById('server_results_count'):null;
    button.setAttribute('aria-label',select.getAttribute('aria-label'));button.setAttribute('aria-haspopup','menu');button.setAttribute('aria-expanded','false');button.setAttribute('aria-controls','optiray_select_dd');
-   function sync(){button.replaceChildren();var text=document.createElement('span');text.textContent=(select.selectedOptions[0]||select.options[0]||{textContent:''}).textContent;button.appendChild(text);button.insertAdjacentHTML('beforeend','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>');}
+   function sync(){button.replaceChildren();var text=document.createElement('span');text.textContent=(select.selectedOptions[0]||select.options[0]||{textContent:''}).textContent;button.appendChild(text);if(filterCount)button.appendChild(filterCount);button.insertAdjacentHTML('beforeend','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>');}
    select.hidden=true;select.style.display='none';select.after(button);sync();select.addEventListener('change',sync);new MutationObserver(sync).observe(select,{childList:true,subtree:true,characterData:true});
    button.addEventListener('click',function(e){e.stopPropagation();open(button,select);});
    button.addEventListener('keydown',function(e){if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();open(button,select);}});
@@ -5225,7 +5303,7 @@ document.addEventListener('change',function(event){
   var response=await fetch('/api/xray_routing_config',{cache:'no-store'});
   var payload=await response.json();
   if(!response.ok||!payload.ok)throw new Error(payload.error||'Не удалось загрузить правила Xray');
-  var backupToggle=document.getElementById('xr_backup_enabled');if(backupToggle)backupToggle.checked=payload.save_backups!==false;
+  var backupToggle=document.getElementById('xr_backup_enabled');if(backupToggle)backupToggle.checked=payload.save_backups===true;
   var routing=payload.routing;
   if(!routing||typeof routing!=='object'||Array.isArray(routing))throw new Error('Некорректная конфигурация Xray');
   var groups=JSON.parse(JSON.stringify(routing.groups_ui||{}));
@@ -5341,16 +5419,18 @@ document.addEventListener('change',function(event){
   headerActions.insertBefore(xrayIO,bar.nextSibling);
   oldHeader.remove();
   var root=editor.querySelector('.rt-routing-root');
-  var toolbar=document.createElement('div');toolbar.className='xr-toolbar';
-  toolbar.innerHTML='<input type="search" id="xr_group_search" placeholder="Поиск групп и правил" aria-label="Поиск групп и правил">'+
+  var toolbar=document.createElement('div');toolbar.className='xr-toolbar mt-sticky-bar';
+  var searchToolbar=document.createElement('div');searchToolbar.className='mt-search-toolbar';
+  searchToolbar.innerHTML='<input type="search" id="xr_group_search" placeholder="Поиск групп и правил" aria-label="Поиск групп и правил">'+
    '<select id="xr_group_filter" aria-label="Фильтр групп"><option value="all">Все</option><option value="enabled">Включённые</option><option value="disabled">Выключенные</option></select><span class="xr-filter-count" id="xr_filter_count" aria-live="polite"></span>';
+  toolbar.append(searchToolbar);
   root.before(toolbar);
   var enable=editor.querySelector('[name="routing_enabled"]').closest('.setting-field');
-  enable.classList.add('xr-enable');toolbar.prepend(enable);
-  var reload=document.createElement('button');reload.type='button';reload.id='xr_reload_btn';reload.className='xr-reload-btn';
+  enable.classList.add('xr-enable','mt-groups-toolbar');toolbar.prepend(enable);
+  var reload=document.createElement('button');reload.type='button';reload.id='xr_reload_btn';reload.className='xr-reload-btn mt-reload-btn';
   reload.title='Перезагрузить конфиг из файла';reload.setAttribute('aria-label','Перезагрузить конфиг');
   reload.innerHTML='<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 7v5h-5M4 17v-5h5"/><path d="M6.2 6.2A8 8 0 0 1 20 12M4 12a8 8 0 0 0 13.8 5.8"/></svg>';
-  reload.addEventListener('click',function(){window.reloadXrayConfig();});toolbar.append(reload);
+  reload.addEventListener('click',function(){window.reloadXrayConfig();});searchToolbar.append(reload);
   modal.querySelector('.mt-search-toolbar').append(modal.querySelector('.mt-reload-btn'));
   if(window.optirayEnhanceSelect)window.optirayEnhanceSelect(document.getElementById('xr_group_filter'));
   Array.from(root.children).forEach(function(child){
@@ -5379,7 +5459,7 @@ document.addEventListener('change',function(event){
   });
   var maintenance=document.createElement('details');maintenance.className='mt-maintenance xr-maintenance';
   maintenance.innerHTML='<summary>Обслуживание</summary>'+ 
-   '<label style="display:flex;align-items:center;gap:8px;margin:16px 0 8px;cursor:pointer;color:var(--text);"><input type="checkbox" id="xr_backup_enabled" checked onchange="setXrayBackupEnabled(this)">Сохранять резервные копии конфигурации Xray</label>'+ 
+   '<label style="display:flex;align-items:center;gap:8px;margin:16px 0 8px;cursor:pointer;color:var(--text);"><input type="checkbox" id="xr_backup_enabled" onchange="setXrayBackupEnabled(this)">Сохранять резервные копии конфигурации Xray</label>'+ 
    '<p>При включении сохраняются копии перед изменением конфигурации и правил. Хранятся последние 10 копий.</p>'+ 
    '<button type="button" class="btn mt-reset-btn" onclick="resetXrayRules()">Сбросить правила</button>'+ 
    '<p>Восстановление конфигурации маршрутизации Xray по умолчанию.</p>';
@@ -5476,9 +5556,57 @@ document.addEventListener('DOMContentLoaded',function(){
 document.addEventListener('DOMContentLoaded',function(){
  var names=document.getElementById('subs_names_container'),row=document.querySelector('.subs-header-row');
  if(!names||!row)return;
+ var chips=names.querySelectorAll('.subs-name-chip');
+ chips.forEach(function(chip){chip.title=chip.textContent.trim();});
+ var track=document.createElement('div');track.className='subs-ticker-track';
+ chips.forEach(function(chip){track.appendChild(chip);});names.appendChild(track);
+ names.classList.add('subs-ticker');
+ var copies=Array.from(chips).map(function(chip){
+  var copy=chip.cloneNode(true);copy.setAttribute('aria-hidden','true');
+  copy.classList.add('subs-ticker-copy');track.appendChild(copy);return copy;
+ });
+ var distance=0,offset=0,paused=false,lastTime=0;
+ function measureTicker(){
+  var total=Array.from(chips).reduce(function(width,chip){return width+chip.getBoundingClientRect().width;},0);
+  var style=getComputedStyle(names);
+  var border=style.boxSizing==='border-box'?(parseFloat(style.borderLeftWidth)||0)+(parseFloat(style.borderRightWidth)||0):0;
+  names.style.setProperty('--subs-content-width',(total+border)+'px');
+  // clientWidth is rounded and excludes the border; a subpixel difference is not overflow.
+  distance=total>names.clientWidth+1&&names.clientWidth>0&&!reducedMotion.matches?total:0;
+  copies.forEach(function(copy){copy.hidden=!distance;});
+  if(!distance){offset=0;track.style.transform='none';}
+ }
+ var tickerResize=new ResizeObserver(measureTicker);
+ tickerResize.observe(names);
+ chips.forEach(function(chip){tickerResize.observe(chip);});
+ new MutationObserver(function(records){
+  records.forEach(function(record){var index=Array.from(chips).indexOf(record.target);if(index>=0)copies[index].setAttribute('style',chips[index].getAttribute('style')||'');});
+ }).observe(track,{attributes:true,subtree:true,attributeFilter:['style']});
+ names.addEventListener('mouseenter',function(){paused=true;});
+ names.addEventListener('mouseleave',function(){paused=false;});
+ var reducedMotion=window.matchMedia('(prefers-reduced-motion: reduce)');
+ reducedMotion.addEventListener('change',measureTicker);
+ function tick(time){
+  var elapsed=lastTime?Math.min(time-lastTime,100):0;lastTime=time;
+  if(distance&&!paused&&!reducedMotion.matches&&names.offsetWidth){
+   offset=(offset+elapsed*.025)%distance;
+   track.style.transform='translateX(-'+offset+'px)';
+  }
+  requestAnimationFrame(tick);
+ }
+ requestAnimationFrame(tick);
  var marker=document.createComment('subscription labels original position');names.before(marker);
+ var toggle=document.getElementById('subs_collapse_btn');
+ if(!toggle)return;
+ var group=document.createElement('div');group.className='subs-header-group';
+ group.setAttribute('role','group');group.setAttribute('aria-label','Подписки');
+ row.insertBefore(group,toggle);
  var media=window.matchMedia('(min-width:761px)');
- function arrange(){if(media.matches){row.insertBefore(names,row.querySelector('.subs-header-actions'));}else{marker.after(names);}}
+ function arrange(){
+  group.hidden=!media.matches;
+  if(media.matches){group.append(toggle,names);}
+  else{row.insertBefore(toggle,group);marker.after(names);}
+ }
  arrange();media.addEventListener('change',arrange);
 });
 

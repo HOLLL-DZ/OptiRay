@@ -1,11 +1,42 @@
 package main
 
 import (
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 )
+
+func TestOptiroutReopenReadsSavedBackupPreference(t *testing.T) {
+	s, err := newStore(t.TempDir())
+	if err != nil {
+		t.Fatal(err)
+	}
+	a := &App{store: s}
+	for _, enabled := range []bool{true, false} {
+		body := `{"enabled":false}`
+		if enabled {
+			body = `{"enabled":true}`
+		}
+		w := httptest.NewRecorder()
+		a.ServeHTTP(w, httptest.NewRequest("POST", "/api/optirout_backup_settings", strings.NewReader(body)))
+		if w.Code != 200 {
+			t.Fatal(w.Body.String())
+		}
+		w = httptest.NewRecorder()
+		a.ServeHTTP(w, httptest.NewRequest("GET", "/api/optirout_config", nil))
+		var result struct {
+			SaveBackups bool `json:"save_backups"`
+		}
+		if err := json.Unmarshal(w.Body.Bytes(), &result); err != nil {
+			t.Fatal(err)
+		}
+		if w.Code != 200 || result.SaveBackups != enabled {
+			t.Fatal(w.Code, w.Body.String())
+		}
+	}
+}
 
 func TestFavoriteDoesNotReorderSubscriptions(t *testing.T) {
 	s, e := newStore(t.TempDir())

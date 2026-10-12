@@ -121,7 +121,7 @@ func (a *App) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			jsonReply(w, 500, Object{"error": e.Error()})
 			return
 		}
-		jsonReply(w, 200, Object{"ok": true, "config": cfg, "path": filepath.Join(a.store.dir, "routing", "optirout.json")})
+		jsonReply(w, 200, Object{"ok": true, "config": cfg, "save_backups": boolean(a.store.snapshot()["optirout_save_backups"]), "path": filepath.Join(a.store.dir, "routing", "optirout.json")})
 		return
 	case r.Method == "GET" && r.URL.Path == "/api/optirout_backups":
 		items, e := a.store.optiroutBackups()
