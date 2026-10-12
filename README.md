@@ -44,9 +44,7 @@ opkg update && opkg install optiray
 opkg update && opkg upgrade optiray
 ```
 
-В новой консоли снова задайте PATH, чтобы opkg использовал wget с HTTPS из Entware.
-
-Удаление:
+## Удаление:
 ```sh
 opkg remove optiray
 ```
