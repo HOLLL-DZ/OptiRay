@@ -41,13 +41,15 @@ opkg update && opkg install optiray
 Обновление:
 
 ```sh
-export PATH="/opt/bin:/opt/sbin:$PATH"
 opkg update && opkg upgrade optiray
 ```
 
 В новой консоли снова задайте PATH, чтобы opkg использовал wget с HTTPS из Entware.
 
-Удаление: `opkg remove optiray` — удаляет пакет, но сохраняет настройки и отдельно установленные ядра.
+Удаление:
+```sh
+opkg remove optiray```
+— удаляет пакет, но сохраняет настройки и отдельно установленные ядра.
 
 Полная очистка (сначала сохраните бэкап): `sh /opt/etc/optiray-go/uninstall.sh && opkg remove optiray`.
 
