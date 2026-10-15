@@ -67,7 +67,7 @@ func (p *RoutingProcess) stopLocked() error {
 			return fmt.Errorf("OptiRout shutdown failed; inspect routing/engine.log: %w", e)
 		}
 		return nil
-	case <-time.After(10 * time.Second):
+	case <-time.After(30 * time.Second):
 		_ = p.cmd.Process.Kill()
 		<-p.done
 		p.cmd = nil

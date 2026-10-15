@@ -2,7 +2,7 @@
 @layer optiray-danger, optiray-interactions;
 
 :root {
-    --ui-control-outline:#c8cbd0;
+    --ui-control-outline:var(--line);
     --ui-segment-divider:color-mix(in srgb,var(--ui-control-bg) 88%,var(--ui-control-text));
     --ui-white-divider:color-mix(in srgb,var(--ui-control-surface) 85%,var(--ui-control-text));
     --ui-primary-button-bg:#287ec9;
@@ -18,13 +18,13 @@
     --ui-on-bg:#EAF3ED;
     --ui-on-hover:#DCE9E2;
     --ui-on-text:#226B45;
-    --ui-field-line:#AEB3B8;
+    --ui-field-line:var(--line);
     --ui-caption:#737373;
-    --bg: #ffffff;
+    --bg: #F3F3F5;
     --surface: #ffffff;
     --surface-2: #f6f6f6;
     --surface-3: #f6f6f6;
-    --line: #e0e0e0;
+    --line: #e1e3e6;
     --text: #080808;
     --text-2: #6b6b6b;
     --brand: color-mix(in srgb, var(--btn-info-text), transparent 30%);
@@ -84,7 +84,7 @@
 }
 
 [data-theme="dark"] {
-    --ui-control-outline:#484c52;
+    --ui-control-outline:#2e3033;
     --ui-primary-button-bg:#165fa4;
     --ui-danger-button-bg:#b92e35;
     --ui-danger-button-hover:#aa2830;
@@ -98,13 +98,13 @@
     --ui-on-bg:#20382a;
     --ui-on-hover:#294633;
     --ui-on-text:#8bd3a7;
-    --ui-field-line:#60656b;
+    --ui-field-line:#2e3033;
     --ui-caption:#a4a7ab;
     --bg: #141414;
     --surface: #141414;
     --surface-2: #1f1f1f;
     --surface-3: #202020;
-    --line: #303030;
+    --line: #2e3033;
     --text: #e0e0e0;
     --text-2: #909090;
     --brand: color-mix(in srgb, var(--btn-info-text), transparent 30%);
@@ -7794,7 +7794,7 @@ body input[type="checkbox"],
 }
 
 /* Alternating rule-row backgrounds restart within every group. */
-:root { --rule-stripe-bg:rgba(0,0,0,.045); }
+:root { --rule-stripe-bg:rgba(0,0,0,.03); }
 [data-theme="dark"] { --rule-stripe-bg:rgba(255,255,255,.065); }
 #mt_modal .mt-rules > .mt-rule,
 #routing_modal .rt-rules > .rt-rule {
@@ -8250,7 +8250,7 @@ body input[type="checkbox"],
 /* 5% color: tint only the expanded body, never its controls. */
 #mt_modal .mt-group-card:not(.collapsed) > .mt-group-body,
 #mt_modal #routing_modal .rt-group-card:not(.collapsed) > .rt-group-body {
- background:color-mix(in srgb,var(--rule-group-color,#888888) 5%,transparent) !important;
+ background:color-mix(in srgb,var(--rule-group-color,#888888) 3%,transparent) !important;
 }
 
 /* Recessed track and raised selected segment use the shared control palette. */
@@ -11162,6 +11162,40 @@ hr.subscriptions-divider { height:0; border:0; border-top:2px solid var(--line);
     }
 }
 
+/* Independent circular actions in the main subscription header. */
+@layer optiray-interactions {
+    .subs-header-actions.subs-header-actions.subs-header-actions {
+        gap:5px !important;
+        padding:0 !important;
+        background:transparent !important;
+        border:0 !important;
+        box-shadow:none !important;
+    }
+    .subs-header-actions.subs-header-actions.subs-header-actions::after { content:none !important; }
+    .subs-header-actions.subs-header-actions.subs-header-actions > .btn-settings-icon {
+        display:inline-flex !important;
+        align-items:center !important;
+        justify-content:center !important;
+        flex:0 0 40px !important;
+        width:40px !important; min-width:40px !important; max-width:40px !important;
+        height:40px !important; min-height:40px !important; max-height:40px !important;
+        padding:0 !important; margin:0 !important;
+        box-sizing:border-box !important;
+        border:0 !important; border-radius:50% !important;
+        background:rgba(0,0,0,.06) !important;
+        color:#101010 !important;
+        box-shadow:none !important;
+        text-decoration:none !important;
+    }
+    .subs-header-actions.subs-header-actions.subs-header-actions > .btn-settings-icon:hover:not(:disabled) {
+        background:rgba(0,0,0,.10) !important;
+    }
+    .subs-header-actions.subs-header-actions.subs-header-actions > .btn-settings-icon:active:not(:disabled) {
+        background:rgba(0,0,0,.14) !important;
+    }
+    .subs-header-actions.subs-header-actions.subs-header-actions > .btn-settings-icon svg { width:20px !important; height:20px !important; color:#101010 !important; }
+}
+
 /* Joined toolbar segments: solid dividers instead of empty gaps. */
 @layer optiray-interactions {
     .subs-header-actions,
@@ -11382,4 +11416,2122 @@ hr.subscriptions-divider { height:0; border:0; border-top:2px solid var(--line);
         box-sizing:border-box !important;
         border:1px solid var(--ui-control-outline) !important;
     }
+}
+
+/* Transparent server search and filter toolbar surfaces. */
+@layer optiray-interactions {
+    #server_browser_toolbar,
+    #server_browser_toolbar #server_search,
+    #server_browser_toolbar .optiray-select-trigger,
+    #server_browser_toolbar .server-view-switch {
+        background-color:transparent !important;
+    }
+}
+
+/* Borderless server browser toolbar. */
+@layer optiray-interactions {
+    #server_browser_toolbar,
+    #server_browser_toolbar > .optiray-select-trigger,
+    #server_browser_toolbar .server-view-switch,
+    #server_browser_toolbar .server-view-switch > button {
+        border:0 !important;
+        outline:none !important;
+        box-shadow:none !important;
+    }
+    #server_browser_toolbar::after { content:none !important; }
+}
+
+/* Soft hover for the server filter and sort controls. */
+@layer optiray-interactions {
+    #server_browser_toolbar > .optiray-select-trigger {
+        border-radius:8px !important;
+    }
+    #server_browser_toolbar > .optiray-select-trigger:hover:not(:disabled) {
+        background:rgba(0,0,0,.06) !important;
+    }
+}
+
+/* Compact dropdown filters with a list cue instead of chevrons. */
+@layer optiray-interactions {
+    #server_browser_toolbar > .optiray-select-trigger {
+        height:40px !important; min-height:40px !important;
+        padding:0 10px !important; gap:6px !important;
+    }
+    #server_browser_toolbar > .optiray-select-trigger > svg { display:none !important; }
+    #server_browser_toolbar > .optiray-select-trigger::before {
+        content:"";
+        flex:0 0 14px; width:14px; height:14px;
+        opacity:.65;
+        background:currentColor;
+        mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M9 6h12M9 12h12M9 18h12' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round'/%3E%3Ccircle cx='4' cy='6' r='1.3'/%3E%3Ccircle cx='4' cy='12' r='1.3'/%3E%3Ccircle cx='4' cy='18' r='1.3'/%3E%3C/svg%3E") center/contain no-repeat;
+    }
+    #server_browser_toolbar #server_results_count {
+        font-size:11px !important;
+        font-variant-numeric:tabular-nums;
+        letter-spacing:-.3px;
+        margin:0 !important; padding:0 !important;
+    }
+}
+
+/* The result count sits beneath the label without moving its baseline. */
+@layer optiray-interactions {
+    #server_browser_toolbar > .optiray-select-trigger { position:relative !important; }
+    #server_browser_toolbar #server_results_count {
+        position:absolute !important;
+        right:10px !important; bottom:1px !important;
+        line-height:11px !important; font-size:10px !important;
+        pointer-events:none;
+    }
+    #server_browser_toolbar > .optiray-select-trigger[data-select-id="server_filter"]::before {
+        mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M3 4h18l-7 8v7l-4 2v-9Z' fill='none' stroke='black' stroke-width='1.8' stroke-linejoin='round'/%3E%3C/svg%3E");
+    }
+    #server_browser_toolbar > .optiray-select-trigger[data-select-id="server_sort"]::before {
+        mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M6 4v16m-3-3 3 3 3-3M12 5h9M12 10h7M12 15h5' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    }
+}
+
+/* Soft segmented server view switch. */
+@layer optiray-interactions {
+    #server_browser_toolbar .server-view-switch {
+        height:40px !important; min-height:40px !important;
+        padding:4px !important; gap:0 !important;
+        background:rgba(0,0,0,.06) !important;
+        border-radius:8px !important;
+    }
+    #server_browser_toolbar .server-view-switch > button {
+        display:inline-flex !important; align-items:center !important;
+        justify-content:center !important; gap:6px !important;
+        height:32px !important; min-height:32px !important;
+        padding:0 10px !important; border-radius:8px !important;
+        background:transparent !important; color:#727780 !important;
+        border:0 !important; outline:none !important; box-shadow:none !important;
+    }
+    #server_browser_toolbar .server-view-switch > button[aria-pressed="true"] {
+        background:#fff !important; color:#101010 !important;
+    }
+    #server_browser_toolbar .server-view-switch > button:hover:not(:disabled) {
+        background:rgba(0,0,0,.06) !important;
+        border-radius:8px !important;
+    }
+    #server_browser_toolbar .server-view-switch > button svg {
+        width:16px !important; height:16px !important; flex:0 0 16px;
+    }
+}
+
+/* Selected view remains unchanged on hover and press. */
+@layer optiray-interactions {
+    #server_browser_toolbar .server-view-switch > button[aria-pressed="true"],
+    #server_browser_toolbar .server-view-switch > button[aria-pressed="true"]:hover,
+    #server_browser_toolbar .server-view-switch > button[aria-pressed="true"]:active {
+        background:#fff !important;
+        color:#101010 !important;
+        transform:none !important;
+        box-shadow:none !important;
+        border:0 !important;
+        outline:none !important;
+    }
+}
+
+/* Override legacy hover rules and joined segment dividers. */
+@layer optiray-interactions {
+    #server_browser_toolbar#server_browser_toolbar .server-view-switch > button {
+        border:0 !important;
+        outline:none !important;
+        box-shadow:none !important;
+        background-image:none !important;
+    }
+    #server_browser_toolbar#server_browser_toolbar .server-view-switch > button::before,
+    #server_browser_toolbar#server_browser_toolbar .server-view-switch > button::after {
+        content:none !important;
+    }
+    #server_browser_toolbar#server_browser_toolbar .server-view-switch > button[aria-pressed="true"],
+    #server_browser_toolbar#server_browser_toolbar .server-view-switch > button[aria-pressed="true"]:hover:not(:disabled),
+    #server_browser_toolbar#server_browser_toolbar .server-view-switch > button[aria-pressed="true"]:active:not(:disabled) {
+        background:#fff !important;
+        color:#101010 !important;
+        transform:none !important;
+        filter:none !important;
+        opacity:1 !important;
+    }
+}
+
+/* Consistent spacing between the server toolbar controls. */
+@layer optiray-interactions {
+    #server_browser_toolbar#server_browser_toolbar {
+        gap:5px !important;
+    }
+    #server_browser_toolbar#server_browser_toolbar > * {
+        margin-inline:0 !important;
+    }
+    #server_browser_toolbar#server_browser_toolbar .server-view-switch {
+        gap:5px !important;
+    }
+}
+
+/* Ten-pixel spacing around the server browser toolbar. */
+@layer optiray-interactions {
+    hr.subscriptions-divider { margin-bottom:0 !important; }
+    #server_browser_toolbar#server_browser_toolbar { margin-top:10px !important; margin-bottom:10px !important; }
+    #servers_container { margin-top:0 !important; padding-top:0 !important; }
+    #servers_container > .sub-section:first-child { margin-top:0 !important; }
+}
+
+/* Transparent forty-pixel subscription selector. */
+@layer optiray-interactions {
+    .subs-header-group.subs-header-group,
+    .subs-header-group.subs-header-group > .btn-toggle-subs,
+    .subs-header-group.subs-header-group #subs_names_container,
+    .subs-header-group.subs-header-group .subs-name-chip {
+        background:transparent !important;
+        border:0 !important;
+        outline:none !important;
+        box-shadow:none !important;
+        height:40px !important;
+        min-height:40px !important;
+        box-sizing:border-box !important;
+    }
+    .subs-header-group.subs-header-group::after { content:none !important; }
+}
+
+/* Subscription icon and disclosure above a compact right-aligned count. */
+@layer optiray-interactions {
+    .subs-header-group #subs_collapse_btn#subs_collapse_btn {
+        display:grid !important;
+        grid-template-columns:18px auto !important;
+        grid-template-rows:20px 10px !important;
+        align-content:center !important; align-items:center !important;
+        column-gap:7px !important; row-gap:0 !important;
+        padding:5px 10px !important;
+    }
+    #subs_collapse_btn .subs-selector-icon { grid-column:1; grid-row:1; color:#101010; }
+    #subs_collapse_btn .subs-selector-label { grid-column:2; grid-row:1; text-align:left; }
+    #subs_collapse_btn #subs_arrow {
+        grid-column:1; grid-row:2;
+        display:flex !important; align-items:center !important; justify-content:center !important;
+        width:18px !important; height:10px !important;
+        margin:0 !important; opacity:.65;
+    }
+    #subs_collapse_btn #subs_arrow svg { width:11px !important; height:11px !important; }
+    .subs-header-group #subs_collapse_btn #subs_count_badge {
+        grid-column:2; grid-row:2;
+        justify-self:end !important;
+        font-size:10px !important; line-height:10px !important;
+        margin:0 !important; padding:0 !important;
+    }
+}
+
+/* A single list icon with an animated disclosure chevron. */
+@layer optiray-interactions {
+    #subs_collapse_btn .subs-selector-icon { display:none !important; }
+    #subs_collapse_btn #subs_arrow {
+        grid-column:1 !important; grid-row:1 / 3 !important;
+        width:22px !important; height:22px !important;
+        opacity:1 !important; color:#101010 !important;
+    }
+    .subs-header-group #subs_collapse_btn#subs_collapse_btn {
+        grid-template-columns:22px auto !important;
+    }
+    #subs_collapse_btn #subs_arrow svg { width:22px !important; height:22px !important; }
+    #subs_arrow .subs-disclosure-chevron {
+        transform-origin:19px 12px;
+        transition:transform .18s ease;
+    }
+    #subs_arrow[data-collapsed="false"] .subs-disclosure-chevron { transform:rotate(90deg); }
+    @media(prefers-reduced-motion:reduce) {
+        #subs_arrow .subs-disclosure-chevron { transition:none; }
+    }
+}
+
+/* Restore the separate disclosure beneath the subscription icon. */
+@layer optiray-interactions {
+    #subs_collapse_btn .subs-selector-icon { display:block !important; }
+    .subs-header-group #subs_collapse_btn#subs_collapse_btn {
+        grid-template-columns:18px auto !important;
+        border-radius:8px !important;
+    }
+    #subs_collapse_btn #subs_arrow {
+        grid-column:1 !important; grid-row:2 !important;
+        width:18px !important; height:10px !important; opacity:.65 !important;
+    }
+    #subs_collapse_btn #subs_arrow svg { width:11px !important; height:11px !important; }
+    .subs-header-group #subs_collapse_btn#subs_collapse_btn:hover:not(:disabled) {
+        background:rgba(0,0,0,.06) !important;
+        border-radius:8px !important;
+    }
+}
+
+/* Separate disclosure and soft hover for subscription controls. */
+@layer optiray-interactions {
+    .subs-header-group.subs-header-group { gap:5px !important; }
+    .subs-header-group #subs_collapse_btn#subs_collapse_btn {
+        grid-template-columns:18px auto !important;
+        column-gap:5px !important; border-radius:8px !important;
+    }
+    #subs_collapse_btn .subs-selector-icon { display:block !important; }
+    #subs_collapse_btn #subs_arrow {
+        grid-column:1 !important; grid-row:2 !important;
+        width:18px !important; height:10px !important; opacity:.65 !important;
+    }
+    #subs_collapse_btn #subs_arrow svg { width:11px !important; height:11px !important; }
+    .subs-header-group.subs-header-group #subs_names_container { gap:5px !important; }
+    .subs-header-group.subs-header-group .subs-name-chip { margin-inline:0 !important; border-radius:8px !important; }
+    .subs-header-group.subs-header-group > #subs_collapse_btn:hover,
+    .subs-header-group.subs-header-group #subs_names_container .subs-name-chip:hover {
+        background:rgba(0,0,0,.06) !important;
+        border-radius:8px !important;
+    }
+}
+
+/* Arrow-only subscription disclosure; neutral subscription names. */
+@layer optiray-interactions {
+    #subs_collapse_btn .subs-selector-icon { display:none !important; }
+    .subs-header-group #subs_collapse_btn#subs_collapse_btn {
+        grid-template-columns:10px auto !important;
+    }
+    #subs_collapse_btn #subs_arrow {
+        grid-column:1 !important; grid-row:1 / 3 !important;
+        width:10px !important; height:10px !important;
+    }
+    #subs_collapse_btn #subs_arrow svg { width:10px !important; height:10px !important; }
+    .subs-header-group.subs-header-group #subs_names_container .subs-name-chip:hover {
+        background:transparent !important;
+        box-shadow:none !important;
+        transform:none !important;
+    }
+}
+
+/* Align the header controls and standard disclosure arrow. */
+@layer optiray-interactions {
+    .subs-header-row.subs-header-row {
+        align-items:center !important;
+        margin-bottom:0 !important;
+    }
+    .subs-header-group.subs-header-group { align-items:center !important; }
+    .subs-header-group #subs_collapse_btn#subs_collapse_btn {
+        grid-template-columns:18px auto !important;
+    }
+    #subs_collapse_btn #subs_arrow {
+        grid-column:1 !important; grid-row:1 !important;
+        width:18px !important; height:18px !important;
+        align-self:center !important;
+        opacity:1 !important; color:var(--text-2) !important;
+    }
+    #subs_collapse_btn #subs_arrow svg { width:18px !important; height:18px !important; }
+    hr.subscriptions-divider { margin-top:20px !important; }
+}
+
+/* Header divider spacing and readable compact counters. */
+@layer optiray-interactions {
+    hr.subscriptions-divider { margin-top:15px !important; }
+    .subs-header-group #subs_collapse_btn #subs_count_badge,
+    #server_browser_toolbar #server_results_count {
+        font-size:11px !important;
+        line-height:11px !important;
+    }
+}
+
+/* Neutral subscription blocks and native manual palette selection. */
+@layer optiray-interactions {
+    #subs_container .sub-row {
+        background:rgba(0,0,0,.12) !important;
+        border-radius:8px !important;
+    }
+    #subs_container .sub-row .color-picker-group {
+        position:relative !important;
+    }
+    #subs_container .sub-row .color-btn {
+        position:absolute !important;
+        inset:0 !important;
+        width:100% !important; min-width:0 !important; max-width:none !important;
+        height:100% !important; min-height:0 !important; max-height:none !important;
+        opacity:0 !important; z-index:3 !important;
+        cursor:pointer !important;
+        pointer-events:auto !important;
+        border-radius:8px 0 0 8px !important;
+    }
+}
+
+/* White subscription rows with compact spacing below header controls. */
+@layer optiray-interactions {
+    .subs-header-row.subs-header-row:has(+ #subs_names_container + #subs_container),
+    .subs-header-row.subs-header-row { margin-bottom:5px !important; }
+    #subs_container {
+        margin-top:0 !important;
+        padding-top:0 !important;
+        row-gap:5px !important;
+    }
+    #subs_container .sub-row {
+        background:#fff !important;
+        border:0 !important;
+        outline:none !important;
+        box-shadow:none !important;
+        margin-top:0 !important;
+        margin-bottom:5px !important;
+        border-radius:8px !important;
+    }
+    #subs_container .sub-row:last-child { margin-bottom:0 !important; }
+}
+@layer optiray-interactions {
+    #subs_container { row-gap:0 !important; }
+}
+
+/* Search-style subscription URLs and explicit manual color action. */
+@layer optiray-interactions {
+    .subs-header-row.subs-header-row { margin-bottom:8px !important; }
+    #subs_container .sub-row .sub-url-input {
+        background-color:transparent !important;
+        color:var(--ui-control-text) !important;
+        border:0 !important; border-radius:0 !important;
+        box-shadow:none !important;
+        background-image:linear-gradient(var(--ui-field-line),var(--ui-field-line)) !important;
+        background-size:calc(100% - 16px) 1px !important;
+        background-position:center calc(100% - 6px) !important;
+        background-repeat:no-repeat !important;
+    }
+    #subs_container .sub-row .sub-url-input:focus {
+        background-image:linear-gradient(var(--btn-info-text),var(--btn-info-text)) !important;
+        background-size:calc(100% - 16px) 2px !important;
+        outline:none !important;
+    }
+    #subs_container .sub-row .color-btn {
+        pointer-events:none !important;
+        width:1px !important; height:1px !important;
+        min-width:0 !important; z-index:0 !important;
+    }
+}
+
+/* Subtle matching outlines without changing element dimensions. */
+@layer optiray-interactions {
+    #subs_container .sub-row,
+    #servers_container.server-view-cards .server-card:not(.active-card) {
+        outline:1px solid rgba(0,0,0,.10) !important;
+        outline-offset:-1px !important;
+    }
+}
+
+@layer optiray-interactions {
+    #subs_container .sub-row,
+    #servers_container.server-view-cards .server-card:not(.active-card) {
+        outline:1px solid var(--line) !important;
+        outline-offset:-1px !important;
+    }
+    #servers_container.server-view-cards .server-card:not(.active-card) { border-color:var(--line) !important; }
+}
+#sub_manual_palette {
+    position:fixed; z-index:200000; display:flex; align-items:center; gap:8px;
+    width:180px; box-sizing:border-box; padding:10px;
+    background:#fff; border:1px solid var(--line); border-radius:8px;
+    box-shadow:0 4px 14px rgba(0,0,0,.12);
+}
+#sub_manual_palette input[type="color"] { position:static; width:38px; height:32px; padding:0; cursor:pointer; }
+#sub_manual_palette input[type="text"] { min-width:0; width:105px; height:32px; padding:4px 6px; box-sizing:border-box; color:#101010; background:#fff; border:1px solid var(--line); border-radius:4px; }
+
+/* Automatic height accents with five-pixel inset and manual color hit area. */
+@layer optiray-interactions {
+    #subs_container .sub-row::before,
+    #servers_container .sub-header::before {
+        top:5px !important; bottom:5px !important; left:5px !important;
+        height:auto !important; width:12px !important;
+    }
+    #subs_container .sub-row .sub-manual-color-trigger {
+        position:absolute !important; left:5px !important;
+        top:5px !important; bottom:5px !important;
+        width:12px !important; height:auto !important;
+        padding:0 !important; margin:0 !important;
+        border:0 !important; border-radius:6px !important;
+        background:transparent !important; box-shadow:none !important;
+        cursor:pointer !important; z-index:3;
+    }
+}
+
+/* Soft pill subscription actions with distinct delete hover. */
+@layer optiray-interactions {
+    #subs_container .sub-row-controls.sub-row-controls {
+        background:rgba(0,0,0,.06) !important;
+        border:0 !important; outline:none !important;
+        border-radius:999px !important;
+        padding:3px !important; gap:0 !important;
+        box-shadow:none !important;
+    }
+    #subs_container .sub-row-controls.sub-row-controls::after { content:none !important; }
+    #subs_container .sub-row-controls.sub-row-controls :is(.dice-btn,.hwid-label,.del-btn) {
+        background:transparent !important;
+        border:0 !important; outline:none !important;
+        box-shadow:none !important;
+        border-radius:999px !important;
+    }
+    #subs_container .sub-row-controls.sub-row-controls .dice-btn { color:#101010 !important; }
+    #subs_container .sub-row-controls.sub-row-controls :is(.dice-btn,.hwid-label):hover {
+        background:rgba(0,0,0,.06) !important;
+    }
+    #subs_container .sub-row-controls.sub-row-controls .del-btn:hover:not(:disabled) {
+        background:rgba(220,53,69,.10) !important;
+        color:#d93645 !important;
+    }
+}
+
+/* Reduce the action pill height by four pixels. */
+@layer optiray-interactions {
+    #subs_container .sub-row-controls.sub-row-controls {
+        padding-block:1px !important;
+    }
+}
+
+/* Explicit pill and child heights, four pixels below the original. */
+@layer optiray-interactions {
+    #subs_container .sub-row-controls.sub-row-controls {
+        height:34px !important; min-height:34px !important;
+    }
+    #subs_container .sub-row-controls.sub-row-controls :is(.dice-btn,.hwid-label,.del-btn) {
+        height:32px !important; min-height:32px !important;
+    }
+}
+
+@layer optiray-interactions {
+    #subs_container .sub-row-controls.sub-row-controls {
+        height:32px !important; min-height:32px !important;
+    }
+    #subs_container .sub-row-controls.sub-row-controls :is(.dice-btn,.hwid-label,.del-btn) {
+        height:30px !important; min-height:30px !important;
+    }
+}
+
+/* Server group actions match the compact subscription pill. */
+@layer optiray-interactions {
+    #servers_container .sub-header .sub-actions.sub-actions {
+        height:32px !important; min-height:32px !important;
+        box-sizing:border-box !important;
+        padding:1px 3px !important; gap:0 !important;
+        background:rgba(0,0,0,.06) !important;
+        border:0 !important; outline:none !important;
+        border-radius:999px !important; box-shadow:none !important;
+    }
+    #servers_container .sub-header .sub-actions.sub-actions::after { content:none !important; }
+    #servers_container .sub-header .sub-actions.sub-actions :is(.btn-test-site,.btn-auto-select,.ping-block,.ping-block-buttons,.ping-block-buttons > button) {
+        height:30px !important; min-height:30px !important;
+        box-sizing:border-box !important;
+        border:0 !important; outline:none !important;
+        background:transparent !important; box-shadow:none !important;
+        border-radius:999px !important;
+    }
+    #servers_container .sub-header .sub-actions.sub-actions .ping-block-buttons { gap:0 !important; padding:0 !important; }
+    #servers_container .sub-header .sub-actions.sub-actions :is(.btn-test-site,.btn-auto-select,.ping-block-buttons > button):hover:not(:disabled) {
+        background:rgba(0,0,0,.06) !important;
+    }
+}
+
+@layer optiray-interactions {
+    #servers_container .sub-header .sub-actions.sub-actions :is(button,a,svg,span) {
+        color:#101010 !important;
+    }
+    #servers_container .sub-header .sub-actions.sub-actions .btn-auto-select {
+        display:inline-flex !important; align-items:center !important;
+        justify-content:center !important; gap:5px !important;
+    }
+    #servers_container .sub-header .sub-actions.sub-actions .auto-select-icon {
+        width:16px !important; height:16px !important; flex:0 0 16px;
+    }
+}
+
+/* HWID label follows its enabled state. */
+@layer optiray-interactions {
+    #subs_container .sub-row-controls.sub-row-controls .hwid-label,
+    #subs_container .sub-row-controls.sub-row-controls .hwid-label svg {
+        color:var(--text-2) !important;
+    }
+    #subs_container .sub-row-controls.sub-row-controls .hwid-label:has(input:checked),
+    #subs_container .sub-row-controls.sub-row-controls .hwid-label:has(input:checked) svg {
+        color:#101010 !important;
+    }
+}
+
+/* Latency labels only gain a pill background on hover. */
+@layer optiray-interactions {
+    #servers_container.server-view-cards .server-card .ping-badge {
+        background:transparent !important;
+        border:0 !important;
+        box-shadow:none !important;
+        border-radius:999px !important;
+    }
+    #servers_container.server-view-cards .server-card .ping-badge:hover {
+        background:rgba(0,0,0,.06) !important;
+        border-radius:999px !important;
+    }
+}
+
+/* Subtle latency pills and unfilled favorite hearts. */
+@layer optiray-interactions {
+    #servers_container.server-view-cards .server-card .ping-badge {
+        background:rgba(0,0,0,.04) !important;
+        border-radius:999px !important;
+    }
+    #servers_container.server-view-cards .server-card .ping-badge:hover {
+        background:rgba(0,0,0,.06) !important;
+    }
+    #servers_container.server-view-cards .server-card .fav-btn,
+    #servers_container.server-view-cards .server-card .fav-btn:hover,
+    #servers_container.server-view-cards .server-card .fav-btn:active {
+        background:transparent !important;
+        border:0 !important;
+        box-shadow:none !important;
+    }
+}
+
+@layer optiray-interactions {
+    .subs-header-actions.subs-header-actions.subs-header-actions > .btn-settings-icon,
+    .subs-header-actions.subs-header-actions.subs-header-actions > .btn-settings-icon svg {
+        color:#000000 !important;
+    }
+}
+
+/* Routing group controls use the same compact soft pill. */
+@layer optiray-interactions {
+    #mt_modal .mt-group-controls.mt-group-controls {
+        background:rgba(0,0,0,.06) !important;
+        border:0 !important; outline:none !important; box-shadow:none !important;
+        border-radius:999px !important;
+        height:32px !important; min-height:32px !important;
+        box-sizing:border-box !important; padding:1px 3px !important;
+    }
+    #mt_modal .mt-group-controls.mt-group-controls::after { content:none !important; }
+    #mt_modal .mt-group-controls.mt-group-controls :is(.mt-iface-picker,.mt-iface-display,.mt-group-actions,.rt-icon-btn) {
+        height:30px !important; min-height:30px !important;
+        box-sizing:border-box !important;
+        background:transparent !important;
+        border:0 !important; outline:none !important; box-shadow:none !important;
+        border-radius:999px !important;
+        color:#101010 !important;
+    }
+    #mt_modal .mt-group-controls.mt-group-controls .mt-group-actions { gap:0 !important; padding:0 !important; }
+    #mt_modal .mt-group-controls.mt-group-controls :is(.mt-iface-display,.rt-icon-btn):hover:not(:disabled) {
+        background:rgba(0,0,0,.06) !important;
+    }
+    #mt_modal .mt-group-controls.mt-group-controls .rt-group-del { color:#d93645 !important; }
+    #mt_modal .mt-group-controls.mt-group-controls .rt-group-del:hover:not(:disabled) {
+        background:rgba(220,53,69,.10) !important;
+        color:#d93645 !important;
+    }
+}
+
+/* Clean routing action pills, including groups without an interface picker. */
+@layer optiray-interactions {
+    #mt_modal#mt_modal .mt-group-controls,
+    #mt_modal#mt_modal .mt-group-controls > .mt-group-actions {
+        border:0 !important; outline:none !important; box-shadow:none !important;
+        border-radius:999px !important;
+        background-image:none !important;
+    }
+    #mt_modal#mt_modal .mt-group-controls > .mt-group-actions {
+        height:30px !important; min-height:30px !important;
+        background:transparent !important;
+    }
+    #mt_modal#mt_modal .mt-group-controls :is(.mt-iface-display,.rt-icon-btn),
+    #mt_modal#mt_modal .mt-group-controls .mt-group-actions > .rt-icon-btn + .rt-icon-btn {
+        border:0 !important; outline:none !important; box-shadow:none !important;
+        background:transparent !important; border-radius:999px !important;
+        height:30px !important; min-height:30px !important;
+    }
+    #mt_modal#mt_modal .mt-group-controls::after,
+    #mt_modal#mt_modal .mt-group-controls .mt-group-actions::after,
+    #mt_modal#mt_modal .mt-group-controls .rt-icon-btn::before,
+    #mt_modal#mt_modal .mt-group-controls .rt-icon-btn::after { content:none !important; }
+    #mt_modal#mt_modal .mt-group-controls :is(.mt-iface-display,.rt-icon-btn):hover:not(:disabled) {
+        background:rgba(0,0,0,.06) !important;
+    }
+    #mt_modal#mt_modal .mt-group-controls .rt-group-del:hover:not(:disabled) {
+        background:rgba(220,53,69,.10) !important;
+    }
+}
+
+/* Xray routing group action pill. */
+@layer optiray-interactions {
+    #mt_modal#mt_modal #routing_modal .rt-group-actions {
+        height:32px !important; min-height:32px !important;
+        box-sizing:border-box !important; padding:1px 3px !important; gap:0 !important;
+        background:rgba(0,0,0,.06) !important;
+        border:0 !important; outline:none !important; box-shadow:none !important;
+        border-radius:999px !important;
+    }
+    #mt_modal#mt_modal #routing_modal .rt-group-actions::after { content:none !important; }
+    #mt_modal#mt_modal #routing_modal .rt-group-actions > .rt-icon-btn {
+        height:30px !important; min-height:30px !important;
+        background:transparent !important;
+        border:0 !important; outline:none !important; box-shadow:none !important;
+        border-radius:999px !important; color:#101010 !important;
+    }
+    #mt_modal#mt_modal #routing_modal .rt-group-actions > .rt-icon-btn:hover:not(:disabled) {
+        background:rgba(0,0,0,.06) !important;
+    }
+    #mt_modal#mt_modal #routing_modal .rt-group-actions > .rt-group-del { color:#d93645 !important; }
+    #mt_modal#mt_modal #routing_modal .rt-group-actions > .rt-group-del:hover:not(:disabled) {
+        background:rgba(220,53,69,.10) !important;
+    }
+}
+
+/* Routing power belongs to the panel title. */
+@layer optiray-interactions {
+    #mt_modal .mt-groups-toolbar > .power-status-button,
+    #mt_modal #routing_modal .power-status-button { display:none !important; }
+    #mt_modal #mt_dialog_title.routing-title-power {
+        display:inline-flex !important; align-items:center !important; gap:7px !important;
+        height:38px !important; padding:0 12px !important;
+        border:0 !important; border-radius:8px !important;
+        background:rgba(0,0,0,.06) !important;
+        color:var(--text-2) !important; font:inherit; font-weight:600;
+        cursor:pointer;
+    }
+    #mt_modal #mt_dialog_title.routing-title-power[aria-pressed="true"] {
+        background:rgba(39,140,69,.08) !important; color:#187341 !important;
+    }
+}
+
+/* Routing header power outline and segmented engine switch. */
+@layer optiray-interactions {
+    #mt_modal #mt_dialog_title.routing-title-power {
+        border:1px solid var(--line) !important;
+    }
+    #mt_modal#mt_modal .unified-rule-switch {
+        display:flex !important; align-items:center !important;
+        height:40px !important; box-sizing:border-box !important;
+        padding:4px !important; gap:5px !important;
+        background:rgba(0,0,0,.06) !important;
+        border:0 !important; outline:none !important;
+        border-radius:8px !important; box-shadow:none !important;
+    }
+    #mt_modal#mt_modal .unified-rule-switch > button {
+        display:inline-flex !important; align-items:center !important; gap:5px !important;
+        height:32px !important; min-height:32px !important;
+        padding:0 10px !important; border-radius:8px !important;
+        border:0 !important; outline:none !important; box-shadow:none !important;
+        background:transparent !important; color:var(--text-2) !important;
+    }
+    #mt_modal#mt_modal .unified-rule-switch > button:hover:not(:disabled) {
+        background:rgba(0,0,0,.06) !important;
+    }
+    #mt_modal#mt_modal .unified-rule-switch > button[aria-pressed="true"],
+    #mt_modal#mt_modal .unified-rule-switch > button[aria-pressed="true"]:hover:not(:disabled),
+    #mt_modal#mt_modal .unified-rule-switch > button[aria-pressed="true"]:active:not(:disabled) {
+        background:#fff !important; color:#101010 !important;
+        transform:none !important;
+    }
+    #mt_modal#mt_modal .unified-rule-switch > button svg { width:16px !important; height:16px !important; }
+}
+
+/* Independent routing header actions and state-colored power border. */
+@layer optiray-interactions {
+    #mt_modal#mt_modal #mt_dialog_title.routing-title-power {
+        border:1px solid #c6c9ce !important;
+    }
+    #mt_modal#mt_modal #mt_dialog_title.routing-title-power[aria-pressed="true"] {
+        border-color:rgba(24,115,65,.32) !important;
+    }
+    #mt_modal#mt_modal .mt-sticky-top > .modal-header,
+    #mt_modal#mt_modal .routing-header-actions,
+    #mt_modal#mt_modal .routing-header-actions .rt-io-group {
+        column-gap:5px !important;
+    }
+    #mt_modal#mt_modal .routing-header-actions,
+    #mt_modal#mt_modal .routing-header-actions .rt-io-group {
+        background:transparent !important; border:0 !important;
+        outline:none !important; box-shadow:none !important;
+    }
+    #mt_modal#mt_modal .routing-header-actions::after { content:none !important; }
+    #mt_modal#mt_modal .routing-header-actions .rt-import-export-btn,
+    #mt_modal#mt_modal .mt-sticky-top > .modal-header > button.modal-close {
+        width:40px !important; min-width:40px !important; max-width:40px !important;
+        height:40px !important; min-height:40px !important;
+        padding:0 !important; margin:0 !important;
+        display:inline-flex !important; align-items:center !important; justify-content:center !important;
+        background:rgba(0,0,0,.06) !important;
+        border:0 !important; outline:none !important; box-shadow:none !important;
+        border-radius:50% !important; color:#000 !important;
+    }
+    #mt_modal#mt_modal .routing-header-actions .rt-import-export-btn svg {
+        width:20px !important; height:20px !important; color:#000 !important;
+    }
+    #mt_modal#mt_modal #mt_dialog_title.routing-title-power:hover:not(:disabled),
+    #mt_modal#mt_modal .routing-header-actions .rt-import-export-btn:hover:not(:disabled),
+    #mt_modal#mt_modal .mt-sticky-top > .modal-header > button.modal-close:hover,
+    #mt_modal#mt_modal .unified-rule-switch > button:hover:not(:disabled) {
+        background:rgba(0,0,0,.06) !important;
+        border-radius:8px !important;
+    }
+}
+
+/* Header hover retains each control's shape. */
+@layer optiray-interactions {
+    #mt_modal#mt_modal .routing-header-actions .rt-import-export-btn:hover:not(:disabled),
+    #mt_modal#mt_modal .mt-sticky-top > .modal-header > button.modal-close:hover {
+        background:rgba(0,0,0,.06) !important;
+        border-radius:50% !important;
+    }
+    #mt_modal#mt_modal #mt_dialog_title.routing-title-power:hover:not(:disabled) {
+        background:rgba(0,0,0,.06) !important;
+        border-radius:8px !important;
+    }
+}
+@layer optiray-interactions {
+    #mt_modal#mt_modal .mt-sticky-top > .modal-header > button.modal-close {
+        margin-left:5px !important;
+    }
+}
+
+/* Hover is an additional overlay, not a replacement of the base fill. */
+@layer optiray-interactions {
+    #mt_modal#mt_modal .routing-header-actions .rt-import-export-btn:hover:not(:disabled),
+    #mt_modal#mt_modal .mt-sticky-top > .modal-header > button.modal-close:hover,
+    #mt_modal#mt_modal #mt_dialog_title.routing-title-power:hover:not(:disabled) {
+        background-image:linear-gradient(rgba(0,0,0,.06),rgba(0,0,0,.06)) !important;
+    }
+    #mt_modal#mt_modal #mt_dialog_title.routing-title-power[aria-pressed="true"]:hover:not(:disabled) {
+        background-color:rgba(39,140,69,.08) !important;
+    }
+}
+
+@layer optiray-interactions {
+    #mt_modal#mt_modal .mt-sticky-top > .modal-header > button.modal-close:hover {
+        background-image:linear-gradient(rgba(220,53,69,.10),rgba(220,53,69,.10)) !important;
+        color:#d93645 !important;
+        border-radius:50% !important;
+    }
+}
+
+/* Routing search toolbar matches the main server filters. */
+@layer optiray-interactions {
+    #mt_modal#mt_modal .mt-sticky-bar,
+    #mt_modal#mt_modal .mt-sticky-bar :is(.mt-groups-toolbar,.mt-search-toolbar) {
+        background:transparent !important;
+        border:0 !important; outline:none !important; box-shadow:none !important;
+        gap:5px !important;
+    }
+    #mt_modal#mt_modal .mt-sticky-bar::after,
+    #mt_modal#mt_modal .mt-sticky-bar .mt-groups-toolbar::after,
+    #mt_modal#mt_modal .mt-sticky-bar .mt-search-toolbar::after { content:none !important; }
+    #mt_modal#mt_modal .mt-sticky-bar :is(.mt-add-group,.mt-global-iface-btn,.mt-paste-group-btn,.mt-reload-btn,.optiray-select-trigger) {
+        display:inline-flex !important; align-items:center !important; justify-content:center !important;
+        gap:5px !important; width:auto !important; min-width:0 !important;
+        height:40px !important; min-height:40px !important;
+        padding:0 10px !important;
+        background:transparent !important; color:#101010 !important;
+        border:0 !important; outline:none !important; box-shadow:none !important;
+        border-radius:8px !important;
+    }
+    #mt_modal#mt_modal .mt-sticky-bar :is(.mt-add-group,.mt-global-iface-btn,.mt-paste-group-btn,.mt-reload-btn,.optiray-select-trigger):hover:not(:disabled) {
+        background:rgba(0,0,0,.06) !important;
+    }
+    #mt_modal#mt_modal #mt_group_search {
+        background-color:transparent !important; border:0 !important; border-radius:0 !important;
+        box-shadow:none !important; height:40px !important;
+    }
+    #mt_modal#mt_modal .mt-sticky-bar svg { width:16px !important; height:16px !important; }
+}
+
+/* Labels require intrinsic action widths instead of old icon-only cells. */
+@layer optiray-interactions {
+    #mt_modal#mt_modal .mt-sticky-bar { display:flex !important; flex-wrap:wrap !important; gap:5px !important; }
+    #mt_modal#mt_modal .mt-sticky-bar .mt-groups-toolbar {
+        display:flex !important; flex:0 0 auto !important;
+        width:auto !important; min-width:0 !important; max-width:none !important;
+        flex-wrap:nowrap !important;
+    }
+    #mt_modal#mt_modal .mt-sticky-bar .mt-search-toolbar {
+        display:flex !important; flex:1 1 240px !important;
+        width:auto !important; min-width:0 !important; max-width:none !important;
+    }
+    #mt_modal#mt_modal .mt-sticky-bar :is(.mt-add-group,.mt-global-iface-btn,.mt-paste-group-btn,.mt-reload-btn,.optiray-select-trigger) {
+        flex:0 0 auto !important;
+        width:auto !important; min-width:max-content !important; max-width:none !important;
+        max-height:40px !important; white-space:nowrap !important;
+    }
+    #mt_modal#mt_modal .mt-sticky-bar svg { flex:0 0 16px !important; }
+    #mt_modal#mt_modal #mt_group_search { flex:1 1 140px !important; width:0 !important; min-width:0 !important; max-height:40px !important; }
+}
+
+/* Reset legacy column sizing on the compact routing toolbar. */
+@layer optiray-interactions {
+    #mt_modal#mt_modal .mt-sticky-bar {
+        flex-direction:row !important; align-items:center !important;
+        justify-content:flex-start !important;
+        height:auto !important; min-height:0 !important;
+        padding:5px 20px 10px !important;
+    }
+    #mt_modal#mt_modal .mt-sticky-bar .mt-groups-toolbar {
+        order:0 !important; align-items:center !important;
+        height:40px !important; min-height:0 !important;
+        margin:0 !important;
+    }
+    #mt_modal#mt_modal .mt-sticky-bar .mt-search-toolbar {
+        order:1 !important; align-items:center !important;
+        height:40px !important; min-height:0 !important;
+        margin:0 !important;
+    }
+    #mt_modal#mt_modal #mt_group_search {
+        display:block !important; width:auto !important;
+        flex:1 1 120px !important;
+        background-image:linear-gradient(var(--ui-field-line),var(--ui-field-line)) !important;
+        background-size:calc(100% - 20px) 1px !important;
+        background-position:center calc(100% - 6px) !important;
+        background-repeat:no-repeat !important;
+    }
+    #mt_modal#mt_modal #mt_group_search:focus {
+        background-image:linear-gradient(var(--btn-info-text),var(--btn-info-text)) !important;
+        background-size:calc(100% - 20px) 2px !important;
+    }
+}
+
+/* Routing filter count and lower toolbar separator. */
+@layer optiray-interactions {
+    #mt_modal#mt_modal .mt-sticky-bar {
+        padding-bottom:10px !important;
+        border-bottom:1px solid #dedee1 !important;
+    }
+    #mt_modal#mt_modal .mt-search-toolbar > .optiray-select-trigger {
+        position:relative !important;
+    }
+    #mt_modal#mt_modal .mt-search-toolbar #mt_filter_count {
+        position:absolute !important;
+        right:10px !important; bottom:1px !important;
+        height:auto !important; min-height:0 !important; max-height:none !important;
+        font-size:11px !important; line-height:11px !important;
+        padding:0 !important; margin:0 !important;
+        background:transparent !important; pointer-events:none;
+    }
+}
+
+@layer optiray-interactions {
+    #mt_modal#mt_modal .mt-search-toolbar #mt_filter_count {
+        right:32px !important;
+        font-variant-numeric:tabular-nums;
+    }
+}
+
+/* Group filter folder icon. */
+@layer optiray-interactions {
+    #mt_modal#mt_modal .mt-search-toolbar > .optiray-select-trigger[data-select-id="mt_group_filter"]::before {
+        content:"";
+        flex:0 0 16px; width:16px; height:16px;
+        background:currentColor;
+        mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M3 7V5a2 2 0 0 1 2-2h5l2 3h7a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7ZM3 9h18' fill='none' stroke='black' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat;
+    }
+}
+
+@layer optiray-interactions {
+    #mt_modal#mt_modal .mt-search-toolbar > .optiray-select-trigger[data-select-id="mt_group_filter"]::before {
+        mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M3 4h18l-7 8v7l-4 2v-9Z' fill='none' stroke='black' stroke-width='1.8' stroke-linejoin='round'/%3E%3C/svg%3E");
+    }
+}
+
+@layer optiray-interactions {
+    #mt_modal#mt_modal .mt-search-toolbar > .optiray-select-trigger[data-select-id="mt_group_filter"] > svg {
+        display:none !important;
+    }
+    #mt_modal#mt_modal .mt-search-toolbar #mt_filter_count { right:10px !important; }
+}
+
+/* Routing group cards match the white subscription rows. */
+@layer optiray-interactions {
+    #mt_modal#mt_modal .mt-group-card {
+        border:1px solid var(--line) !important;
+        border-radius:4px !important;
+        background:#fff !important;
+        box-shadow:none !important;
+        margin-bottom:5px !important;
+        overflow:hidden;
+    }
+    #mt_modal#mt_modal .mt-group-head {
+        background:#fff !important;
+        border-radius:4px !important;
+    }
+}
+
+/* Group names use the same underline field style as search. */
+@layer optiray-interactions {
+    #mt_modal#mt_modal .mt-group-head .mt-group-name {
+        background-color:transparent !important;
+        border:0 !important; border-radius:0 !important;
+        box-shadow:none !important;
+        background-image:linear-gradient(var(--ui-field-line),var(--ui-field-line)) !important;
+        background-size:calc(100% - 16px) 1px !important;
+        background-position:center calc(100% - 6px) !important;
+        background-repeat:no-repeat !important;
+        color:#101010 !important;
+    }
+    #mt_modal#mt_modal .mt-group-head .mt-group-name:focus {
+        background-image:linear-gradient(var(--btn-info-text),var(--btn-info-text)) !important;
+        background-size:calc(100% - 16px) 2px !important;
+        outline:none !important;
+    }
+}
+
+/* Underline rule fields and compact type/delete pills. */
+@layer optiray-interactions {
+    #mt_modal#mt_modal .mt-rule-input {
+        background-color:transparent !important;
+        border:0 !important; border-radius:0 !important; box-shadow:none !important;
+        color:#101010 !important;
+        background-image:linear-gradient(var(--ui-field-line),var(--ui-field-line)) !important;
+        background-size:calc(100% - 16px) 1px !important;
+        background-position:center calc(100% - 6px) !important;
+        background-repeat:no-repeat !important;
+    }
+    #mt_modal#mt_modal .mt-rule-input:focus {
+        background-image:linear-gradient(var(--btn-info-text),var(--btn-info-text)) !important;
+        background-size:calc(100% - 16px) 2px !important; outline:none !important;
+    }
+    #mt_modal#mt_modal .mt-rule-controls {
+        height:32px !important; min-height:32px !important;
+        box-sizing:border-box !important; padding:1px 3px !important; gap:0 !important;
+        background:rgba(0,0,0,.06) !important;
+        border:0 !important; outline:none !important; box-shadow:none !important;
+        border-radius:999px !important;
+    }
+    #mt_modal#mt_modal .mt-rule-controls::after { content:none !important; }
+    #mt_modal#mt_modal .mt-rule-controls > :is(.optiray-select-trigger,.rt-rule-del) {
+        height:30px !important; min-height:30px !important;
+        background:transparent !important;
+        border:0 !important; outline:none !important; box-shadow:none !important;
+        border-radius:999px !important;
+    }
+    #mt_modal#mt_modal .mt-rule-controls > .optiray-select-trigger:hover:not(:disabled) {
+        background:rgba(0,0,0,.06) !important;
+    }
+    #mt_modal#mt_modal .mt-rule-controls > .rt-rule-del:hover:not(:disabled) {
+        background:rgba(220,53,69,.10) !important;
+    }
+}
+
+@layer optiray-interactions {
+    #mt_modal#mt_modal input.routing-search-match {
+        background-color:rgba(255,198,44,.20) !important;
+        border-radius:4px !important;
+    }
+}
+
+@layer optiray-interactions {
+    .subs-header-row #subs_add_row {
+        margin:0 0 0 15px !important;
+        flex:0 0 auto !important;
+    }
+    .subs-header-row #subs_add_row > button {
+        display:inline-flex !important; align-items:center !important; gap:5px !important;
+        height:40px !important; min-height:40px !important;
+        padding:0 10px !important;
+        background:transparent !important; color:#101010 !important;
+        border:0 !important; outline:none !important; box-shadow:none !important;
+        border-radius:8px !important; font-weight:400 !important;
+    }
+    .subs-header-row #subs_add_row > button:hover:not(:disabled) {
+        background:rgba(0,0,0,.06) !important;
+    }
+}
+@layer optiray-interactions {
+    .subs-header-row.subs-header-row { column-gap:5px !important; }
+    .subs-header-row #subs_add_row { margin-left:10px !important; }
+}
+
+/* Keep subscription addition adjacent to the compact disclosure group. */
+@layer optiray-interactions {
+    .subs-header-row.subs-header-row .subs-header-group {
+        flex:0 1 auto !important;
+        width:auto !important;
+        min-width:0 !important;
+    }
+    .subs-header-row.subs-header-row #subs_add_row {
+        margin-left:10px !important;
+        margin-right:0 !important;
+        flex:0 0 auto !important;
+    }
+    .subs-header-row.subs-header-row .subs-header-actions { margin-left:auto !important; }
+}
+@layer optiray-interactions {
+    .subs-header-row.subs-header-row { justify-content:flex-start !important; }
+    .subs-header-row.subs-header-row .subs-header-group { width:fit-content !important; }
+    .subs-header-row.subs-header-row .subs-header-group > #subs_add_row {
+        margin:0 0 0 10px !important;
+    }
+}
+
+/* Small close control in the routing dialog corner. */
+@layer optiray-interactions {
+    #mt_modal#mt_modal .mt-sticky-top > .modal-header { position:static !important; }
+    #mt_modal#mt_modal .mt-sticky-top > .modal-header > button.modal-close {
+        position:absolute !important; top:15px !important; right:15px !important;
+        width:20px !important; min-width:20px !important; max-width:20px !important;
+        height:20px !important; min-height:20px !important; max-height:20px !important;
+        margin:0 !important; padding:0 !important;
+    }
+    #mt_modal#mt_modal .mt-sticky-top > .modal-header > button.modal-close svg {
+        width:14px !important; height:14px !important;
+    }
+    #mt_modal#mt_modal .mt-sticky-top > .modal-header { padding-right:50px !important; }
+}
+
+@layer optiray-interactions {
+    #mt_modal#mt_modal .mt-sticky-top > .modal-header > button.modal-close {
+        width:30px !important; min-width:30px !important; max-width:30px !important;
+        height:30px !important; min-height:30px !important; max-height:30px !important;
+    }
+    #mt_modal#mt_modal .mt-sticky-top > .modal-header > button.modal-close svg {
+        width:18px !important; height:18px !important;
+        flex:0 0 18px !important;
+    }
+    #mt_modal#mt_modal .mt-sticky-top > .modal-header { padding-right:55px !important; }
+}
+@layer optiray-interactions {
+    #mt_modal#mt_modal .routing-header-actions > .unified-rule-switch { order:2 !important; }
+    #mt_modal#mt_modal .routing-header-actions > :is(.rt-io-group,.xray-header-io,.mt-io-import,.mt-io-export) { order:1 !important; }
+    #mt_modal#mt_modal .routing-header-actions > .mt-io-backup { order:3 !important; }
+}
+@layer optiray-interactions {
+    #mt_modal#mt_modal .routing-header-actions > .unified-routing-mode { order:2 !important; }
+}
+
+/* Remove the old joined-header separator around the mode wrapper. */
+@layer optiray-interactions {
+    #mt_modal#mt_modal .routing-header-actions > .unified-routing-mode {
+        border:0 !important; outline:none !important; box-shadow:none !important;
+        background:transparent !important;
+    }
+    #mt_modal#mt_modal .routing-header-actions > .unified-routing-mode::before,
+    #mt_modal#mt_modal .routing-header-actions > .unified-routing-mode::after {
+        content:none !important;
+    }
+}
+
+@layer optiray-interactions {
+    #mt_modal#mt_modal .mt-sticky-top > .modal-header { padding-right:65px !important; }
+}
+
+/* Routing fields reveal their underline only while focused. */
+@layer optiray-interactions {
+    #mt_modal#mt_modal .mt-group-head .mt-group-name:not(:focus),
+    #mt_modal#mt_modal .mt-rule-input:not(:focus),
+    #mt_modal#mt_modal .rt-group-title:not(:focus),
+    #mt_modal#mt_modal .rt-rule-input:not(:focus) {
+        background-image:none !important;
+        border-bottom:0 !important;
+        box-shadow:none !important;
+    }
+}
+
+@layer optiray-interactions {
+    #subs_container .sub-row .sub-url-input:not(:focus) {
+        background-image:none !important;
+        border-bottom:0 !important;
+        box-shadow:none !important;
+    }
+}
+
+@layer optiray-interactions {
+    #servers_container .sub-section {
+        background:color-mix(in srgb,var(--subscription-color,#1971c2) 3%,var(--bg)) !important;
+    }
+    #servers_container .sub-header {
+        background:color-mix(in srgb,var(--subscription-color,#1971c2) 8%,var(--bg)) !important;
+    }
+}
+
+/* More visible neutral outlines and softer server subscription containers. */
+@layer optiray-interactions {
+    #servers_container .sub-section {
+        border:1px solid var(--line) !important;
+        border-radius:10px !important;
+        overflow:hidden;
+    }
+    #servers_container .sub-section > .sub-header {
+        border-radius:9px 9px 0 0 !important;
+    }
+    #servers_container .sub-section.collapsed > .sub-header {
+        border-radius:9px !important;
+    }
+}
+
+@layer optiray-interactions {
+    #servers_container .sub-section {
+        background:color-mix(in srgb,var(--subscription-color,#1971c2) 5%,var(--bg)) !important;
+    }
+    #servers_container .sub-header {
+        background:color-mix(in srgb,var(--subscription-color,#1971c2) 10%,var(--bg)) !important;
+    }
+}
+
+.active-status-text .active-proxy-name {
+    margin-top:3px;
+    font-size:11px;
+    line-height:15px;
+    color:var(--text-2);
+    text-align:left;
+}
+
+@layer optiray-interactions {
+    .header-right > .active-status-card { padding-block:6px !important; }
+    .active-status-card .active-socks-name { color:#101010 !important; }
+}
+
+/* Xray uses the common header toolbar, not a second search row. */
+@layer optiray-interactions {
+    #mt_modal#mt_modal #routing_modal .xr-toolbar { display:none !important; }
+    #mt_modal#mt_modal[data-rule-engine="xray"] .mt-sticky-bar .mt-global-iface-btn { display:none !important; }
+}
+
+/* Xray shares OptiRout group and field styling, with its own section actions. */
+@layer optiray-interactions {
+    #mt_modal#mt_modal[data-rule-engine="xray"] .mt-sticky-bar :is(.mt-add-group,.mt-paste-group-btn) { display:none !important; }
+    #mt_modal#mt_modal #routing_modal .rt-group-card {
+        border:1px solid var(--line) !important; border-radius:4px !important;
+        background:#fff !important; box-shadow:none !important;
+        margin-bottom:5px !important; overflow:hidden;
+    }
+    #mt_modal#mt_modal #routing_modal .rt-group-head {
+        background:#fff !important; border-radius:4px !important;
+    }
+    #mt_modal#mt_modal #routing_modal :is(.rt-group-title,.rt-rule-input) {
+        background-color:transparent !important;
+        border:0 !important; border-radius:0 !important; box-shadow:none !important;
+        color:#101010 !important; background-image:none !important;
+        background-position:center calc(100% - 6px) !important;
+        background-repeat:no-repeat !important;
+    }
+    #mt_modal#mt_modal #routing_modal :is(.rt-group-title,.rt-rule-input):focus {
+        background-image:linear-gradient(var(--btn-info-text),var(--btn-info-text)) !important;
+        background-size:calc(100% - 16px) 2px !important; outline:none !important;
+    }
+    #mt_modal#mt_modal #routing_modal input.routing-search-match {
+        background-color:rgba(255,198,44,.20) !important;
+    }
+}
+
+/* Outbound sections match main subscription containers. */
+@layer optiray-interactions {
+    #mt_modal#mt_modal #routing_modal .rt-routing-root > .setting-field.xr-outbound {
+        border:1px solid var(--line) !important;
+        border-radius:10px !important; overflow:hidden;
+        background:color-mix(in srgb,var(--xr-outbound-accent) 5%,var(--bg)) !important;
+    }
+    #mt_modal#mt_modal #routing_modal .xr-outbound > .setting-label {
+        background:color-mix(in srgb,var(--xr-outbound-accent) 10%,var(--bg)) !important;
+        border-radius:9px 9px 0 0 !important;
+    }
+    #mt_modal#mt_modal #routing_modal .xr-outbound.xr-collapsed > .setting-label { border-radius:9px !important; }
+    #mt_modal#mt_modal #routing_modal .xr-outbound-body {
+        background:color-mix(in srgb,var(--xr-outbound-accent) 5%,var(--bg)) !important;
+    }
+}
+
+/* Standalone Xray rule delete has one round surface. */
+@layer optiray-interactions {
+    #mt_modal#mt_modal #routing_modal .xr-rule-controls {
+        width:32px !important; min-width:32px !important;
+        height:32px !important; padding:0 !important;
+        background:transparent !important;
+        border:0 !important; outline:none !important; box-shadow:none !important;
+    }
+    #mt_modal#mt_modal #routing_modal .xr-rule-controls > .rt-rule-del {
+        display:inline-flex !important; align-items:center !important; justify-content:center !important;
+        width:32px !important; min-width:32px !important;
+        height:32px !important; min-height:32px !important;
+        padding:0 !important; margin:0 !important;
+        border-radius:50% !important;
+        background:rgba(0,0,0,.06) !important;
+        border:0 !important; outline:none !important; box-shadow:none !important;
+        color:#d93645 !important;
+    }
+    #mt_modal#mt_modal #routing_modal .xr-rule-controls > .rt-rule-del:hover:not(:disabled) {
+        background-image:linear-gradient(rgba(220,53,69,.10),rgba(220,53,69,.10)) !important;
+    }
+}
+
+@layer optiray-interactions {
+    #mt_modal#mt_modal #routing_modal .mt-rule-controls.xr-rule-controls,
+    #mt_modal#mt_modal #routing_modal .mt-rule-controls.xr-rule-controls > button.rt-rule-del {
+        flex:0 0 32px !important;
+        width:32px !important; min-width:32px !important; max-width:32px !important;
+        height:32px !important; min-height:32px !important; max-height:32px !important;
+        box-sizing:border-box !important;
+        border-radius:50% !important;
+        padding:0 !important;
+    }
+}
+
+@layer optiray-interactions {
+    #mt_modal#mt_modal .mt-group-controls > .mt-group-actions {
+        flex:0 0 190px !important; width:190px !important;
+    }
+    #mt_modal#mt_modal .mt-group-controls { width:auto !important; }
+    #mt_modal#mt_modal :is(.mt-group-actions,.rt-group-actions) > :is(.mt-add-rule,.rt-add-rule) {
+        position:static !important; margin:0 !important;
+        width:38px !important; min-width:38px !important;
+        padding:0 !important; font-size:14px !important;
+    }
+}
+
+@layer optiray-interactions {
+    #mt_modal#mt_modal .mt-group-controls > .mt-iface-picker {
+        flex:0 0 172px !important;
+        width:172px !important; min-width:172px !important;
+    }
+}
+
+/* Keep all five routing actions within the shared pill. */
+@layer optiray-interactions {
+    #mt_modal#mt_modal .mt-group-controls.mt-group-controls {
+        display:flex !important; align-items:center !important;
+        flex:0 0 auto !important;
+        width:358px !important; min-width:358px !important;
+        box-sizing:border-box !important;
+        overflow:visible !important;
+    }
+    #mt_modal#mt_modal .mt-group-controls > .mt-iface-picker {
+        flex:0 0 162px !important;
+        width:162px !important; min-width:162px !important;
+    }
+    #mt_modal#mt_modal .mt-group-controls > .mt-group-actions {
+        display:flex !important; align-items:center !important;
+        flex:0 0 190px !important;
+        width:190px !important; min-width:190px !important;
+        padding:0 !important; gap:0 !important;
+    }
+    #mt_modal#mt_modal .mt-group-controls .mt-group-actions > .rt-icon-btn {
+        flex:0 0 38px !important;
+        width:38px !important; min-width:38px !important; max-width:38px !important;
+        display:inline-flex !important; align-items:center !important; justify-content:center !important;
+        padding:0 !important; margin:0 !important;
+    }
+}
+
+/* Narrower interface picker and no stale joined-block chevron. */
+@layer optiray-interactions {
+    #mt_modal#mt_modal .mt-group-controls.mt-group-controls {
+        width:348px !important; min-width:348px !important;
+        gap:0 !important;
+    }
+    #mt_modal#mt_modal .mt-group-controls > .mt-iface-picker {
+        flex:0 0 152px !important;
+        width:152px !important; min-width:152px !important;
+    }
+    #mt_modal#mt_modal .mt-group-controls::before,
+    #mt_modal#mt_modal .mt-group-controls .mt-group-actions::before,
+    #mt_modal#mt_modal .mt-group-controls .routing-group-auto-color::before,
+    #mt_modal#mt_modal .mt-group-controls .routing-group-auto-color::after {
+        content:none !important;
+    }
+}
+@layer optiray-interactions {
+    #mt_modal#mt_modal .mt-group-head > .mt-group-toggle {
+        position:static !important;
+        flex:0 0 30px !important;
+        width:30px !important; min-width:30px !important;
+        margin-left:5px !important;
+        order:99 !important;
+    }
+}
+
+/* Match the header grid track to the actual interface/action pill width. */
+@layer optiray-interactions {
+    #mt_modal#mt_modal .mt-group-head {
+        grid-template-columns:24px 48px 0px minmax(0,1fr) 68px 348px 36px !important;
+    }
+    #mt_modal#mt_modal .mt-group-head > .mt-group-controls {
+        grid-column:6 !important; grid-row:1 !important;
+        min-width:348px !important; width:348px !important;
+    }
+    #mt_modal#mt_modal .mt-group-head > .mt-group-toggle {
+        grid-column:7 !important; grid-row:1 !important;
+        order:0 !important; margin:0 !important;
+    }
+    @media(max-width:760px) {
+        #mt_modal#mt_modal .mt-group-head {
+            grid-template-columns:24px 40px 0px minmax(0,1fr) 68px 30px !important;
+        }
+        #mt_modal#mt_modal .mt-group-head > .mt-group-toggle { grid-column:6 !important; }
+        #mt_modal#mt_modal .mt-group-head > .mt-group-controls {
+            grid-column:2 / -1 !important; grid-row:2 !important;
+        }
+    }
+}
+
+@layer optiray-interactions {
+    #mt_modal#mt_modal .mt-group-controls > .mt-iface-picker {
+        flex:0 0 142px !important; width:142px !important; min-width:142px !important;
+    }
+    #mt_modal#mt_modal .mt-group-controls.mt-group-controls,
+    #mt_modal#mt_modal .mt-group-head > .mt-group-controls {
+        width:338px !important; min-width:338px !important;
+    }
+    #mt_modal#mt_modal .mt-group-head {
+        grid-template-columns:24px 48px 0px minmax(0,1fr) 68px 338px 36px !important;
+    }
+    @media(max-width:760px) {
+        #mt_modal#mt_modal .mt-group-head { grid-template-columns:24px 40px 0px minmax(0,1fr) 68px 30px !important; }
+    }
+}
+
+/* Global ping actions follow the shared soft control style. */
+@layer optiray-interactions {
+    .global-ping-wrapper {
+        margin-top:10px !important; margin-bottom:0 !important;
+        padding:0 !important; align-items:center !important;
+    }
+    #global_ping_row {
+        display:flex; align-items:center !important;
+        flex-wrap:wrap !important; gap:5px !important;
+        margin:0 !important; padding:0 !important;
+    }
+    #global_ping_row > :is(.btn-pingfav,.btn-pingtcp,.btn-pingall,.btn-stop) {
+        display:inline-flex !important; align-items:center !important; justify-content:center !important;
+        height:40px !important; min-height:40px !important;
+        padding:0 12px !important; margin:0 !important; gap:5px !important;
+        border:0 !important; outline:none !important; box-shadow:none !important;
+        border-radius:8px !important;
+        background:rgba(0,0,0,.06) !important; color:#101010 !important;
+        font-weight:400 !important;
+    }
+    #global_ping_row > button:hover:not(:disabled) {
+        background-image:linear-gradient(rgba(0,0,0,.06),rgba(0,0,0,.06)) !important;
+    }
+    #global_ping_row > .btn-stop { color:#d93645 !important; }
+    #global_ping_row > .btn-stop:hover:not(:disabled) {
+        background-image:linear-gradient(rgba(220,53,69,.10),rgba(220,53,69,.10)) !important;
+    }
+    #global_ping_row > button svg { width:18px !important; height:18px !important; color:inherit !important; }
+}
+
+/* White routing power control with a state-colored icon. */
+@layer optiray-interactions {
+    #mt_modal#mt_modal #mt_dialog_title.routing-title-power,
+    #mt_modal#mt_modal #mt_dialog_title.routing-title-power[aria-pressed="true"],
+    #mt_modal#mt_modal #mt_dialog_title.routing-title-power[aria-pressed="true"]:hover:not(:disabled) {
+        background-color:#fff !important;
+        border:1px solid var(--line) !important;
+        border-radius:4px !important;
+        padding:0 10px 0 5px !important;
+        color:#101010 !important;
+    }
+    #mt_modal#mt_modal #mt_dialog_title.routing-title-power[aria-pressed="false"] { color:var(--text-2) !important; }
+    #mt_modal#mt_modal #mt_dialog_title.routing-title-power .power-status-dot { display:none !important; }
+    #mt_modal#mt_modal #mt_dialog_title.routing-title-power > svg {
+        width:28px !important; height:28px !important;
+        box-sizing:border-box !important; padding:5px !important;
+        border-radius:50% !important;
+        color:#d93645 !important; background:rgba(217,54,69,.07) !important;
+    }
+    #mt_modal#mt_modal #mt_dialog_title.routing-title-power[aria-pressed="true"] > svg {
+        color:#278c45 !important; background:rgba(39,140,69,.07) !important;
+    }
+}
+
+/* Balanced routing title: a fixed round power icon and readable label. */
+@layer optiray-interactions {
+    #mt_modal#mt_modal #mt_dialog_title.routing-title-power,
+    #mt_modal#mt_modal #mt_dialog_title.routing-title-power[aria-pressed="true"],
+    #mt_modal#mt_modal #mt_dialog_title.routing-title-power:hover:not(:disabled) {
+        height:40px !important; min-height:40px !important;
+        display:inline-flex !important; align-items:center !important;
+        gap:8px !important; padding:5px 12px 5px 5px !important;
+        box-sizing:border-box !important; border-radius:8px !important;
+        flex:0 0 auto !important; white-space:nowrap !important;
+        background-color:#fff !important;
+    }
+    #mt_modal#mt_modal #mt_dialog_title.routing-title-power > svg {
+        flex:0 0 28px !important;
+        width:28px !important; min-width:28px !important; max-width:28px !important;
+        height:28px !important; min-height:28px !important;
+        padding:4px !important; border-radius:50% !important;
+    }
+    #mt_modal#mt_modal #mt_dialog_title.routing-title-power > span:first-of-type {
+        font-size:14px !important; line-height:20px !important;
+        font-weight:500 !important;
+    }
+}
+
+/* Consistent status outline and hover on the routing power title. */
+@layer optiray-interactions {
+    #mt_modal#mt_modal #mt_dialog_title.routing-title-power,
+    #mt_modal#mt_modal #mt_dialog_title.routing-title-power:hover:not(:disabled),
+    #mt_modal#mt_modal #mt_dialog_title.routing-title-power:active:not(:disabled) {
+        border-radius:10px !important;
+        background:#fff !important;
+        transform:none !important; filter:none !important;
+        box-shadow:none !important;
+    }
+    #mt_modal#mt_modal #mt_dialog_title.routing-title-power[aria-pressed="true"],
+    #mt_modal#mt_modal #mt_dialog_title.routing-title-power[aria-pressed="true"]:hover:not(:disabled) {
+        border:1px solid rgba(39,140,69,.24) !important;
+    }
+    #mt_modal#mt_modal #mt_dialog_title.routing-title-power[aria-pressed="false"],
+    #mt_modal#mt_modal #mt_dialog_title.routing-title-power[aria-pressed="false"]:hover:not(:disabled) {
+        border:1px solid rgba(217,54,69,.24) !important;
+    }
+    #mt_modal#mt_modal #mt_dialog_title.routing-title-power:hover:not(:disabled) {
+        background-image:linear-gradient(rgba(0,0,0,.06),rgba(0,0,0,.06)) !important;
+        border-radius:10px !important;
+    }
+}
+
+/* Lock power-title geometry across all legacy state selectors. */
+@layer optiray-interactions {
+    #mt_modal#mt_modal #mt_dialog_title#mt_dialog_title.routing-title-power,
+    #mt_modal#mt_modal #mt_dialog_title#mt_dialog_title.routing-title-power:is(:hover,:active,:focus) {
+        box-sizing:border-box !important;
+        height:40px !important; min-height:40px !important; max-height:40px !important;
+        padding:5px 12px 5px 5px !important; margin:0 !important;
+        gap:8px !important; border-radius:10px !important;
+        border-width:1px !important; border-style:solid !important;
+        background:#fff !important;
+        transform:none !important; filter:none !important;
+        box-shadow:none !important;
+    }
+    #mt_modal#mt_modal #mt_dialog_title#mt_dialog_title.routing-title-power[aria-pressed="true"] { border-color:rgba(39,140,69,.24) !important; }
+    #mt_modal#mt_modal #mt_dialog_title#mt_dialog_title.routing-title-power[aria-pressed="false"] { border-color:rgba(217,54,69,.24) !important; }
+    #mt_modal#mt_modal #mt_dialog_title#mt_dialog_title.routing-title-power:hover:not(:disabled) {
+        background-image:linear-gradient(rgba(0,0,0,.06),rgba(0,0,0,.06)) !important;
+    }
+}
+
+@layer optiray-interactions {
+    #mt_modal#mt_modal #mt_dialog_title#mt_dialog_title.routing-title-power:active:not(:disabled) {
+        transform:scale(var(--interactive-press-scale)) !important;
+        transform-origin:center !important;
+    }
+}
+
+/* Xray action pill accommodates five equal buttons. */
+@layer optiray-interactions {
+    #mt_modal#mt_modal #routing_modal .rt-group-actions {
+        display:flex !important; align-items:center !important;
+        flex:0 0 196px !important;
+        width:196px !important; min-width:196px !important; max-width:196px !important;
+        height:32px !important; min-height:32px !important;
+        box-sizing:border-box !important;
+        padding:1px 3px !important; gap:0 !important;
+        background:rgba(0,0,0,.06) !important;
+        border:0 !important; outline:none !important;
+        border-radius:999px !important; box-shadow:none !important;
+    }
+    #mt_modal#mt_modal #routing_modal .rt-group-actions > .rt-icon-btn {
+        position:static !important;
+        flex:0 0 38px !important;
+        width:38px !important; min-width:38px !important; max-width:38px !important;
+        height:30px !important; min-height:30px !important; max-height:30px !important;
+        padding:0 !important; margin:0 !important;
+        box-sizing:border-box !important;
+        display:inline-flex !important; align-items:center !important; justify-content:center !important;
+    }
+}
+
+/* Allocate a separate grid cell for the Xray disclosure arrow. */
+@layer optiray-interactions {
+    #mt_modal#mt_modal #routing_modal .rt-group-head {
+        grid-template-columns:24px 48px 0px minmax(0,1fr) 68px 196px 30px !important;
+    }
+    #mt_modal#mt_modal #routing_modal .rt-group-head > .rt-group-actions {
+        grid-column:6 !important; grid-row:1 !important;
+    }
+    #mt_modal#mt_modal #routing_modal .rt-group-head > .rt-group-toggle {
+        grid-column:7 !important; grid-row:1 !important;
+        position:static !important; margin:0 !important;
+        width:30px !important; min-width:30px !important;
+    }
+    @media(max-width:760px) {
+        #mt_modal#mt_modal #routing_modal .rt-group-head { grid-template-columns:24px 40px 0px minmax(0,1fr) 30px !important; }
+        #mt_modal#mt_modal #routing_modal .rt-group-head > .rt-group-actions { grid-column:2 / -1 !important; grid-row:2 !important; }
+        #mt_modal#mt_modal #routing_modal .rt-group-head > .rt-group-toggle { grid-column:5 !important; }
+    }
+}
+
+#wait_modal[data-operation] #wait_modal_cancel { display:none !important; }
+#wait_modal .maintenance-animation { width:160px; height:80px; }
+.maintenance-animation svg { width:160px; height:80px; }
+.maintenance-animation :is(.maintenance-file,.maintenance-router,.maintenance-reset) { stroke:#287ec9; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+.maintenance-animation .maintenance-router { fill:rgba(40,126,201,.07); }
+.maintenance-link { stroke:rgba(40,126,201,.25); stroke-width:2; stroke-dasharray:3 4; }
+.maintenance-data { fill:#287ec9; animation:maintenance-transfer 1.3s ease-in-out infinite; }
+.maintenance-reset { display:none; }
+#wait_modal[data-operation="reset"] .maintenance-file,
+#wait_modal[data-operation="reset"] .maintenance-link,
+#wait_modal[data-operation="reset"] .maintenance-data { display:none; }
+#wait_modal[data-operation="reset"] .maintenance-router { transform:translateX(-40px); }
+#wait_modal[data-operation="reset"] .maintenance-reset { display:block; transform-box:fill-box; transform-origin:center; animation:maintenance-rotate 2s linear infinite; }
+@keyframes maintenance-transfer { 0% {transform:translateX(0);opacity:0;} 20% {opacity:1;} 80% {opacity:1;} 100% {transform:translateX(29px);opacity:0;} }
+@keyframes maintenance-rotate { to {transform:rotate(360deg);} }
+@media(prefers-reduced-motion:reduce) { .maintenance-animation * { animation:none !important; } }
+
+.active-status-card.xray-missing :is(.active-status-caption,.active-server-line,.status-column) { display:none !important; }
+.xray-install-notice { font-size:12px; line-height:18px; max-width:230px; color:#a34d29; }
+
+.xray-install-notice {
+    color:#d93645 !important;
+    font-size:14px !important;
+    font-weight:600 !important;
+    line-height:20px !important;
+}
+
+/* Settings adopt the shared light surfaces and interaction language. */
+#settings_modal { --settings-card:#fff; --settings-ink:#101010; --settings-line:var(--line); --settings-hover:rgba(0,0,0,.06); }
+[data-theme="dark"] #settings_modal { --settings-card:#242628; --settings-ink:#eee; --settings-line:#2e3033; --settings-hover:rgba(255,255,255,.06); }
+@layer optiray-interactions {
+    #settings_modal#settings_modal .settings-sidebar {
+        background:rgba(0,0,0,.03) !important;
+        padding:8px !important; border-right:1px solid var(--settings-line) !important;
+    }
+    #settings_modal#settings_modal .settings-nav-item {
+        border:0 !important; border-radius:8px !important;
+        margin:0 0 5px !important; box-shadow:none !important;
+        color:var(--text-2) !important; background:transparent !important;
+    }
+    #settings_modal#settings_modal .settings-nav-item:hover {
+        background:var(--settings-hover) !important;
+    }
+    #settings_modal#settings_modal .settings-nav-item[aria-current="page"],
+    #settings_modal#settings_modal .settings-nav-item[aria-current="page"]:hover {
+        background:var(--settings-card) !important; color:var(--settings-ink) !important;
+        transform:none !important;
+    }
+    #settings_modal#settings_modal .settings-panel :is(input[type="text"],input[type="password"],input[type="number"],input[type="url"],textarea),
+    #settings_modal#settings_modal #hwid_input {
+        background-color:transparent !important;
+        background-image:none !important;
+        border:0 !important; border-radius:0 !important;
+        box-shadow:none !important;
+        color:var(--settings-ink) !important;
+    }
+    #settings_modal#settings_modal .settings-panel :is(input[type="text"],input[type="password"],input[type="number"],input[type="url"],textarea):focus,
+    #settings_modal#settings_modal #hwid_input:focus {
+        outline:none !important;
+        background-image:linear-gradient(var(--btn-info-text),var(--btn-info-text)) !important;
+        background-size:calc(100% - 16px) 2px !important;
+        background-position:center calc(100% - 6px) !important;
+        background-repeat:no-repeat !important;
+    }
+    #settings_modal#settings_modal .optiray-select-trigger {
+        height:40px !important; min-height:40px !important;
+        background:var(--settings-hover) !important;
+        border:0 !important; border-radius:8px !important;
+        box-shadow:none !important; color:var(--settings-ink) !important;
+    }
+    #settings_modal#settings_modal .optiray-select-trigger:hover:not(:disabled) {
+        background-image:linear-gradient(var(--settings-hover),var(--settings-hover)) !important;
+    }
+    #settings_modal#settings_modal :is(.settings-backup-card,.settings-reset-card) {
+        background:var(--settings-card) !important;
+        border:1px solid var(--settings-line) !important; border-radius:10px !important;
+        box-shadow:none !important;
+    }
+    #settings_modal#settings_modal .modal-header > div:last-child {
+        gap:5px !important; border:0 !important; background:transparent !important;
+    }
+    #settings_modal#settings_modal .modal-header :is(.theme-toggle-btn,.modal-close) {
+        width:40px !important; min-width:40px !important; height:40px !important;
+        padding:0 !important; border:0 !important; outline:none !important;
+        border-radius:50% !important; background:var(--settings-hover) !important;
+        color:var(--settings-ink) !important; box-shadow:none !important;
+        display:inline-flex !important; align-items:center !important; justify-content:center !important;
+    }
+    #settings_modal#settings_modal .modal-header .theme-toggle-btn:hover {
+        background-image:linear-gradient(var(--settings-hover),var(--settings-hover)) !important;
+    }
+    #settings_modal#settings_modal .modal-header .modal-close:hover {
+        background-image:linear-gradient(rgba(220,53,69,.10),rgba(220,53,69,.10)) !important;
+        color:#d93645 !important;
+    }
+    #settings_modal#settings_modal .modal-header :is(.theme-toggle-btn,.modal-close) svg { width:20px !important; height:20px !important; }
+    #settings_modal#settings_modal .hwid-input-row { background:transparent !important; border:0 !important; gap:5px !important; }
+    #settings_modal#settings_modal .hwid-input-row::after { content:none !important; }
+    #settings_modal#settings_modal .settings-hwid-generate {
+        border:0 !important; border-radius:50% !important;
+        width:32px !important; min-width:32px !important; height:32px !important;
+        background:var(--settings-hover) !important; color:var(--settings-ink) !important;
+    }
+    #settings_modal#settings_modal .settings-hwid-generate:hover {
+        background-image:linear-gradient(var(--settings-hover),var(--settings-hover)) !important;
+    }
+    #settings_modal#settings_modal :is(.modal-footer-btn,.core-btn,.settings-restore-button,.backup-btn-download) {
+        border-radius:10px !important; height:38px !important; min-height:38px !important;
+    }
+    #settings_modal#settings_modal .modal-footer-cancel {
+        background:var(--settings-card) !important; border:1px solid var(--settings-line) !important;
+        color:var(--settings-ink) !important;
+    }
+    #settings_modal#settings_modal .modal-footer-cancel:hover {
+        background-image:linear-gradient(var(--settings-hover),var(--settings-hover)) !important;
+    }
+    #settings_modal#settings_modal button:active:not(:disabled):not([aria-current="page"]) {
+        transform:scale(var(--interactive-press-scale)) !important;
+    }
+    #settings_modal#settings_modal .modal-footer-btns { box-shadow:none !important; border-top:1px solid var(--settings-line) !important; }
+}
+
+/* Settings fields keep a visible search-style baseline. */
+@layer optiray-interactions {
+    #settings_modal#settings_modal .settings-panel :is(input[type="text"],input[type="password"],input[type="number"],input[type="url"],textarea),
+    #settings_modal#settings_modal #hwid_input {
+        background-image:linear-gradient(var(--ui-field-line),var(--ui-field-line)) !important;
+        background-size:calc(100% - 16px) 1px !important;
+        background-position:center calc(100% - 6px) !important;
+        background-repeat:no-repeat !important;
+    }
+    #settings_modal#settings_modal .settings-panel :is(input[type="text"],input[type="password"],input[type="number"],input[type="url"],textarea):focus,
+    #settings_modal#settings_modal #hwid_input:focus {
+        background-image:linear-gradient(var(--btn-info-text),var(--btn-info-text)) !important;
+        background-size:calc(100% - 16px) 2px !important;
+    }
+    #settings_modal#settings_modal .modal-header > div:last-child {
+        border:0 !important; outline:none !important; box-shadow:none !important;
+        padding:0 !important; background:transparent !important;
+        margin-right:35px !important;
+    }
+    #settings_modal#settings_modal .modal-header > div:last-child::before,
+    #settings_modal#settings_modal .modal-header > div:last-child::after { content:none !important; }
+    #settings_modal#settings_modal .modal-header .modal-close {
+        position:absolute !important; top:15px !important; right:15px !important;
+        width:30px !important; min-width:30px !important; max-width:30px !important;
+        height:30px !important; min-height:30px !important; max-height:30px !important;
+        margin:0 !important;
+    }
+    #settings_modal#settings_modal .modal-header .modal-close svg { width:18px !important; height:18px !important; }
+    #settings_modal#settings_modal .modal-header .theme-toggle-btn { border-radius:50% !important; }
+}
+
+@layer optiray-interactions {
+    #settings_modal#settings_modal .settings-backup-icon {
+        background:transparent !important; border:0 !important;
+        box-shadow:none !important; padding:0 !important;
+        width:28px !important; height:28px !important;
+        color:var(--settings-ink) !important;
+    }
+    #settings_modal#settings_modal .settings-backup-icon svg { width:28px !important; height:28px !important; }
+}
+
+/* Settings close position must be relative to the header, not its button wrapper. */
+@layer optiray-interactions {
+    #settings_modal#settings_modal .modal-header { position:relative !important; }
+    #settings_modal#settings_modal .modal-header > div:last-child {
+        position:static !important;
+        margin:0 40px 0 0 !important;
+        padding:0 !important;
+        width:auto !important;
+        flex:0 0 auto !important;
+    }
+    #settings_modal#settings_modal .modal-header > div:last-child > .modal-close {
+        position:absolute !important;
+        top:15px !important; right:15px !important;
+        margin:0 !important;
+    }
+    #settings_modal#settings_modal .modal-header > div:last-child > .theme-toggle-btn {
+        position:static !important;
+        margin:0 !important;
+        flex:0 0 40px !important;
+    }
+}
+
+@layer optiray-interactions {
+    #settings_modal#settings_modal .modal-header > div:last-child > .theme-toggle-btn {
+        position:absolute !important;
+        top:15px !important; right:50px !important;
+        width:30px !important; min-width:30px !important; max-width:30px !important;
+        height:30px !important; min-height:30px !important; max-height:30px !important;
+        padding:0 !important; margin:0 !important;
+        border-radius:50% !important;
+    }
+    #settings_modal#settings_modal .modal-header > div:last-child > .theme-toggle-btn svg {
+        width:18px !important; height:18px !important;
+    }
+}
+
+/* Dark counterparts for the shared light-theme controls. */
+@layer optiray-interactions {
+    [data-theme="dark"] {
+        --app-dark-surface:#242628;
+        --app-dark-line:#2e3033;
+        --app-dark-ink:#e5e7eb;
+        --app-dark-hover:rgba(255,255,255,.06);
+    }
+    [data-theme="dark"] #subs_container .sub-row {
+        background:var(--app-dark-surface) !important;
+        outline:1px solid var(--app-dark-line) !important;
+    }
+    [data-theme="dark"] #servers_container .sub-section { border-color:var(--app-dark-line) !important; }
+    [data-theme="dark"] #servers_container.server-view-cards .server-card:not(.active-card) {
+        border-color:var(--app-dark-line) !important;
+        outline:1px solid var(--app-dark-line) !important;
+    }
+    [data-theme="dark"] .active-status-card .active-socks-name,
+    [data-theme="dark"] .subs-header-row #subs_add_row > button,
+    [data-theme="dark"] #subs_collapse_btn #subs_arrow {
+        color:var(--app-dark-ink) !important;
+    }
+    [data-theme="dark"] .subs-header-actions.subs-header-actions.subs-header-actions > .btn-settings-icon,
+    [data-theme="dark"] .subs-header-actions.subs-header-actions.subs-header-actions > .btn-settings-icon svg {
+        color:var(--app-dark-ink) !important;
+    }
+    [data-theme="dark"] .subs-header-actions.subs-header-actions.subs-header-actions > .btn-settings-icon {
+        background:var(--app-dark-hover) !important;
+    }
+    [data-theme="dark"] .subs-header-actions.subs-header-actions.subs-header-actions > .btn-settings-icon:hover { background:rgba(255,255,255,.12) !important; }
+    [data-theme="dark"] #subs_container .sub-row-controls.sub-row-controls,
+    [data-theme="dark"] #servers_container .sub-header .sub-actions.sub-actions,
+    [data-theme="dark"] #mt_modal#mt_modal .mt-group-controls,
+    [data-theme="dark"] #mt_modal#mt_modal #routing_modal .rt-group-actions,
+    [data-theme="dark"] #mt_modal#mt_modal .mt-rule-controls,
+    [data-theme="dark"] #server_browser_toolbar#server_browser_toolbar .server-view-switch,
+    [data-theme="dark"] #mt_modal#mt_modal .unified-rule-switch {
+        background:var(--app-dark-hover) !important;
+    }
+    [data-theme="dark"] #servers_container .sub-header .sub-actions.sub-actions :is(button,a,svg,span),
+    [data-theme="dark"] #subs_container .sub-row-controls.sub-row-controls .dice-btn,
+    [data-theme="dark"] #subs_container .sub-row-controls.sub-row-controls .hwid-label:has(input:checked),
+    [data-theme="dark"] #mt_modal#mt_modal .mt-group-controls :is(.mt-iface-display,.rt-icon-btn),
+    [data-theme="dark"] #mt_modal#mt_modal .mt-rule-controls .optiray-select-trigger,
+    [data-theme="dark"] #mt_modal#mt_modal #routing_modal .rt-group-actions > .rt-icon-btn,
+    [data-theme="dark"] #mt_modal#mt_modal .mt-sticky-bar :is(.mt-add-group,.mt-global-iface-btn,.mt-paste-group-btn,.mt-reload-btn,.optiray-select-trigger) {
+        color:var(--app-dark-ink) !important;
+    }
+    [data-theme="dark"] #mt_modal#mt_modal :is(.mt-group-card,.mt-group-head),
+    [data-theme="dark"] #mt_modal#mt_modal #routing_modal :is(.rt-group-card,.rt-group-head) {
+        background:var(--app-dark-surface) !important;
+        border-color:var(--app-dark-line) !important;
+    }
+    [data-theme="dark"] #mt_modal#mt_modal .mt-group-head .mt-group-name,
+    [data-theme="dark"] #mt_modal#mt_modal .mt-rule-input,
+    [data-theme="dark"] #mt_modal#mt_modal #routing_modal :is(.rt-group-title,.rt-rule-input) {
+        color:var(--app-dark-ink) !important;
+    }
+    [data-theme="dark"] #mt_modal#mt_modal #routing_modal .rt-routing-root > .setting-field.xr-outbound { border-color:var(--app-dark-line) !important; }
+    [data-theme="dark"] #mt_modal#mt_modal #mt_dialog_title#mt_dialog_title.routing-title-power,
+    [data-theme="dark"] #mt_modal#mt_modal #mt_dialog_title#mt_dialog_title.routing-title-power:is(:hover,:active,:focus) {
+        background:var(--app-dark-surface) !important;
+    }
+    [data-theme="dark"] #mt_modal#mt_modal #mt_dialog_title#mt_dialog_title.routing-title-power[aria-pressed="true"] { color:var(--app-dark-ink) !important; }
+    [data-theme="dark"] #mt_modal#mt_modal #mt_dialog_title#mt_dialog_title.routing-title-power[aria-pressed="false"] { color:#929aa3 !important; }
+    [data-theme="dark"] #mt_modal#mt_modal #mt_dialog_title#mt_dialog_title.routing-title-power:hover { background-image:linear-gradient(var(--app-dark-hover),var(--app-dark-hover)) !important; }
+    [data-theme="dark"] #mt_modal#mt_modal .routing-header-actions .rt-import-export-btn,
+    [data-theme="dark"] #mt_modal#mt_modal .mt-sticky-top > .modal-header > button.modal-close {
+        background:var(--app-dark-hover) !important; color:var(--app-dark-ink) !important;
+    }
+    [data-theme="dark"] #mt_modal#mt_modal .routing-header-actions .rt-import-export-btn svg { color:var(--app-dark-ink) !important; }
+    [data-theme="dark"] #server_browser_toolbar#server_browser_toolbar .server-view-switch > button[aria-pressed="true"],
+    [data-theme="dark"] #server_browser_toolbar#server_browser_toolbar .server-view-switch > button[aria-pressed="true"]:is(:hover,:active),
+    [data-theme="dark"] #mt_modal#mt_modal .unified-rule-switch > button[aria-pressed="true"],
+    [data-theme="dark"] #mt_modal#mt_modal .unified-rule-switch > button[aria-pressed="true"]:is(:hover,:active) {
+        background:#34383e !important; color:var(--app-dark-ink) !important;
+    }
+    [data-theme="dark"] #global_ping_row > :is(.btn-pingfav,.btn-pingtcp,.btn-pingall) { background:var(--app-dark-hover) !important; color:var(--app-dark-ink) !important; }
+    [data-theme="dark"] #servers_container.server-view-cards .server-card .ping-badge { background:rgba(255,255,255,.04) !important; }
+    [data-theme="dark"] #servers_container.server-view-cards .server-card .ping-badge:hover { background:var(--app-dark-hover) !important; }
+    [data-theme="dark"] #mt_modal#mt_modal .mt-sticky-bar { border-bottom-color:var(--app-dark-line) !important; }
+    [data-theme="dark"] #mt_modal#mt_modal :is(.mt-group-controls,.mt-rule-controls) :is(.rt-group-del,.rt-rule-del),
+    [data-theme="dark"] #mt_modal#mt_modal #routing_modal .rt-group-actions > .rt-group-del { color:#ee727c !important; }
+    [data-theme="dark"] #mt_modal#mt_modal #routing_modal .xr-rule-controls { background:transparent !important; }
+    [data-theme="dark"] #mt_modal#mt_modal #routing_modal .xr-rule-controls > .rt-rule-del { background:var(--app-dark-hover) !important; }
+    [data-theme="dark"] #sub_manual_palette { background:var(--app-dark-surface); border-color:var(--app-dark-line); }
+}
+@layer optiray-interactions {
+    [data-theme="dark"] #subs_container .sub-row-controls.sub-row-controls :is(.dice-btn,.hwid-label):hover,
+    [data-theme="dark"] #servers_container .sub-header .sub-actions.sub-actions :is(.btn-test-site,.btn-auto-select,.ping-block-buttons > button):hover,
+    [data-theme="dark"] #mt_modal#mt_modal .mt-group-controls :is(.mt-iface-display,.rt-icon-btn):hover:not(:disabled),
+    [data-theme="dark"] #mt_modal#mt_modal .mt-rule-controls > .optiray-select-trigger:hover,
+    [data-theme="dark"] #mt_modal#mt_modal .mt-sticky-bar :is(.mt-add-group,.mt-global-iface-btn,.mt-paste-group-btn,.mt-reload-btn,.optiray-select-trigger):hover,
+    [data-theme="dark"] #server_browser_toolbar > .optiray-select-trigger:hover,
+    [data-theme="dark"] .subs-header-row #subs_add_row > button:hover {
+        background:rgba(255,255,255,.06) !important;
+    }
+}
+
+/* Taller routing group headers, with no gaps between cards. */
+@layer optiray-interactions {
+    #mt_modal#mt_modal .mt-group-head,
+    #mt_modal#mt_modal #routing_modal .rt-group-head {
+        min-height:56px !important;
+        padding-top:9px !important;
+        padding-bottom:9px !important;
+    }
+    #mt_modal#mt_modal #mt_groups_container,
+    #mt_modal#mt_modal #routing_modal .rt-groups {
+        row-gap:0 !important;
+    }
+    #mt_modal#mt_modal .mt-group-card,
+    #mt_modal#mt_modal #routing_modal .rt-group-card {
+        margin-top:0 !important;
+        margin-bottom:0 !important;
+    }
+}
+
+/* Flat adjoining routing cards with a single shared separator. */
+@layer optiray-interactions {
+    #mt_modal#mt_modal .mt-group-card,
+    #mt_modal#mt_modal .mt-group-head,
+    #mt_modal#mt_modal #routing_modal .rt-group-card,
+    #mt_modal#mt_modal #routing_modal .rt-group-head {
+        border-radius:0 !important;
+    }
+    #mt_modal#mt_modal .mt-group-card + .mt-group-card,
+    #mt_modal#mt_modal #routing_modal .rt-group-card + .rt-group-card {
+        border-top:0 !important;
+    }
+}
+
+/* A soft group tint fades towards the name; the left edge retains manual color selection. */
+@layer optiray-interactions {
+    #mt_modal#mt_modal .mt-group-head::before,
+    #mt_modal#mt_modal #routing_modal .rt-group-head::before {
+        width:min(230px,38%) !important;
+        border-radius:0 !important;
+        background:linear-gradient(90deg,
+            color-mix(in srgb,var(--rule-group-color,#888888) 17%,transparent) 0%,
+            color-mix(in srgb,var(--rule-group-color,#888888) 7%,transparent) 48%,
+            transparent 100%) !important;
+    }
+    #mt_modal#mt_modal .mt-group-head {
+        grid-template-columns:24px 48px 0px minmax(0,1fr) 68px 284px 36px !important;
+    }
+    #mt_modal#mt_modal .mt-group-controls.mt-group-controls,
+    #mt_modal#mt_modal .mt-group-head > .mt-group-controls {
+        width:284px !important; min-width:284px !important;
+    }
+    #mt_modal#mt_modal .mt-group-controls > .mt-group-actions {
+        width:152px !important; min-width:152px !important; flex:0 0 152px !important;
+    }
+    #mt_modal#mt_modal #routing_modal .rt-group-head {
+        grid-template-columns:24px 48px 0px minmax(0,1fr) 68px 158px 30px !important;
+    }
+    #mt_modal#mt_modal #routing_modal .rt-group-actions {
+        width:158px !important; min-width:158px !important; flex:0 0 158px !important;
+    }
+    @media(max-width:760px) {
+        #mt_modal#mt_modal .mt-group-head {
+            grid-template-columns:24px 40px 0px minmax(0,1fr) 68px 30px !important;
+        }
+        #mt_modal#mt_modal #routing_modal .rt-group-head {
+            grid-template-columns:24px 40px 0px minmax(0,1fr) 30px !important;
+        }
+    }
+}
+@layer optiray-interactions {
+    #mt_modal#mt_modal .mt-group-controls > .mt-iface-picker {
+        flex:0 0 126px !important;
+        width:126px !important; min-width:126px !important;
+        margin:0 !important;
+    }
+    #mt_modal#mt_modal .mt-group-controls > .mt-group-actions {
+        margin:0 !important; justify-content:flex-start !important;
+    }
+    #mt_modal#mt_modal .mt-group-controls .mt-iface-display {
+        width:100% !important; min-width:0 !important;
+        box-sizing:border-box !important; padding-right:20px !important;
+    }
+    #mt_modal#mt_modal .mt-group-controls .mt-iface-display::after { right:6px !important; }
+}
+/* Circular hover target for group disclosure arrows. */
+@layer optiray-interactions {
+    #mt_modal#mt_modal .mt-group-head > .mt-group-toggle,
+    #mt_modal#mt_modal #routing_modal .rt-group-head > .rt-group-toggle,
+    #mt_modal#mt_modal .mt-group-head > .mt-group-toggle:is(:hover,:focus-visible,:active),
+    #mt_modal#mt_modal #routing_modal .rt-group-head > .rt-group-toggle:is(:hover,:focus-visible,:active) {
+        width:30px !important; min-width:30px !important; max-width:30px !important;
+        height:30px !important; min-height:30px !important; max-height:30px !important;
+        padding:0 !important; border-radius:50% !important;
+        display:inline-flex !important; align-items:center !important; justify-content:center !important;
+    }
+}
+/* Xray disclosure buttons and compact group creation toolbar. */
+@layer optiray-interactions {
+    #mt_modal#mt_modal #routing_modal :is(.rt-group-toggle,.xr-outbound-toggle) {
+        width:30px !important; min-width:30px !important; height:30px !important;
+        min-height:30px !important; padding:0 !important; border:0 !important;
+        border-radius:50% !important; background:transparent !important;
+        box-shadow:none !important; display:inline-flex !important;
+        align-items:center !important; justify-content:center !important;
+        transition:background-color .16s ease,transform .12s ease !important;
+    }
+    #mt_modal#mt_modal #routing_modal :is(.rt-group-toggle,.xr-outbound-toggle):hover {
+        background:rgba(0,0,0,.06) !important;
+    }
+    #mt_modal#mt_modal #routing_modal .rt-add-group-row {
+        height:36px !important; padding:2px !important; gap:2px !important;
+        border:0 !important; border-radius:999px !important;
+        background:rgba(0,0,0,.06) !important;
+    }
+    #mt_modal#mt_modal #routing_modal .rt-add-group-row > :is(.rt-add-group,.rt-add-group-paste) {
+        height:32px !important; min-height:32px !important; max-height:32px !important;
+        border:0 !important; border-radius:999px !important;
+        background:transparent !important; background-image:none !important;
+        color:var(--text) !important; padding:0 12px !important;
+        transition:background-color .16s ease,transform .12s ease !important;
+    }
+    #mt_modal#mt_modal #routing_modal .rt-add-group-row > .rt-add-group-paste {
+        width:32px !important; min-width:32px !important; flex:0 0 32px !important;
+        padding:0 !important;
+    }
+    #mt_modal#mt_modal #routing_modal .rt-add-group-row > :is(.rt-add-group,.rt-add-group-paste):hover {
+        background:rgba(0,0,0,.06) !important;
+    }
+    #mt_modal#mt_modal #routing_modal :is(.rt-add-group,.rt-add-group-paste,.rt-group-toggle,.xr-outbound-toggle):active {
+        transform:scale(.95) !important;
+    }
+    [data-theme="dark"] #mt_modal#mt_modal #routing_modal .rt-add-group-row,
+    [data-theme="dark"] #mt_modal#mt_modal #routing_modal :is(.rt-add-group,.rt-add-group-paste,.rt-group-toggle,.xr-outbound-toggle):hover {
+        background:rgba(255,255,255,.07) !important;
+    }
+}
+/* Compact modal footers without shrinking their controls. */
+@layer optiray-interactions {
+    body .modal-content .modal-footer-btns,
+    #settings_modal#settings_modal .modal-footer-btns,
+    #mt_modal#mt_modal .mt-modal-footer {
+        padding-top:6px !important;
+        padding-bottom:calc(6px + env(safe-area-inset-bottom,0px)) !important;
+        min-height:0 !important;
+        height:auto !important;
+    }
+}
+/* Shared backdrop for all application dialogs and operation windows. */
+@layer optiray-interactions {
+    :root :is(.modal-overlay,.wait-modal-overlay,.update-overlay):not(#mt_modal #routing_modal) {
+        background:rgba(24,27,33,.32) !important;
+        backdrop-filter:blur(4px) !important;
+        -webkit-backdrop-filter:blur(4px) !important;
+    }
+}
+/* Dark header controls brighten on hover instead of gaining a black overlay. */
+@layer optiray-interactions {
+    [data-theme="dark"] #mt_modal#mt_modal .routing-header-actions .rt-import-export-btn:hover:not(:disabled) {
+        background:rgba(255,255,255,.12) !important;
+        background-image:none !important;
+        border-radius:50% !important;
+        box-shadow:none !important;
+    }
+}
+/* Consistent soft close-button hover across dark dialogs. */
+@layer optiray-interactions {
+    [data-theme="dark"] .modal-overlay .modal-header button.modal-close:hover,
+    [data-theme="dark"] #settings_modal#settings_modal .modal-header button.modal-close:hover,
+    [data-theme="dark"] #mt_modal#mt_modal .mt-sticky-top > .modal-header > button.modal-close:hover {
+        background:rgba(255,255,255,.12) !important;
+        background-image:none !important;
+        border-radius:50% !important;
+        color:var(--app-dark-ink,#e6e8eb) !important;
+        box-shadow:none !important;
+    }
+}
+/* Shared popup menu surface and selection treatment. */
+@layer optiray-interactions {
+    :root { --popup-surface:#fff; --popup-ink:#101010; --popup-hover:rgba(0,0,0,.06); --popup-shadow:0 4px 14px rgba(0,0,0,.10); }
+    [data-theme="dark"] { --popup-surface:#242628; --popup-ink:#e5e7eb; --popup-hover:rgba(255,255,255,.06); --popup-shadow:0 4px 14px rgba(0,0,0,.25); }
+    :is(#optiray_select_dd#optiray_select_dd,#mt_global_iface_dd#mt_global_iface_dd,#mt_group_iface_dd#mt_group_iface_dd) {
+        background:var(--popup-surface) !important;
+        border:1px solid var(--line) !important;
+        border-radius:8px !important;
+        padding:4px !important;
+        box-shadow:var(--popup-shadow) !important;
+        color:var(--popup-ink) !important;
+    }
+    :is(#optiray_select_dd#optiray_select_dd,#mt_global_iface_dd#mt_global_iface_dd,#mt_group_iface_dd#mt_group_iface_dd) :is(.mt-global-iface-dd-item,.mt-group-iface-dd-item) {
+        --attached-item-bg:transparent;
+        position:relative !important;
+        background:transparent !important; background-image:none !important;
+        border:0 !important; outline:none !important; box-shadow:none !important;
+        color:var(--popup-ink) !important; font-weight:400 !important;
+        border-radius:4px !important; filter:none !important;
+        padding:8px 30px 8px 10px !important;
+    }
+    :is(#optiray_select_dd#optiray_select_dd,#mt_global_iface_dd#mt_global_iface_dd,#mt_group_iface_dd#mt_group_iface_dd) :is(.mt-global-iface-dd-item,.mt-group-iface-dd-item):is(:hover,:focus-visible):not(:disabled) {
+        background:var(--popup-hover) !important;
+    }
+    :is(#optiray_select_dd#optiray_select_dd,#mt_global_iface_dd#mt_global_iface_dd,#mt_group_iface_dd#mt_group_iface_dd) .is-current::after {
+        content:"✓" !important; color:var(--popup-ink) !important; font-weight:400 !important;
+    }
+    :is(#optiray_select_dd#optiray_select_dd,#mt_global_iface_dd#mt_global_iface_dd,#mt_group_iface_dd#mt_group_iface_dd) .mt-global-iface-dd-name {
+        color:inherit !important; font-weight:400 !important;
+    }
+    :is(#optiray_select_dd#optiray_select_dd,#mt_global_iface_dd#mt_global_iface_dd,#mt_group_iface_dd#mt_group_iface_dd) .mt-global-iface-dd-desc { color:var(--ui-caption) !important; }
+}
+@layer optiray-interactions {
+ .config-edit-link { border:0 !important; background:transparent !important; color:var(--text) !important; border-radius:6px !important; padding:5px 8px !important; cursor:pointer; }
+ .config-edit-link:hover { background:rgba(0,0,0,.06) !important; }
+ [data-theme="dark"] .config-edit-link:hover { background:rgba(255,255,255,.06) !important; }
+ #subs_container .sub-row:has(.config-edit-link)::before { background:#101010 !important; }
+}
+/* Configuration editor follows the shared dialog controls. */
+@layer optiray-interactions {
+ #config_edit_modal#config_edit_modal .modal-header { display:flex; align-items:center; justify-content:space-between; }
+ #config_edit_modal#config_edit_modal .modal-close {
+  display:inline-flex !important; align-items:center !important; justify-content:center !important;
+  width:30px !important; min-width:30px !important; height:30px !important; min-height:30px !important;
+  padding:0 !important; border:0 !important; border-radius:50% !important;
+  background:rgba(0,0,0,.06) !important; color:var(--text) !important; box-shadow:none !important;
+ }
+ #config_edit_modal#config_edit_modal .modal-close:hover { background:rgba(0,0,0,.12) !important; }
+ #config_edit_modal#config_edit_modal .modal-footer-btns > button {
+  min-width:110px !important; height:38px !important; min-height:38px !important;
+  padding:0 18px !important; border-radius:10px !important; box-shadow:none !important;
+  transition:filter .15s ease,transform .1s ease !important;
+ }
+ #config_edit_modal#config_edit_modal .modal-footer-cancel {
+  background:var(--ui-control-surface) !important; border:1px solid var(--line) !important; color:var(--text) !important;
+ }
+ #config_edit_modal#config_edit_modal .core-btn-install {
+  background:var(--ui-primary-button-bg) !important; border:1px solid transparent !important; color:#fff !important;
+ }
+ #config_edit_modal#config_edit_modal .modal-footer-btns > button:hover:not(:disabled) { filter:brightness(.95) !important; }
+ #config_edit_modal#config_edit_modal button:active:not(:disabled) { transform:scale(.96) !important; }
+ [data-theme="dark"] #config_edit_modal#config_edit_modal .modal-close { background:rgba(255,255,255,.06) !important; }
+ [data-theme="dark"] #config_edit_modal#config_edit_modal .modal-close:hover { background:rgba(255,255,255,.12) !important; }
+ [data-theme="dark"] #config_edit_modal#config_edit_modal .modal-footer-btns > button:hover:not(:disabled) { filter:brightness(1.10) !important; }
+}
+/* Give configuration text the available dialog space. */
+@layer optiray-interactions {
+ #config_edit_modal#config_edit_modal .modal-content { padding:0 !important; overflow:hidden; }
+ #config_edit_modal#config_edit_modal .modal-header { margin:0 !important; padding:14px 20px !important; }
+ #config_edit_modal#config_edit_modal .modal-content > div:nth-child(2) { padding:12px 16px !important; min-height:0; }
+ #config_edit_modal#config_edit_modal textarea.setting-input {
+  display:block !important; width:100% !important; max-width:none !important;
+  height:clamp(180px,42dvh,420px) !important;
+  min-height:120px !important; max-height:55dvh !important;
+  margin:0 !important; padding:10px 12px !important; box-sizing:border-box !important;
+ }
+ #config_edit_modal#config_edit_modal .config-edit-error:empty { display:none; }
+ #config_edit_modal#config_edit_modal .modal-footer-btns { margin:0 !important; padding:8px 16px !important; }
+}
+/* Match the settings close button exactly, including its fixed square flex size. */
+@layer optiray-interactions {
+ #config_edit_modal#config_edit_modal .modal-header { position:relative !important; min-height:60px !important; box-sizing:border-box !important; padding-right:60px !important; }
+ #config_edit_modal#config_edit_modal .modal-header > button.modal-close {
+  position:absolute !important; top:15px !important; right:15px !important;
+  flex:0 0 30px !important; width:30px !important; min-width:30px !important; max-width:30px !important;
+  height:30px !important; min-height:30px !important; max-height:30px !important;
+  margin:0 !important; padding:0 !important; border:0 !important; border-radius:50% !important;
+  outline:none !important; background:rgba(0,0,0,.06) !important;
+ }
+ #config_edit_modal#config_edit_modal .modal-close svg { width:18px !important; height:18px !important; }
+ #config_edit_modal#config_edit_modal .modal-header > button.modal-close:hover { background:rgba(0,0,0,.06) !important; background-image:linear-gradient(rgba(220,53,69,.10),rgba(220,53,69,.10)) !important; color:#d93645 !important; }
+ [data-theme="dark"] #config_edit_modal#config_edit_modal .modal-header > button.modal-close { background:rgba(255,255,255,.06) !important; }
+ [data-theme="dark"] #config_edit_modal#config_edit_modal .modal-header > button.modal-close:hover { background:rgba(255,255,255,.12) !important; background-image:none !important; color:var(--app-dark-ink) !important; }
+}
+@layer optiray-interactions {
+ #subs_container .sub-row:has(.config-edit-link) { height:auto !important; max-height:none !important; min-height:54px !important; padding-top:8px !important; padding-bottom:8px !important; align-items:center !important; }
+ #subs_container .sub-row:has(.config-edit-link) .sub-row-inputs { height:auto !important; min-height:0 !important; align-items:center !important; }
+ #subs_container .sub-row:has(.config-edit-link) .sub-url-input { display:flex !important; flex-wrap:wrap !important; align-items:center !important; gap:4px 6px !important; height:auto !important; min-height:30px !important; max-height:none !important; white-space:normal !important; overflow:visible !important; padding:0 !important; }
+ #subs_container .config-edit-link { max-width:100%; white-space:normal !important; overflow-wrap:anywhere; text-align:left; }
+ #config_edit_modal#config_edit_modal .config-editor-heading { display:flex; align-items:baseline; flex-wrap:wrap; gap:5px 12px; min-width:0; }
+ #config_edit_modal#config_edit_modal .config-editor-name { color:var(--text-2); overflow-wrap:anywhere; }
+ #config_edit_modal#config_edit_modal .modal-footer-btns > .config-delete-btn { margin-right:auto !important; background:var(--ui-danger-button-bg) !important; border:1px solid transparent !important; color:white !important; }
+}
+@layer optiray-interactions {
+ .config-deletion-overlay { z-index:2147483000 !important; cursor:wait; }
+ .config-deletion-card { width:340px; max-width:calc(100vw - 32px); padding:28px 24px; box-sizing:border-box; text-align:center; background:var(--bg); color:var(--text); border:1px solid var(--line); border-radius:20px; box-shadow:var(--sh-2); }
+ .config-deletion-icon { display:block; margin:0 auto 16px; color:var(--ui-danger-button-bg); }
+ .config-deletion-orbit { transform-origin:32px 32px; animation:config-delete-spin 1.6s linear infinite; opacity:.45; }
+ .config-deletion-bin { transform-origin:32px 34px; animation:config-delete-pulse 1.2s ease-in-out infinite; }
+ .config-deletion-name { margin-top:8px; overflow-wrap:anywhere; }
+ .config-deletion-hint { margin-top:12px; color:var(--text-2); }
+ @keyframes config-delete-spin { to { transform:rotate(360deg); } }
+ @keyframes config-delete-pulse { 50% { opacity:.5; transform:translateY(2px); } }
+ @media(prefers-reduced-motion:reduce){ .config-deletion-orbit,.config-deletion-bin { animation:none; } }
+}
+@layer optiray-interactions {
+ :is(.config-deletion-card,.wait-modal-card,.update-spinner-card),
+ :is(.config-deletion-card,.wait-modal-card,.update-spinner-card) :is(div,span,p,button) {
+  font-size:14px !important; font-weight:400 !important;
+ }
+ .config-write-overlay .config-deletion-icon { color:var(--ui-primary-button-bg); }
 }

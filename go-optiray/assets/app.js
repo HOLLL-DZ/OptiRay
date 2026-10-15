@@ -228,7 +228,7 @@ function updateWaitModal(subtext) {
 }
 function hideWaitModal() {
     var m = document.getElementById('wait_modal');
-    if (m) m.classList.remove('active');
+    if (m) {m.classList.remove('active');if(m.dataset.operation){delete m.dataset.operation;var animation=m.querySelector('.update-spinner');if(animation && animation.dataset.originalMarkup){animation.innerHTML=animation.dataset.originalMarkup;animation.classList.remove('maintenance-animation');}}}
 }
 
 async function probeUrl(url, timeoutMs) {
@@ -575,7 +575,23 @@ function genNewHwid() {
     });
 }
 
-function changeSubColor(subId, hex) {
+var subColorSaving = false;
+async function changeSubColor(subId, hex) {
+    if (subColorSaving) return false;
+    subColorSaving = true;
+    var controls = Array.from(document.querySelectorAll('.sub-manual-color-trigger,.sub-row .dice-btn,#sub_manual_palette input'));
+    controls.forEach(function (control) { control.disabled = true; });
+    try {
+        var response = await fetch('/api/save_sub_color', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: 'sub_id=' + subId + '&color=' + encodeURIComponent(hex)
+        });
+        if (!response.ok) throw new Error('Не удалось сохранить цвет');
+        var result = await response.json();
+        if (result.ok === false) throw new Error(result.error || 'Не удалось сохранить цвет');
+        var source = document.querySelector('input[name="sub_color_' + subId + '"]');
+        if (source) source.value = hex;
     var row = document.getElementById('sub-row-' + subId);
     var sec = document.getElementById('sub-section-' + subId);
     if (row) {
@@ -594,11 +610,14 @@ function changeSubColor(subId, hex) {
     var rows = Array.from(document.querySelectorAll('.sub-row'));
     var chip = document.querySelectorAll('.subs-name-chip')[rows.indexOf(row)];
     if (chip) { chip.style.setProperty('--subscription-color',hex); var dot=chip.querySelector('.subs-name-dot'); if(dot)dot.style.background=hex; }
-    fetch('/api/save_sub_color', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: 'sub_id=' + subId + '&color=' + encodeURIComponent(hex)
-    });
+        return true;
+    } catch (error) {
+        alert(error.message || 'Не удалось сохранить цвет');
+        return false;
+    } finally {
+        subColorSaving = false;
+        controls.forEach(function (control) { control.disabled = false; });
+    }
 }
 
 function randomSubColor(subId) {
@@ -606,7 +625,7 @@ function randomSubColor(subId) {
     var inp = document.querySelector('input[name="sub_color_' + subId + '"]');
     var choices=pal.filter(function(color){return !inp || color.toLowerCase() !== inp.value.toLowerCase();});
     var hex = choices[Math.floor(Math.random() * choices.length)];
-    if (inp) inp.value = hex;
+
     changeSubColor(subId, hex);
 }
 
@@ -623,6 +642,7 @@ async function loadXrayVersions(force) {
         var response = await fetch('/api/xray_info' + (force ? '?refresh=1' : ''), {cache:'no-store'});
         if (!response.ok) throw new Error('HTTP ' + response.status);
         var res = await response.json();
+        setXraySubscriptionAvailability(res.installed);
         s.innerText = res.installed ? ('Установлено v' + res.version) : 'Не установлено';
         s.className = 'badge-ver ' + (res.installed ? 'installed' : 'missing');
         sel.innerHTML = '';
@@ -803,27 +823,39 @@ function downloadBackup() {
         '&xray=' + (xray && xray.checked ? '1' : '0');
 }
 
+var optirayRestoreBusy = false;
 async function restoreBackupFromFile(inp) {
-    if (!inp.files || !inp.files[0]) return;
-    var r = new FileReader();
-    r.onload = async function(e) {
-        try {
-            var p = JSON.parse(e.target.result);
-            var res = await fetch('/api/restore', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(p)
-            });
-            if (!res.ok) {
-                var result = await res.json();
-                throw new Error(result.error || 'Не удалось восстановить копию');
-            }
-            clearAllPingCache(); window.location.reload();
-        } catch(err) { alert('Ошибка восстановления: ' + err.message); }
-    };
-    r.readAsText(inp.files[0]);
+    if (optirayRestoreBusy || !inp.files || !inp.files[0]) return;
+    var file=inp.files[0];
+    optirayRestoreBusy=true;
+    inp.disabled=true;
+    showMaintenanceWait('restore','Восстановление OptiRay','Чтение резервной копии…');
+    var elapsed=0;
+    var timer=null;
+    try {
+        var payload=JSON.parse(await file.text());
+        updateWaitModal('Сохранение настроек и применение конфигурации на роутере…');
+        timer=setInterval(function(){
+            elapsed++;
+            updateWaitModal('Восстановление на роутере… '+elapsed+' с. Дождитесь завершения.');
+        },1000);
+        var response=await fetch('/api/restore', {
+            method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)
+        });
+        var result=await response.json();
+        if(!response.ok || result.ok===false)throw new Error(result.error || 'Не удалось восстановить копию');
+        clearInterval(timer);timer=null;
+        updateWaitModal('Восстановление завершено. Обновление страницы…');
+        clearAllPingCache();
+        window.location.reload();
+    } catch(error) {
+        hideWaitModal();
+        alert('Ошибка восстановления: '+error.message);
+    } finally {
+        if(timer)clearInterval(timer);
+        inp.disabled=false;inp.value='';optirayRestoreBusy=false;
+    }
 }
-
 async function resetToDefaults() {
     var msg = 'ВНИМАНИЕ!\n\n' +
               'Это действие сбросит ВСЁ:\n' +
@@ -837,12 +869,17 @@ async function resetToDefaults() {
               'Продолжить?';
     if (!confirm(msg)) return;
     if (!confirm('Последнее подтверждение. Точно сбросить ВСЁ?')) return;
+    if(optirayRestoreBusy)return;
+    optirayRestoreBusy=true;
+    showMaintenanceWait('reset','Сброс OptiRay','Возврат настроек к исходным значениям…');
+    var resetSeconds=0;
+    var resetTimer=setInterval(function(){updateWaitModal('Сброс на роутере… '+(++resetSeconds)+' с. Дождитесь завершения.');},1000);
     try {
         var res = await fetch('/api/reset_defaults', { method: 'POST' });
         var result = await res.json();
         if (!res.ok || !result.ok) throw new Error(result.error || ('HTTP ' + res.status));
         clearAllPingCache(); localStorage.clear(); window.location.reload();
-    } catch(e) { alert('Ошибка сброса настроек: ' + e.message); }
+    } catch(e) { hideWaitModal(); alert('Ошибка сброса настроек: ' + e.message); } finally { clearInterval(resetTimer); optirayRestoreBusy=false; }
 }
 
 function scrollToTop() { window.scrollTo({ top: 0, behavior: 'smooth' }); }
@@ -1098,24 +1135,24 @@ function mtRenderGlobal() {
 
 function _mtIfaceOptions(current) {
     var html = '';
-    var seen = {};
+    var seen = {blackhole:1};
     for (var i = 0; i < MT_STATE.interfaces.length; i++) {
         var item = MT_STATE.interfaces[i];
         var n = _mtIfaceName(item);
-        if (!n) continue;
+        if (!n || (n === 'br0' && !document.getElementById('settings_show_br0')?.checked)) continue;
         seen[n] = 1;
         var d = _mtIfaceDesc(item) || '';
         var label = d ? (n + ' \u2014 ' + d) : n;
         html += '<option value="' + _mtEsc(n) + '" data-name="' + _mtEsc(n) + '" data-desc="' + _mtEsc(d) + '"' + (n === current ? ' selected' : '') + '>' + _mtEsc(label) + '</option>';
     }
-    if (current && !seen[current]) {
+    if (current && (current !== 'br0' || document.getElementById('settings_show_br0')?.checked) && !seen[current]) {
         html = '<option value="' + _mtEsc(current) + '" data-name="' + _mtEsc(current) + '" data-desc="" selected>' + _mtEsc(current) + '</option>' + html;
     }
     return html;
 }
 
 function _mtIfacePickerHtml(current, gid) {
-    var curName = current || '';
+    var curName = current || 'blackhole';
     var curDesc = '';
     for (var i = 0; i < MT_STATE.interfaces.length; i++) {
         var item = MT_STATE.interfaces[i];
@@ -1124,11 +1161,11 @@ function _mtIfacePickerHtml(current, gid) {
             break;
         }
     }
-    var displayName = curName || 'Интерфейс';
+    var displayName = curName === 'blackhole' ? 'Блокировать' : curName;
     var descStyle = curDesc ? '' : 'display:none;';
     return '<div class="mt-iface-picker" data-gid="' + _mtEsc(gid) + '">'
         + '<select class="mt-group-iface" title="Интерфейс" tabindex="-1" aria-hidden="true">'
-        + '<option value="" data-name="" data-desc="">\u2014 не выбрано \u2014</option>'
+        + '<option value="blackhole" data-name="Блокировать" data-desc=""' + (curName === 'blackhole' ? ' selected' : '') + '>Блокировать</option>'
         + _mtIfaceOptions(curName)
         + '</select>'
         + '<button type="button" class="mt-iface-display" aria-label="Выбрать интерфейс группы" aria-haspopup="menu" aria-expanded="false">'
@@ -1178,10 +1215,9 @@ function _mtGroupHtml(g) {
         +   '<input type="text" class="mt-group-name" value="' + _mtEsc(g.name || '') + '" placeholder="Имя группы">'
         +   '<div class="mt-group-controls" role="group" aria-label="Интерфейс и действия группы">'
         +   _mtIfacePickerHtml(g.interface || '', g.id)
-        +   '<div class="mt-group-actions">'
+        +   '<div class="mt-group-actions"><button type="button" class="rt-icon-btn mt-add-rule" title="Добавить правило" aria-label="Добавить правило"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>'
         +   '<button type="button" class="rt-icon-btn mt-group-bulk" title="Добавить правила списком">' + OPTIRAY_ROUTING_ICONS.bulk + '</button>'
         +   '<button type="button" class="rt-icon-btn mt-group-copy" title="Копировать группу в буфер">' + OPTIRAY_ROUTING_ICONS.copy + '</button>'
-        +   '<button type="button" class="rt-icon-btn routing-group-auto-color" title="Случайный цвет группы" aria-label="Случайный цвет группы">' + OPTIRAY_AUTO_COLOR_ICON + '</button>'
         +   '<button type="button" class="rt-icon-btn rt-group-del" title="Удалить группу">' + OPTIRAY_ROUTING_ICONS.delete + '</button>'
         +   '</div>'
         +   '</div>'
@@ -1191,7 +1227,7 @@ function _mtGroupHtml(g) {
         + '</div>'
         + '<div class="mt-group-body">'
         +   '<div class="mt-rules">' + rulesHtml + '</div>'
-        +   '<button type="button" class="mt-add-rule">+ Добавить правило</button>'
+        
         + '</div>'
         + '</div>';
 }
@@ -1458,7 +1494,7 @@ window.mtOpenGlobalIface = function(btn) {
     for (var i = 0; i < MT_STATE.interfaces.length; i++) {
         var item = MT_STATE.interfaces[i];
         var n = _mtIfaceName(item);
-        if (!n) continue;
+        if (!n || (n === 'br0' && !document.getElementById('settings_show_br0')?.checked)) continue;
         var d = _mtIfaceDesc(item) || '';
         var isCur = (n === MT_UI.globalIface);
         html += '<button type="button" role="menuitemradio" aria-checked="' + String(isCur) + '" class="mt-global-iface-dd-item' + (isCur ? ' is-current' : '') + '"'
@@ -1901,7 +1937,7 @@ document.addEventListener('click', function(e) {
         if (!g) return;
         g.rules = g.rules || [];
         g.rules.push({ id: _mtNewId(), name: '', type: 'namespace', rule: '', enable: true });
-        g.collapsed = false;
+        g.collapsed = false; if (typeof MT_UI !== "undefined" && MT_UI.collapsed) MT_UI.collapsed[g.id] = false;
         mtRenderGroups();
         MT_STATE.dirty = true;
         return;
@@ -2520,10 +2556,9 @@ window.applyPasteGroupMt = function() {
                 '<span class="xr-category-dot" title="' + ({block:'Блокировать',direct:'Напрямую',proxy:'Через прокси'}[cat]) + '"></span>' +
                 '<input type="text" class="rt-group-title" value="' + esc(g.title || '') +
                     '" placeholder="Название группы">' +
-                '<div class="rt-group-actions">' +
+                '<div class="rt-group-actions"><button type="button" class="rt-icon-btn rt-add-rule" title="Добавить правило" aria-label="Добавить правило"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>' +
                 '<button type="button" class="rt-icon-btn rt-group-bulk" title="Добавить списком">' + SVG_LIST + '</button>' +
                 '<button type="button" class="rt-icon-btn rt-group-copy" title="Копировать группу (имя + правила)">' + SVG_COPY + '</button>' +
-                '<button type="button" class="rt-icon-btn routing-group-auto-color" title="Случайный цвет группы" aria-label="Случайный цвет группы">' + OPTIRAY_AUTO_COLOR_ICON + '</button>' +
                 '<button type="button" class="rt-icon-btn rt-group-del" title="Удалить группу">' + SVG_DEL + '</button>' +
                 '</div>' +
                 '<span class="xr-group-count">' + _rules.filter(function(r){return normRuleState(r).value.trim();}).length + ' правил</span>' +
@@ -2531,7 +2566,7 @@ window.applyPasteGroupMt = function() {
             '</div>' +
             '<div class="rt-group-body">' +
                 '<div class="rt-rules">' + rulesHtml + '</div>' +
-                '<button type="button" class="rt-add-btn rt-add-rule">+ Добавить правило</button>' +
+                
             '</div>' +
         '</div>';
 
@@ -2680,6 +2715,7 @@ window.applyPasteGroupMt = function() {
         if (!g) return;
         g.rules = g.rules || [];
         g.rules.push({value:'', enabled:true});
+        g.collapsed = false;
         renderAll();
         var box = document.getElementById('rt_groups_' + cat);
         if (box) {
@@ -2823,7 +2859,7 @@ window.applyPasteGroupMt = function() {
         var lines = String(raw == null ? '' : raw).split(/\r?\n/);
         var title = '';
         var rules = [];
-        var seen = {};
+        var seen = {blackhole:1};
         for (var i = 0; i < lines.length; i++) {
             var v = String(lines[i] || '').replace(/^\s+|\s+$/g, '');
             if (!v) continue;
@@ -4887,6 +4923,7 @@ document.addEventListener('keydown', function(event) {
 });
 
 function mtFilterGroups() {
+ if(document.getElementById('mt_modal')?.dataset.ruleEngine==='xray'){syncSharedXraySearch();return;}
  var cont = document.getElementById('mt_groups_container');
  if (!cont) return;
  var search = document.getElementById('mt_group_search');
@@ -4899,9 +4936,23 @@ function mtFilterGroups() {
   var name = card.querySelector('.mt-group-name');
   var check = card.querySelector('.mt-group-enable');
   var enabled = !check || check.checked;
-  var values = Array.from(card.querySelectorAll('.mt-rule-input')).map(function(input) { return input.value; });
+  var ruleInputs = Array.from(card.querySelectorAll('.mt-rule-input'));
+  var values = ruleInputs.map(function(input) { return input.value; });
+  var ruleMatch = ruleInputs.some(function(input) { return query && input.value.toLowerCase().includes(query); });
+  ruleInputs.forEach(function(input) { input.classList.toggle('routing-search-match', !!query && input.value.toLowerCase().includes(query)); });
+  if(name)name.classList.toggle('routing-search-match', !!query && name.value.toLowerCase().includes(query));
+  if(query && !card.dataset.searchCollapseSaved){
+   card.dataset.searchCollapseSaved='1';card.dataset.searchWasCollapsed=String(card.classList.contains('collapsed'));
+  }
+  if(query && ruleMatch){card.classList.remove('collapsed');}
+  if(!query && card.dataset.searchCollapseSaved){
+   card.classList.toggle('collapsed',card.dataset.searchWasCollapsed==='true');
+   delete card.dataset.searchCollapseSaved;delete card.dataset.searchWasCollapsed;
+  }
+  var toggle=card.querySelector('.mt-group-toggle');
+  if(toggle){toggle.title=card.classList.contains('collapsed')?'Развернуть':'Свернуть';toggle.setAttribute('aria-expanded',String(!card.classList.contains('collapsed')));}
   var text = ((name ? name.value : '') + ' ' + values.join(' ')).toLowerCase();
-  card.hidden = !!((query && text.indexOf(query) < 0) || (mode === 'enabled' && !enabled) || (mode === 'disabled' && enabled));
+  card.hidden = !!((query && text.indexOf(query) < 0) || (mode === 'enabled' && !enabled) || (mode === 'disabled' && enabled) || (mode === 'blocked' && card.querySelector('.mt-group-iface')?.value !== 'blackhole'));
   if (!card.hidden) visible++;
   var head = card.querySelector('.mt-group-head');
   if (head && name) {
@@ -4913,7 +4964,7 @@ function mtFilterGroups() {
   }
  });
  var summary = document.getElementById('mt_filter_count');
- if (summary) summary.textContent = visible + ' из ' + cards.length;
+ if (summary) summary.textContent = visible + '/' + cards.length;
  var empty = document.getElementById('mt_filter_empty');
  if (empty) empty.hidden = cards.length === 0 || visible > 0;
 }
@@ -5030,7 +5081,7 @@ function browseServers() {
   cards.sort(function(a,b){var active=Number(b.dataset.active==='1')-Number(a.dataset.active==='1');if(active)return active;if(sort==='name')return a.dataset.name.localeCompare(b.dataset.name,'ru');if(sort==='latency')return latency(a)-latency(b)||Number(a.dataset.browseOrder)-Number(b.dataset.browseOrder);return Number(b.dataset.fav==='1')-Number(a.dataset.fav==='1')||Number(a.dataset.browseOrder)-Number(b.dataset.browseOrder);});
   cards.forEach(function(card){grid.appendChild(card);});
  });
- document.getElementById('server_results_count').textContent=visible+' из '+total;
+ document.getElementById('server_results_count').textContent=visible+'/'+total;
  document.getElementById('server_results_empty').hidden=visible>0||total===0;
 }
 document.addEventListener('DOMContentLoaded',function(){
@@ -5194,7 +5245,7 @@ document.addEventListener('DOMContentLoaded',function(){
  window.optirayEnhanceSelect=function(select){
    if(!select||select.dataset.optirayEnhanced)return;
    select.dataset.optirayEnhanced='1';
-   var button=document.createElement('button');button.type='button';button.className='optiray-select-trigger';
+   var button=document.createElement('button');button.type='button';button.className='optiray-select-trigger';button.dataset.selectId=select.id;
    var filterCount=select.id==='mt_group_filter'?document.getElementById('mt_filter_count'):select.id==='xr_group_filter'?document.getElementById('xr_filter_count'):select.id==='server_filter'?document.getElementById('server_results_count'):null;
    button.setAttribute('aria-label',select.getAttribute('aria-label'));button.setAttribute('aria-haspopup','menu');button.setAttribute('aria-expanded','false');button.setAttribute('aria-controls','optiray_select_dd');
    function sync(){button.replaceChildren();var text=document.createElement('span');text.textContent=(select.selectedOptions[0]||select.options[0]||{textContent:''}).textContent;button.appendChild(text);if(filterCount)button.appendChild(filterCount);button.insertAdjacentHTML('beforeend','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>');}
@@ -5288,7 +5339,17 @@ document.addEventListener('change',function(event){
  var originalOpenMt=openMtModal,originalCloseMt=closeMtModal;
  function refresh(){
   var modal=document.getElementById('mt_modal');if(!modal)return;
-  modal.dataset.ruleEngine=mode;
+  modal.dataset.ruleEngine=mode; syncRoutingHeaderActions(mode);
+  var heading=document.getElementById('mt_dialog_title');
+  if(heading && heading.tagName!=='BUTTON') {
+   var titleButton=document.createElement('button');
+   titleButton.type='button';titleButton.id='mt_dialog_title';
+   titleButton.className='power-status-button routing-title-power';
+   titleButton.innerHTML='<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M12 3v9M6.4 5.6a8 8 0 1 0 11.2 0"/></svg><span></span><span class="power-status-dot" aria-hidden="true"></span>';
+   titleButton.onclick=function(){powerButtonClick(this);};
+   heading.replaceWith(titleButton);heading=titleButton;
+  }
+  if(heading){heading.dataset.powerTarget=mode==='xray'?'xray_routing_enabled':'mt_enabled';syncPowerButtons();}
   var editor=document.getElementById('routing_modal');if(editor)editor.hidden=mode!=='xray';
   if(editor)editor.inert=busy;
   var reload=document.getElementById('xr_reload_btn');if(reload)reload.disabled=busy;
@@ -5350,6 +5411,11 @@ document.addEventListener('change',function(event){
   finally{busy=false;refresh();if(error)_mtSetStatus(error,'err');}
  };
  async function openUnified(){
+  var searchModal=document.getElementById('mt_modal');
+  if(searchModal && searchModal.style.display!=='flex'){
+   ['mt_group_search','xr_group_search'].forEach(function(id){var input=document.getElementById(id);if(input)input.value='';});
+   mtFilterGroups();if(window.filterXrayGroups)window.filterXrayGroups();
+  }
   if(mode==='optirout')await originalOpenMt();
   else{
    var modal=document.getElementById('mt_modal');
@@ -5472,19 +5538,29 @@ document.addEventListener('change',function(event){
    var cards=editor.querySelectorAll('.rt-group-card'),visible=0;
    cards.forEach(function(card){
     var values=Array.from(card.querySelectorAll('.rt-group-title,.rt-rule-input')).map(function(input){return input.value;}).join(' ').toLowerCase();
+    var matchedRule=false;
+    card.querySelectorAll('.rt-group-title,.rt-rule-input').forEach(function(input){
+     var match=!!query && input.value.toLowerCase().includes(query);
+     input.classList.toggle('routing-search-match',match);
+     if(match && input.classList.contains('rt-rule-input'))matchedRule=true;
+    });
+    if(query && !card.dataset.searchCollapseSaved){card.dataset.searchCollapseSaved='1';card.dataset.searchWasCollapsed=String(card.classList.contains('collapsed'));}
+    if(query && matchedRule){card.classList.remove('collapsed');var section=card.closest('.xr-outbound');if(section)section.classList.remove('xr-collapsed');}
+    if(!query && card.dataset.searchCollapseSaved){card.classList.toggle('collapsed',card.dataset.searchWasCollapsed==='true');delete card.dataset.searchCollapseSaved;delete card.dataset.searchWasCollapsed;}
     var enabled=card.querySelector('.rt-group-enabled').checked;
-    card.hidden=(query&&values.indexOf(query)<0)||(filter==='enabled'&&!enabled)||(filter==='disabled'&&enabled)||(['block','direct','proxy'].indexOf(filter)>=0&&card.dataset.cat!==filter);
+    card.hidden=(query&&values.indexOf(query)<0)||(filter==='enabled'&&!enabled)||(filter==='disabled'&&enabled)||(filter==='blocked'&&card.dataset.cat!=='block')||(['block','direct','proxy'].indexOf(filter)>=0&&card.dataset.cat!==filter);
     if(!card.hidden)visible++;
     var count=card.querySelector('.xr-group-count');
-    if(count)count.textContent=Array.from(card.querySelectorAll('.rt-rule-input')).filter(function(input){return input.value.trim();}).length+' правил';
+    if(count)count.textContent=ruCount(Array.from(card.querySelectorAll('.rt-rule-input')).filter(function(input){return input.value.trim();}).length,'правило','правила','правил');
    });
    editor.querySelectorAll('.xr-outbound').forEach(function(section){
     var categoryMismatch=['block','direct','proxy'].indexOf(filter)>=0&&section.dataset.cat!==filter;
     var matchingGroup=Array.from(section.querySelectorAll('.rt-group-card')).some(function(card){return !card.hidden;});
     var listMatches=query&&section.querySelector('textarea').value.toLowerCase().indexOf(query)>=0;
-    section.hidden=categoryMismatch||((query||filter==='enabled'||filter==='disabled')&&!matchingGroup&&!listMatches);
+    section.hidden=categoryMismatch||((query||filter==='enabled'||filter==='disabled'||filter==='blocked')&&!matchingGroup&&!listMatches);
    });
-   document.getElementById('xr_filter_count').textContent=visible+' из '+cards.length;
+   document.getElementById('xr_filter_count').textContent=visible+'/'+cards.length;
+   if(mode==='xray')document.getElementById('mt_filter_count').textContent=visible+'/'+cards.length;
    empty.hidden=Array.from(editor.querySelectorAll('.xr-outbound')).some(function(section){return !section.hidden;});
   };
   ['input','change'].forEach(function(name){editor.addEventListener(name,function(event){
@@ -5501,17 +5577,6 @@ document.addEventListener('change',function(event){
  });
 })();
 
-document.addEventListener('click',function(event) {
- var button=event.target.closest('.routing-group-auto-color');
- if(!button)return;
- event.preventDefault();event.stopPropagation();
- var card=button.closest('.mt-group-card,.rt-group-card');
- var input=card && card.querySelector('.mt-group-color,.xr-group-color');
- if(!input)return;
- input.value=randomRoutingGroupColor();
- input.dispatchEvent(new Event('input',{bubbles:true}));
- input.dispatchEvent(new Event('change',{bubbles:true}));
-});
 
 function selectPasteMode(button, replace) {
  var toggle=button.closest('.paste-mode-toggle');
@@ -5651,7 +5716,7 @@ function syncPowerButtons(){
   var input=document.getElementById(button.dataset.powerTarget);if(!input)return;
   var name=button.dataset.powerTarget==='optiray_power'?'OptiRay':button.dataset.powerTarget==='mt_enabled'?'OptiRout':'Xray Routing';
   button.setAttribute('aria-pressed',String(input.checked));button.disabled=input.disabled;
-  button.querySelector('span').textContent=name+(input.checked?' вкл.':' выкл.');
+  button.querySelector('span').textContent=button.classList.contains('routing-title-power')?name:name+(input.checked?' вкл.':' выкл.');
   button.setAttribute('aria-label',(input.checked?'Выключить ':'Включить ')+name);
  });
 }
@@ -5663,3 +5728,324 @@ function powerButtonClick(button){
  else{input.dispatchEvent(new Event('change',{bubbles:true}));}
 }
 if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',syncPowerButtons);}else{syncPowerButtons();}
+
+function subscriptionDisclosureIcon() {
+    return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="12" height="16" rx="2"/><path d="M5 8h6M5 12h6M5 16h3"/><path class="subs-disclosure-chevron" d="m17 9 3 3-3 3"/></svg>';
+}
+// Visible manual color controls avoid clipped native picker anchors.
+document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('#subs_container .sub-row').forEach(function (row) {
+        var auto = row.querySelector('.dice-btn');
+        if (!auto) return;
+        auto.title = 'Автоцвет';
+        auto.setAttribute('aria-label', 'Выбрать автоматический цвет');
+        auto.onclick = function () { randomSubColor(Number(row.dataset.subId)); };
+        var button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'sub-manual-color-trigger';
+        row.appendChild(button);
+        button.removeAttribute('onclick');
+        button.title = 'Выбрать цвет';
+        button.setAttribute('aria-label', 'Выбрать цвет подписки');
+        button.addEventListener('click', function (event) {
+            event.stopPropagation();
+            var old = document.getElementById('sub_manual_palette');
+            if (old) { if (old.closePalette) old.closePalette(); else old.remove(); }
+            var row = button.closest('.sub-row');
+            var source = row.querySelector('input[type="color"]');
+            if (!source) return;
+            var panel = document.createElement('div');
+            panel.id = 'sub_manual_palette';
+            panel.setAttribute('role', 'dialog');
+            panel.setAttribute('aria-label', 'Цвет подписки');
+            var picker = document.createElement('input');
+            picker.type = 'color'; picker.value = source.value;
+            picker.setAttribute('aria-label', 'Выбрать цвет');
+            var hex = document.createElement('input');
+            hex.type = 'text'; hex.value = source.value; hex.maxLength = 7;
+            hex.setAttribute('aria-label', 'HEX-код цвета');
+            async function apply(value) {
+                if (!/^#[0-9a-f]{6}$/i.test(value)) return;
+                
+                var saved = await changeSubColor(Number(row.dataset.subId), value);
+                picker.value = source.value; hex.value = source.value;
+            }
+            picker.addEventListener('change', function () { apply(picker.value); });
+            hex.addEventListener('change', function () { apply(hex.value.trim()); });
+            panel.append(picker, hex);
+            panel.addEventListener('click', function (e) { e.stopPropagation(); });
+            document.body.appendChild(panel);
+            var rect = button.getBoundingClientRect();
+            panel.style.left = Math.max(8, Math.min(rect.right - 180, innerWidth - 188)) + 'px';
+            panel.style.top = Math.min(rect.bottom + 5, innerHeight - 70) + 'px';
+            function close(e) {
+                if (e.type === 'keydown' && e.key !== 'Escape') return;
+                panel.remove();
+                document.removeEventListener('click', close);
+                document.removeEventListener('keydown', close);
+            }
+            panel.closePalette = function () { close({type:'click'}); };
+            document.addEventListener('click', close);
+            document.addEventListener('keydown', close);
+        });
+    });
+});
+/* Automatic server selection uses a wand icon. */
+document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('#servers_container .sub-actions .btn-auto-select').forEach(function (button) {
+        if (button.querySelector('.auto-select-icon')) return;
+        button.insertAdjacentHTML('afterbegin', '<svg class="action-icon auto-select-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>');
+    });
+});
+
+// Engine icons for the header mode switch.
+document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('#mt_modal .unified-rule-switch > button').forEach(function (button) {
+        var path = button.dataset.ruleMode === 'optirout'
+            ? '<rect x="3" y="3" width="5" height="5" rx="1"/><rect x="16" y="3" width="5" height="5" rx="1"/><rect x="9.5" y="16" width="5" height="5" rx="1"/><path d="M5.5 8v3.5h13V8M12 11.5V16"/>'
+            : '<path d="m13 2-9 12h7l-1 8 10-12h-7Z"/>';
+        button.insertAdjacentHTML('afterbegin','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+path+'</svg>');
+    });
+});
+
+// Files entering/leaving the panel and a restore history icon.
+document.addEventListener('DOMContentLoaded', function () {
+    var icons = {
+        '.mt-io-import': ['Загрузить правила из файла Excel', '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6Z"/><path d="M14 2v6h6M12 11v7m-3-3 3 3 3-3"/>'],
+        '.mt-io-export': ['Скачать правила в файл Excel', '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6Z"/><path d="M14 2v6h6M12 18v-7m-3 3 3-3 3 3"/>'],
+        '.mt-io-backup': ['Восстановить правила из резервной копии', '<path d="M3 10a9 9 0 1 1 2 8M3 4v6h6"/><path d="M12 7v5l3 2"/>']
+    };
+    Object.keys(icons).forEach(function (selector) {
+        document.querySelectorAll('#mt_modal .routing-header-actions ' + selector).forEach(function (button) {
+            button.title=icons[selector][0];button.setAttribute('aria-label',button.title);
+            button.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+icons[selector][1]+'</svg>';
+        });
+    });
+});
+
+// Labeled routing toolbar actions.
+document.addEventListener('DOMContentLoaded', function () {
+    var actions = {
+        '.mt-add-group':['Добавить','<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M12 8v8M8 12h8"/>'],
+        '.mt-global-iface-btn':['Интерфейс','<rect x="3" y="3" width="5" height="5" rx="1"/><rect x="16" y="3" width="5" height="5" rx="1"/><rect x="9.5" y="16" width="5" height="5" rx="1"/><path d="M5.5 8v3h13V8M12 11v5"/>'],
+        '.mt-paste-group-btn':['Вставить','<rect x="5" y="5" width="14" height="16" rx="2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h6"/>'],
+        '.mt-reload-btn':['Обновить','<path d="M20 11a8 8 0 0 0-14-5L3 9m0-5v5h5M4 13a8 8 0 0 0 14 5l3-3m0 5v-5h-5"/>']
+    };
+    Object.keys(actions).forEach(function(selector){
+        document.querySelectorAll('#mt_modal .mt-sticky-bar '+selector).forEach(function(button){
+            button.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+actions[selector][1]+'</svg><span>'+actions[selector][0]+'</span>';
+        });
+    });
+});
+
+// Place clipboard import directly after adding a routing group.
+document.addEventListener('DOMContentLoaded', function () {
+    var add=document.querySelector('#mt_modal .mt-groups-toolbar .mt-add-group');
+    var paste=document.querySelector('#mt_modal .mt-groups-toolbar .mt-paste-group-btn');
+    if(add && paste){
+        add.after(paste);
+        var label=paste.querySelector('span');
+        if(label)label.textContent='Из буфера';
+    }
+});
+
+document.addEventListener('DOMContentLoaded', function () {
+    var button=document.querySelector('#mt_modal .mt-global-iface-btn');
+    if(button){var icon=button.querySelector('svg');if(icon)icon.innerHTML='<path d="M5 4h14v12l-3 4H8l-3-4Z"/><path d="M8 4v5M11 4v5M14 4v5M17 4v5M9 20v2M15 20v2"/>';}
+});
+
+// Add a subscription beside its disclosure control, retaining collapse visibility.
+document.addEventListener('DOMContentLoaded', function () {
+    var row=document.getElementById('subs_add_row');
+    var group=document.querySelector('.subs-header-group');
+    if(!row || !group)return;
+    group.after(row);
+    var button=row.querySelector('button');
+    button.innerHTML='<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M12 8v8M8 12h8"/></svg><span>Добавить подключение</span>';
+    var subscriptions=document.getElementById('subs_container');
+    row.style.display=subscriptions && subscriptions.style.display==='none'?'none':'';
+});
+
+// Keep the add action inside the same compact group as the disclosure.
+document.addEventListener('DOMContentLoaded', function () {
+    var toggle=document.getElementById('subs_collapse_btn');
+    var add=document.getElementById('subs_add_row');
+    if(toggle && add)toggle.after(add);
+});
+
+document.addEventListener('DOMContentLoaded', function () {
+    var actions=document.querySelector('#mt_modal .routing-header-actions');
+    var toggle=actions && actions.querySelector('.unified-routing-mode');
+    if(actions && toggle){
+        Array.from(actions.children).filter(function(el){return el.classList.contains('rt-io-group') || el.classList.contains('xray-header-io');}).forEach(function(el){actions.insertBefore(el,toggle);});
+    }
+    var close=document.querySelector('#mt_modal .mt-sticky-top > .modal-header > button.modal-close');
+    if(close)close.innerHTML='<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>';
+});
+
+document.addEventListener('DOMContentLoaded', function () {
+    var actions=document.querySelector('#mt_modal .routing-header-actions');
+    var toggle=actions && actions.querySelector('.unified-routing-mode');
+    if(!toggle)return;
+    Array.from(actions.children).filter(function(el){return el.classList.contains('rt-io-group');}).forEach(function(button){
+        actions.insertBefore(button,toggle);
+    });
+});
+
+function syncSharedXraySearch(){
+ var search=document.getElementById('xr_group_search'),filter=document.getElementById('xr_group_filter');
+ if(!search||!filter)return;
+ search.value=document.getElementById('mt_group_search').value;
+ var selectedFilter=document.getElementById('mt_group_filter').value;
+ if(selectedFilter==='blocked')selectedFilter='all';
+ filter.value=selectedFilter;
+ if(window.filterXrayGroups)window.filterXrayGroups();
+}
+function syncRoutingHeaderActions(mode){
+ var sharedFilter=document.getElementById('mt_group_filter');
+ if(sharedFilter){
+  var blockedOption=sharedFilter.querySelector('option[value=blocked]');
+  if(mode==='xray' && blockedOption){
+   if(sharedFilter.value==='blocked')sharedFilter.value='all';
+   blockedOption.remove();
+   sharedFilter.dispatchEvent(new Event('change',{bubbles:true}));
+  }else if(mode!=='xray' && !blockedOption){
+   var option=document.createElement('option');option.value='blocked';option.textContent='Заблокированные';sharedFilter.appendChild(option);
+  }
+ }
+ var toolbar=document.querySelector('#mt_modal .mt-groups-toolbar');if(!toolbar)return;
+ var add=toolbar.querySelector('.mt-add-group'),paste=toolbar.querySelector('.mt-paste-group-btn'),iface=toolbar.querySelector('.mt-global-iface-btn'),reload=document.querySelector('#mt_modal .mt-sticky-bar .mt-reload-btn');
+ if(!add.dataset.originalClick){add.dataset.originalClick=add.getAttribute('onclick');paste.dataset.originalClick=paste.getAttribute('onclick');reload.dataset.originalClick=reload.getAttribute('onclick');}
+ if(mode==='xray'){
+  add.onclick=function(){document.querySelector('#routing_modal .rt-add-group')?.click();};
+  paste.onclick=function(){document.querySelector('#routing_modal .rt-add-group-paste')?.click();};
+  reload.onclick=function(){window.reloadXrayConfig();};
+  iface.style.setProperty('display','none','important');
+  syncSharedXraySearch();
+ }else{
+  add.setAttribute('onclick',add.dataset.originalClick);paste.setAttribute('onclick',paste.dataset.originalClick);reload.setAttribute('onclick',reload.dataset.originalClick);
+  iface.style.removeProperty('display');
+ }
+}
+document.addEventListener('DOMContentLoaded', function () {
+    var icons={
+        '.btn-pingfav':'<path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2-5.6-3-5.6 3 1.1-6.2L3 9.6l6.2-.9Z"/>',
+        '.btn-pingtcp':'<rect x="2" y="8" width="5" height="8" rx="1"/><rect x="17" y="8" width="5" height="8" rx="1"/><path d="M7 10h10M7 14h10M4 5v3M20 5v3"/>',
+        '.btn-pingall':'<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c5 5 5 13 0 18-5-5-5-13 0-18Z"/>',
+        '.btn-stop':'<rect x="5" y="5" width="14" height="14" rx="2"/>'
+    };
+    Object.keys(icons).forEach(function(selector){var svg=document.querySelector('#global_ping_row '+selector+' svg');if(svg){svg.setAttribute('stroke-width','1.7');svg.innerHTML=icons[selector];}});
+});
+
+function showMaintenanceWait(mode,title,status){
+ var modal=document.getElementById('wait_modal');
+ var animation=modal.querySelector('.update-spinner');
+ if(!animation.dataset.originalMarkup)animation.dataset.originalMarkup=animation.innerHTML;
+ modal.dataset.operation=mode;
+ animation.classList.add('maintenance-animation');
+ animation.innerHTML='<svg viewBox="0 0 160 80" fill="none"><g class="maintenance-file"><path d="M20 14h25l12 12v35H20Z"/><path d="M45 14v12h12M28 34h20M28 42h20M28 50h12"/></g><path class="maintenance-link" d="M64 40h28"/><circle class="maintenance-data" cx="65" cy="40" r="3"/><g class="maintenance-router"><rect x="98" y="34" width="46" height="28" rx="7"/><path d="M105 34V19M137 34V19M108 44h26"/><circle cx="110" cy="53" r="1.5"/><circle cx="117" cy="53" r="1.5"/></g><path class="maintenance-reset" d="M119 14a14 14 0 1 1-11 22M104 23v13h13"/></svg>';
+ showWaitModal(title,status);
+}
+function setXraySubscriptionAvailability(installed){
+ window.optirayXrayInstalled=!!installed;
+ document.querySelectorAll('#subs_add_row button,.btn-refresh-icon,button[name="action"][value="update"]').forEach(function(button){button.disabled=!installed;if(!installed)button.title='Установите ядро Xray в настройках';});
+ var card=document.querySelector('.active-status-card');
+ if(card)card.classList.toggle('xray-missing',!installed);
+ var notice=document.querySelector('.xray-install-notice');if(notice)notice.hidden=installed;
+}
+document.addEventListener('DOMContentLoaded',function(){
+ setXraySubscriptionAvailability(document.getElementById('xray_available')?.value==='true');
+});
+document.addEventListener('DOMContentLoaded',function(){
+    var icons=document.querySelectorAll('#settings_modal .settings-backup-icon');
+    var paths=[
+        '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6Z"/><path d="M14 2v6h6M12 11v7m-3-3 3 3 3-3"/>',
+        '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6Z"/><path d="M14 2v6h6M12 18v-7m-3 3 3-3 3 3"/>'
+    ];
+    icons.forEach(function(icon,index){if(paths[index])icon.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+paths[index]+'</svg>';});
+});
+
+document.addEventListener('click',function(event){
+ var button=event.target.closest('.config-edit-link');if(!button)return;
+ var modal=document.getElementById('config_edit_modal');
+ if(!modal){modal=document.createElement('div');modal.id='config_edit_modal';modal.className='modal-overlay';modal.innerHTML='<div class="modal-content" style="width:600px;max-width:calc(100vw - 32px)"><div class="modal-header"><span class="config-editor-heading">Редактирование конфигурации <span class="config-editor-name"></span></span><button type="button" class="modal-close" aria-label="Закрыть"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="m6 6 12 12M6 18 18 6"/></svg></button></div><div style="padding:16px 24px"><textarea class="setting-input" rows="6" style="width:100%;box-sizing:border-box;resize:vertical" aria-label="Ссылка конфигурации"></textarea><div class="config-edit-error" role="alert" style="color:var(--danger);margin-top:8px"></div></div><div class="modal-footer-btns"><button type="button" class="btn config-delete-btn">Удалить</button><button type="button" class="btn modal-footer-cancel">Отмена</button><button type="button" class="btn core-btn core-btn-install">Сохранить</button></div></div>';document.body.appendChild(modal);
+ var close=function(){modal.style.display='none';};modal.querySelector('.modal-close').onclick=close;modal.querySelector('.modal-footer-cancel').onclick=close;modal.addEventListener('click',function(e){if(e.target===modal)close();});modal.addEventListener('keydown',function(e){if(e.key==='Escape')close();});
+ modal.querySelector('.core-btn-install').onclick=async function(){var save=this;save.disabled=true;try{var body=new URLSearchParams({action:'edit_config',sub_id:modal.dataset.subId,config_index:modal.dataset.index,config_link:modal.querySelector('textarea').value});var response=await fetch('/manage',{method:'POST',body:body});if(!response.ok){var data=await response.json();throw Error(data.error||'Не удалось сохранить');}location.reload();}catch(error){modal.querySelector('.config-edit-error').textContent=error.message;}finally{save.disabled=false;}};
+ }
+ modal.querySelector('.config-editor-name').textContent=button.textContent.trim();
+ modal.querySelector('.config-delete-btn').onclick=async function(){
+  if(!confirm('Удалить конфигурацию «'+button.textContent.trim()+'»?'))return;
+  this.disabled=true;
+  var finishDeletion=showConfigDeletion(button.textContent.trim());
+  try{var response=await fetch('/manage',{method:'POST',body:new URLSearchParams({action:'delete_config',sub_id:modal.dataset.subId,config_index:modal.dataset.index})});if(!response.ok){var data=await response.json();throw Error(data.error||'Не удалось удалить');}location.reload();}catch(error){finishDeletion();this.disabled=false;modal.querySelector('.config-edit-error').textContent=error.message;}
+ };
+ modal.dataset.subId=button.dataset.subId;modal.dataset.index=button.dataset.configIndex;modal.querySelector('textarea').value=button.dataset.configLink;modal.querySelector('.config-edit-error').textContent='';modal.style.display='flex';modal.querySelector('textarea').focus();
+});
+function showConfigDeletion(name,title){
+ var overlay=document.createElement('div');overlay.className='modal-overlay config-deletion-overlay';overlay.style.display='flex';overlay.tabIndex=-1;
+ overlay.innerHTML='<div class="config-deletion-card" role="alertdialog" aria-modal="true" aria-labelledby="config_deletion_title" aria-busy="true"><svg class="config-deletion-icon" viewBox="0 0 64 64" width="64" height="64" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle class="config-deletion-orbit" cx="32" cy="32" r="28" stroke-dasharray="70 106"/><g class="config-deletion-bin"><path d="M23 25h18l-2 23H25l-2-23Zm-3 0h24M28 20h8l2 5M29 31v11m6-11v11"/></g></svg><div id="config_deletion_title">Удаление конфигурации</div><div class="config-deletion-name"></div><div class="config-deletion-hint" role="status">Подождите, удаление выполняется…</div></div>';
+ overlay.querySelector('.config-deletion-name').textContent=name;
+ if(title)overlay.querySelector('#config_deletion_title').textContent=title;
+ var previous=document.activeElement,locked=[];
+ Array.from(document.body.children).forEach(function(element){if(!element.inert){element.inert=true;locked.push(element);}});
+ document.body.appendChild(overlay);overlay.focus();
+ function block(event){if(event.key==='Escape'||event.key==='Tab'){event.preventDefault();event.stopImmediatePropagation();}}
+ document.addEventListener('keydown',block,true);
+ return function(){document.removeEventListener('keydown',block,true);overlay.remove();locked.forEach(function(element){element.inert=false;});if(previous&&previous.isConnected)previous.focus();};
+}
+// The native confirmation runs first; keep the page locked while deleting the source.
+document.addEventListener('submit',async function(event){
+ var button=event.submitter;
+ if(!button || button.name!=='action' || !/^del_\d+$/.test(button.value) || !button.closest('#subs_container'))return;
+ event.preventDefault();
+ var form=event.target;if(form.dataset.deletionBusy==='1')return;
+ var row=button.closest('.sub-row');
+ var name=row.querySelector('.sub-title-badge')?.textContent.trim()||'Подписка';
+ var configurations=!!row.querySelector('.config-edit-link')||name==='Конфигурации';
+ var body=new URLSearchParams();new FormData(form).forEach(function(value,key){if(typeof value==='string')body.append(key,value);});body.set('action',button.value);
+ form.dataset.deletionBusy='1';
+ var finish=showConfigDeletion(name,configurations?'Удаление всех конфигураций':'Удаление подписки');
+ try{
+  var response=await fetch(form.getAttribute('action')||'/manage',{method:'POST',body:body});
+  if(!response.ok){var data=await response.json();throw Error(data.error||'Не удалось удалить');}
+  location.reload();
+ }catch(error){finish();delete form.dataset.deletionBusy;alert('Ошибка удаления: '+error.message);}
+},true);
+// A single busy policy covers configuration writes and existing operation dialogs.
+(function(){
+ var originalFetch=window.fetch.bind(window), pending=0, finishBusy=null;
+ var mutations=new Set(['/manage','/select','/api/auto_select','/api/restore','/api/reset_defaults','/api/xray_action','/api/hysteria_action','/api/optirout_import','/api/optirout_config','/api/optirout_reset','/api/optirout_restore_backup','/api/routing_import','/api/xray_reset','/api/routing_rules_mode','/api/optiray_enabled','/api/reorder_subs','/api/save_sub_color','/api/optirout_backup_settings','/api/xray_backup_settings']);
+ function operationVisible(){return document.querySelector('.config-deletion-overlay,#wait_modal.active,#update_overlay.active');}
+ window.fetch=async function(input,options){
+  var path;try{path=new URL(typeof input==='string'?input:input.url,location.href).pathname;}catch(_){return originalFetch(input,options);}
+  var method=((options&&options.method)||(input&&input.method)||'GET').toUpperCase();
+  if(method==='GET'||!mutations.has(path))return originalFetch(input,options);
+  if(!pending&&!operationVisible()){
+   finishBusy=showConfigDeletion('',path==='/select'?'Применение конфигурации':'Сохранение изменений');
+   var overlay=document.querySelector('.config-deletion-overlay');overlay.classList.add('config-write-overlay');
+   overlay.querySelector('.config-deletion-hint').textContent='Подождите, операция выполняется…';
+   overlay.querySelector('.config-deletion-bin').innerHTML='<path d="m23 33 6 6 13-14"/>';
+  }
+  pending++;
+  try{var response=await originalFetch(input,options);await response.clone().arrayBuffer();return response;}
+  finally{pending--;if(!pending&&finishBusy){finishBusy();finishBusy=null;}}
+ };
+ var locked=[],active=null;
+ function sync(){
+  var next=operationVisible();if(next===active)return;
+  locked.forEach(function(el){el.inert=false;});locked=[];active=next;
+  if(!next)return;
+  Array.from(document.body.children).forEach(function(el){if(el!==next&&!el.contains(next)&&!el.inert){el.inert=true;locked.push(el);}});
+ }
+ new MutationObserver(sync).observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:['class','style']});
+ document.addEventListener('keydown',function(e){if(operationVisible()&&(e.key==='Escape'||e.key==='Enter'||e.key===' ')){e.preventDefault();e.stopImmediatePropagation();}},true);
+ // Standard form navigation also needs immediate feedback, before the next page arrives.
+ document.addEventListener('submit',function(e){
+  if(e.defaultPrevented||e.target.getAttribute('action')!=='/manage')return;
+  if(operationVisible()){e.preventDefault();return;}
+  var value=e.submitter&&e.submitter.value;
+  showConfigDeletion('',value==='add'?'Добавление подключения':'Сохранение настроек');
+  var overlay=document.querySelector('.config-deletion-overlay');overlay.classList.add('config-write-overlay');overlay.querySelector('.config-deletion-hint').textContent='Подождите, операция выполняется…';overlay.querySelector('.config-deletion-bin').innerHTML='<path d="m23 33 6 6 13-14"/>';
+ });
+ window.addEventListener('pageshow',function(e){if(e.persisted)location.reload();});
+})();

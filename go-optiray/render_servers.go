@@ -11,6 +11,9 @@ import (
 
 func esc(v any) string { return html.EscapeString(str(v)) }
 func colorOf(sub Object) string {
+	if boolean(sub["standalone_group"]) {
+		return "#101010"
+	}
 	v := str(sub["color"])
 	if !regexp.MustCompile(`^#[0-9a-fA-F]{6}$`).MatchString(v) {
 		return "#1971c2"
@@ -72,7 +75,20 @@ func renderSubscriptionInputs(d Object) (string, string) {
 			checked = "checked"
 		}
 		name := esc(sub["name"])
-		fmt.Fprintf(&rows, `<div id="sub-row-%d" class="sub-row" data-sub-id="%d" style="background:%s10;border:2px solid %s40;border-left:16px solid %s80;"><div class="sub-row-inputs"><div style="display:flex;align-items:center;gap:12px"><div class="drag-handle" title="Перетащить">%s</div><div class="sub-title-badge">%s</div></div><input type="text" name="sub_url_%d" value="%s" placeholder="https://..." class="sub-url-input"></div><div class="sub-row-controls"><div class="color-picker-group"><input type="color" name="sub_color_%d" value="%s" onchange="changeSubColor(%d,this.value)" class="color-btn" title="Цвет"><button type="button" onclick="randomSubColor(Number(this.closest('.sub-row').dataset.subId))" class="dice-btn" title="Случайный цвет">`+paletteIcon+`</button></div><label class="hwid-label"><input type="checkbox" name="sub_hwid_%d" value="1" %s> HWID</label><button type="submit" name="action" value="del_%d" class="del-btn" aria-label="Удалить подписку" onclick="return confirm('Удалить подписку?')">`+deleteIcon+`</button></div></div>`, id, id, color, color, color, dragIcon, name, id, esc(sub["url"]), id, color, id, id, checked, id)
+		if boolean(sub["standalone_group"]) {
+			configNames := []string{}
+			for index, entry := range list(sub["servers"]) {
+				link := ""
+				if index < len(list(sub["config_links"])) {
+					link = str(list(sub["config_links"])[index])
+				}
+				configNames = append(configNames, fmt.Sprintf(`<button type="button" class="config-edit-link" data-sub-id="%d" data-config-index="%d" data-config-link="%s">%s</button>`, id, index, esc(link), esc(obj(entry)["name"])))
+			}
+			fmt.Fprintf(&rows, `<div id="sub-row-%d" class="sub-row" data-sub-id="%d" style="--subscription-color:#101010"><div class="sub-row-inputs"><div style="display:flex;align-items:center;gap:12px"><div class="drag-handle" title="Перетащить">%s</div><div class="sub-title-badge">Конфигурации</div></div><span class="sub-url-input">%s</span></div><div class="sub-row-controls"><button type="submit" name="action" value="del_%d" class="del-btn" aria-label="Удалить конфигурации" onclick="return confirm('Удалить все конфигурации?')">%s</button></div></div>`, id, id, dragIcon, strings.Join(configNames, " "), id, deleteIcon)
+			fmt.Fprintf(&chips, `<span class="subs-name-chip text-style-7" style="--subscription-color:#101010;background:#10101010;border-color:#10101040"><span class="subs-name-dot" style="background:#101010"></span>Конф. %d</span>`, len(list(sub["servers"])))
+			continue
+		}
+		fmt.Fprintf(&rows, `<div id="sub-row-%d" class="sub-row" data-sub-id="%d" style="background:%s10;border:2px solid %s40;border-left:16px solid %s80;"><div class="sub-row-inputs"><div style="display:flex;align-items:center;gap:12px"><div class="drag-handle" title="Перетащить">%s</div><div class="sub-title-badge">%s</div></div><input type="text" name="sub_url_%d" value="%s" placeholder="Подписка https://… или конфигурация vless://…" class="sub-url-input"></div><div class="sub-row-controls"><div class="color-picker-group"><input type="color" name="sub_color_%d" value="%s" onchange="changeSubColor(%d,this.value)" class="color-btn" title="Цвет"><button type="button" onclick="randomSubColor(Number(this.closest('.sub-row').dataset.subId))" class="dice-btn" title="Случайный цвет">`+paletteIcon+`</button></div><label class="hwid-label"><input type="checkbox" name="sub_hwid_%d" value="1" %s> HWID</label><button type="submit" name="action" value="del_%d" class="del-btn" aria-label="Удалить подписку" onclick="return confirm('Удалить подписку?')">`+deleteIcon+`</button></div></div>`, id, id, color, color, color, dragIcon, name, id, esc(sub["url"]), id, color, id, id, checked, id)
 		fmt.Fprintf(&chips, `<span class="subs-name-chip text-style-7" style="background:%s10;border-color:%s40"><span class="subs-name-dot" style="background:%s"></span>%s</span>`, color, color, color, name)
 	}
 	return rows.String(), chips.String()

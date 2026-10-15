@@ -478,7 +478,8 @@ func (a *App) render(w http.ResponseWriter) {
 	for _, key := range []string{"block", "direct", "proxy"} {
 		s = strings.ReplaceAll(s, "__ROUTING_"+strings.ToUpper(key)+"_RULES__", esc(routes[key+"_rules"]))
 	}
-	stateTokens := map[string]bool{"__OPTIRAY_ENABLED__": optirayEnabled(d), "__AUTH_ENABLED__": boolean(auth["enabled"]), "__ASRC_ALL__": str(d["auto_select_source"]) != "favorites", "__ASRC_FAVS__": str(d["auto_select_source"]) == "favorites", "__ROUTING_ENABLED__": boolean(routes["enabled"]), "__ROUTING_MODE_DIRECT__": boolean(routes["direct_default"]), "__ROUTING_MODE_PROXY__": !boolean(routes["direct_default"])}
+	s = strings.ReplaceAll(s, "__XRAY_AVAILABLE__", strconv.FormatBool(a.xrayInstalled()))
+ stateTokens := map[string]bool{"__OPTIRAY_ENABLED__": optirayEnabled(d), "__AUTH_ENABLED__": boolean(auth["enabled"]), "__ASRC_ALL__": str(d["auto_select_source"]) != "favorites", "__ASRC_FAVS__": str(d["auto_select_source"]) == "favorites", "__ROUTING_ENABLED__": boolean(routes["enabled"]), "__ROUTING_MODE_DIRECT__": boolean(routes["direct_default"]), "__ROUTING_MODE_PROXY__": !boolean(routes["direct_default"])}
 	for token, on := range stateTokens {
 		value := ""
 		if on {
@@ -501,7 +502,7 @@ func (a *App) render(w http.ResponseWriter) {
 		floating = `<a id="test_float_btn" class="btn-test-float" href="` + esc(d["test_button_url"]) + `" target="_blank" rel="noopener noreferrer">` + openIcon + `</a>`
 	}
 	s = strings.ReplaceAll(s, "__TEST_FLOAT_BTN__", floating)
-	checked := map[string]string{"__LOGGING_CHECKED__": "enable_logging", "__SHOW_PING_ALL__": "show_ping_all", "__SHOW_TEST_BUTTON__": "show_test_button", "__SHOW_TEST_FLOAT__": "show_test_float", "__UPDATE_FORCE_RESTART__": "update_force_restart", "__OPTIROUT_SAVE_BACKUPS__": "optirout_save_backups", "__BACKUP_INCLUDE_XRAY__": "backup_include_xray"}
+	checked := map[string]string{"__SHOW_BR0__": "show_br0", "__LOGGING_CHECKED__": "enable_logging", "__SHOW_PING_ALL__": "show_ping_all", "__SHOW_TEST_BUTTON__": "show_test_button", "__SHOW_TEST_FLOAT__": "show_test_float", "__UPDATE_FORCE_RESTART__": "update_force_restart", "__OPTIROUT_SAVE_BACKUPS__": "optirout_save_backups", "__BACKUP_INCLUDE_XRAY__": "backup_include_xray"}
 	for token, key := range checked {
 		v := ""
 		if boolean(d[key]) {

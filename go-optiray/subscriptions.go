@@ -402,6 +402,16 @@ func subscriptionHeaders(profile string) http.Header {
 	return h
 }
 func fetchSubscription(ctx context.Context, rawURL, profile, hwid string, useHWID bool) ([]any, string, error) {
+	rawURL = strings.TrimSpace(rawURL)
+	for _, scheme := range []string{"vless://", "vmess://", "trojan://", "ss://", "hysteria://", "hysteria2://", "hy2://"} {
+		if strings.HasPrefix(rawURL, scheme) {
+			server, err := parseLink(rawURL)
+			if err != nil {
+				return nil, "", fmt.Errorf("Некорректная конфигурация: %w", err)
+			}
+			return []any{server}, str(server["name"]), nil
+		}
+	}
 	if useHWID {
 		rawURL = strings.ReplaceAll(rawURL, "{hwid}", url.QueryEscape(hwid))
 	}

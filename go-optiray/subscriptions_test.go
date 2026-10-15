@@ -58,3 +58,34 @@ func TestInvalidSubscriptionIsAnError(t *testing.T) {
 		}
 	}
 }
+
+func TestFetchStandaloneConfigurationIgnoresSubscriptionHWID(t *testing.T) {
+	servers, name, err := fetchSubscription(context.Background(), "vless://test-uuid@example.com:443?security=reality&type=tcp&pbk=public&sni=example.com#Standalone", "", "device-id", true)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(servers) != 1 || name != "Standalone" {
+		t.Fatalf("unexpected standalone result: %d %q", len(servers), name)
+	}
+	stream := obj(obj(obj(servers[0])["outbound"])["streamSettings"])
+	if str(obj(stream["realitySettings"])["publicKey"]) != "public" {
+		t.Fatal("Reality settings lost")
+	}
+}
+
+func TestStandaloneConfigurationGrouping(t *testing.T) {
+    uri := "vless://test-uuid@example.com:443?security=tls#Manual"
+    d := Object{"subscriptions":[]any{Object{"id":1,"url":uri},Object{"id":2,"url":"https://example.com/sub"},Object{"id":3,"url":uri}}}
+    if err := collectStandaloneConfigs(d); err != nil { t.Fatal(err) }
+    subs := list(d["subscriptions"])
+    if len(subs)!=2 || !boolean(obj(subs[0])["standalone_group"]) || len(list(obj(subs[0])["servers"]))!=1 { t.Fatal("grouping or deduplication failed") }
+    if err := collectStandaloneConfigs(d); err != nil { t.Fatal(err) }
+    if len(list(d["subscriptions"]))!=2 { t.Fatal("grouping is not idempotent") }
+}
+func TestStandaloneConfigurationHasPingIdentity(t *testing.T) {
+ d := Object{"subscriptions":[]any{Object{"id":1,"url":"vless://first@example.com:443#First"},Object{"id":2,"url":"vless://second@example.com:443#Second"}}}
+ if err := collectStandaloneConfigs(d); err != nil { t.Fatal(err) }
+ servers := list(obj(list(d["subscriptions"])[0])["servers"])
+ if len(servers)!=2 { t.Fatal("distinct configurations were lost") }
+ for _, entry := range servers { if str(obj(entry)["sid"])=="" { t.Fatal("missing ping identity") } }
+}

@@ -30,6 +30,9 @@ func (s *Store) refreshApply(ctx context.Context, fetch subscriptionFetch, apply
 	results := []refreshResult{}
 	for _, v := range list(before["subscriptions"]) {
 		sub := obj(v)
+		if boolean(sub["standalone_group"]) {
+			continue
+		}
 		r := refreshResult{id: integer(sub["id"]), url: str(sub["url"]), hwid: str(before["hwid"]), profile: str(before["subscription_client_profile"]), useHWID: boolean(sub["use_hwid"])}
 		if ctx.Err() != nil {
 			return ctx.Err()
@@ -50,6 +53,7 @@ func (s *Store) refreshApply(ctx context.Context, fetch subscriptionFetch, apply
 		oldID := integer(oldSub["id"])
 		for _, v := range list(d["subscriptions"]) {
 			sub := obj(v)
+			uniqueServerIDs(list(sub["servers"]))
 			for _, r := range results {
 				if integer(sub["id"]) != r.id || str(sub["url"]) != r.url || boolean(sub["use_hwid"]) != r.useHWID || str(d["hwid"]) != r.hwid || str(d["subscription_client_profile"]) != r.profile {
 					continue
