@@ -1,6 +1,7 @@
 #!/bin/sh
 # Download and install Go; the package handles startup and legacy migration.
 set -eu
+export PATH="/opt/bin:/opt/sbin:$PATH"
 VERSION='@VERSION@'
 BASE=${1:-${OPTIRAY_GO_REPO_URL:-}}
 [ -n "$BASE" ] || { echo 'Usage: sh install.sh https://your-server/path/to/go-release' >&2; exit 1; }
@@ -9,7 +10,7 @@ BASE=${BASE%/}
 [ "$(id -u)" = 0 ] || { echo 'Run as root' >&2; exit 1; }
 if ! command -v curl >/dev/null 2>&1 || [ ! -r /opt/etc/ssl/certs/ca-certificates.crt ]; then
  command -v opkg >/dev/null || { echo 'Entware opkg is missing' >&2; exit 1; }
- opkg update && opkg install curl ca-bundle || { echo 'Cannot install download dependencies' >&2; exit 1; }
+ opkg update && opkg install curl ca-bundle wget-ssl || { echo 'Cannot install download dependencies' >&2; exit 1; }
 fi
 for tool in curl sha256sum tar mktemp; do command -v "$tool" >/dev/null || { echo "Missing utility: $tool" >&2; exit 1; }; done
 case "$(uname -m)" in aarch64) ARCH=arm64;; mips*) ARCH=mipsle;; *) echo 'Unsupported router architecture' >&2; exit 1;; esac

@@ -127,7 +127,7 @@ def build(source, output, version, revision):
                 entries.append(('./' + path, tar.extractfile(member).read(), mode))
         control = (f'Package: optiray\nVersion: {package_version}\nArchitecture: {abi}\n'
                    'Maintainer: HOLLL-DZ\nSection: net\nPriority: optional\n'
-                   'Depends: curl, ca-bundle, iptables, ip-full\n'
+                   'Depends: curl, ca-bundle, wget-ssl, iptables, ip-full\n'
                    'License: GPL-3.0\n'
                    'Homepage: https://github.com/HOLLL-DZ/OptiRay\n'
                    f'Installed-Size: {sum(len(d) for _, d, _ in entries)}\n'

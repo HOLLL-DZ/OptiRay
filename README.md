@@ -31,12 +31,15 @@ Keenetic с установленной Entware и доступом к её ко�
 Один раз подключите отдельный репозиторий OptiRay (не входит в официальный feed Entware):
 
 ```sh
+export PATH="/opt/bin:/opt/sbin:$PATH" &&
 opkg update && opkg install curl ca-bundle wget-ssl &&
-curl -fL https://raw.githubusercontent.com/HOLLL-DZ/OptiRay/main/go-optiray/server-files/setup-repo.sh -o /tmp/setup-optiray-repo.sh &&
+curl -fL --connect-timeout 10 --max-time 60 --retry 1 https://raw.githubusercontent.com/HOLLL-DZ/OptiRay/main/go-optiray/server-files/setup-repo.sh -o /tmp/setup-optiray-repo.sh &&
 sh /tmp/setup-optiray-repo.sh &&
 export PATH="/opt/bin:/opt/sbin:$PATH" &&
 opkg update && opkg install optiray
 ```
+
+Установщик проверяет HTTPS, сохраняет резервные копии конфигурации и переводит официальные репозитории Entware на HTTPS. На время его работы загрузки `wget` используют тайм-аут 30 секунд и до двух попыток. На чистой системе сначала нужны `curl`, `ca-bundle` и `wget-ssl`; если начальный `opkg update` зависает по HTTP, потребуется восстановить доступ к Entware до запуска установщика.
 
 Обновление:
 
