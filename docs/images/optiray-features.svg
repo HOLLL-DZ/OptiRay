@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1040" height="440" viewBox="0 0 1040 440" role="img" aria-labelledby="title desc">
+<title id="title">Возможности OptiRay</title><desc id="desc">Подписки и отдельные конфиги, управление Xray и Hysteria, маршрутизация и проверка серверов на Keenetic с Entware.</desc>
+<rect x="1" y="1" width="1038" height="438" rx="22" fill="#fff" stroke="#e1e3e6"/>
+<g font-family="Segoe UI,Arial,sans-serif" fill="#18212d">
+<text x="34" y="56" font-size="27" font-weight="600">Одна панель. Все подключения.</text>
+<text x="34" y="84" font-size="14" fill="#78818d">OptiRay для Keenetic с Entware</text>
+<g fill="none" stroke="#c8d7e8" stroke-width="2"><path d="M334 172h32v53h24M334 289h32v-64M650 225h24v-53h32M674 225v64h32"/></g>
+<g fill="#fafbfc" stroke="#e1e3e6"><rect x="34" y="122" width="300" height="96" rx="12"/><rect x="34" y="240" width="300" height="96" rx="12"/><rect x="706" y="122" width="300" height="96" rx="12"/><rect x="706" y="240" width="300" height="96" rx="12"/></g>
+<g font-size="17" font-weight="600"><text x="54" y="158">Подписки</text><text x="54" y="276">Отдельные конфиги</text><text x="726" y="158">Маршрутизация</text><text x="726" y="276">Проверка и подключение</text></g>
+<g font-size="13" fill="#78818d"><text x="54" y="185">Добавление и обновление серверов</text><text x="54" y="303">Серверные ссылки и VLESS из JSON</text><text x="726" y="185">Выбор пути для вашего трафика</text><text x="726" y="303">Задержки, избранное, автовыбор</text></g>
+<rect x="390" y="122" width="260" height="214" rx="20" fill="#f0f6fd" stroke="#c8dcf3"/>
+<g transform="translate(488 148)"><circle cx="32" cy="32" r="31" fill="#1674cf"/><g fill="none" stroke="white" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M14 43A22 22 0 0 1 47 15M50 21A22 22 0 0 1 17 49M43 12l5 4-6 1M21 48l-5-4 6-1M32 23v9L22 41M32 32l11 11"/></g><g fill="white"><circle cx="32" cy="22" r="5"/><circle cx="22" cy="41" r="5"/><circle cx="43" cy="43" r="5"/></g></g>
+<text x="520" y="252" text-anchor="middle" font-size="29" font-weight="600">OptiRay</text><text x="520" y="284" text-anchor="middle" font-size="14" fill="#617184">Xray · Hysteria · OptiRout</text>
+<path d="M34 370h972" stroke="#edf0f3"/><g font-size="13" fill="#617184"><text x="34" y="405">Настройки ядер</text><text x="285" y="405">Резервное копирование</text><text x="647" y="405">Светлая и тёмная темы</text></g></g></svg>
