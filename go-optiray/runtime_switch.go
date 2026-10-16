@@ -33,18 +33,34 @@ func (a *App) setOptirayEnabled(ctx context.Context, enabled bool) error {
 	next["optiray_enabled"] = enabled
 	a.lastPowerSwitch = time.Now()
 	defer func() { a.lastPowerSwitch = time.Now() }()
-	var extra map[string][]byte
-	if !enabled {
-		cfg, e := a.store.loadOptirout()
-		if e != nil {
-			return e
-		}
-		cfg["enabled"] = false
-		raw, e := json.Marshal(cfg)
-		if e != nil {
-			return e
-		}
-		extra = map[string][]byte{"routing/optirout.json": raw}
+	extra, e := a.routingPowerTransition(before, next, enabled)
+	if e != nil {
+		return e
 	}
 	return a.commitState(ctx, before, next, extra)
+}
+
+func (a *App) routingPowerTransition(before, next Object, enabled bool) (map[string][]byte, error) {
+	cfg, e := a.store.loadOptirout()
+	if e != nil {
+		return nil, e
+	}
+	if !enabled {
+		next["optiray_resume_optirout"] = configEnabled(cfg)
+		cfg["enabled"] = false
+	} else {
+		wanted, known := before["optiray_resume_optirout"]
+		if known {
+			cfg["enabled"] = boolean(wanted)
+		} else if !optirayEnabled(before) {
+			// Older versions cleared this flag without retaining the original preference.
+			cfg["enabled"] = true
+		}
+		delete(next, "optiray_resume_optirout")
+	}
+	raw, e := json.Marshal(cfg)
+	if e != nil {
+		return nil, e
+	}
+	return map[string][]byte{"routing/optirout.json": raw}, nil
 }

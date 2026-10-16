@@ -2211,13 +2211,14 @@ window.addEventListener('DOMContentLoaded', function() {
 
             if (!res.ok) {
                 if (window.hideWaitModal) window.hideWaitModal();
-                if (window.console) console.log('optiray: ошибка /select:', payload.error || 'проверьте ядро');
+                alert(payload.error || 'Не удалось подключиться к серверу');
                 btn.innerText = orig;
                 btn.disabled = false;
                 return;
             }
 
             /* Обновляем UI */
+            var powerToggle=document.getElementById('optiray_power');if(powerToggle){powerToggle.checked=true;powerToggle.disabled=false;syncPowerButtons();}
             document.querySelectorAll('.server-card').forEach(function(c) {
                 c.classList.remove('active-card');
                 c.dataset.active = '0';
@@ -2264,7 +2265,7 @@ window.addEventListener('DOMContentLoaded', function() {
             }
         } catch(e) {
             if (window.hideWaitModal) window.hideWaitModal();
-            if (window.console) console.log('optiray: сетевая ошибка:', e.message);
+            alert('Ошибка подключения: '+e.message);
             btn.innerText = orig;
             btn.disabled = false;
         }
@@ -5249,7 +5250,7 @@ document.addEventListener('DOMContentLoaded',function(){
    var filterCount=select.id==='mt_group_filter'?document.getElementById('mt_filter_count'):select.id==='xr_group_filter'?document.getElementById('xr_filter_count'):select.id==='server_filter'?document.getElementById('server_results_count'):null;
    button.setAttribute('aria-label',select.getAttribute('aria-label'));button.setAttribute('aria-haspopup','menu');button.setAttribute('aria-expanded','false');button.setAttribute('aria-controls','optiray_select_dd');
    function sync(){button.replaceChildren();var text=document.createElement('span');text.textContent=(select.selectedOptions[0]||select.options[0]||{textContent:''}).textContent;button.appendChild(text);if(filterCount)button.appendChild(filterCount);button.insertAdjacentHTML('beforeend','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>');}
-   select.hidden=true;select.style.display='none';select.after(button);sync();select.addEventListener('change',sync);new MutationObserver(sync).observe(select,{childList:true,subtree:true,characterData:true});
+   select.hidden=true;select.style.display='none';select.after(button);sync();if(select.matches('.mt-rule-type')){var ctx=document.createElement('canvas').getContext('2d');ctx.font=getComputedStyle(button).font;var widest=Math.max.apply(null,Array.from(select.options).map(function(option){return ctx.measureText(option.textContent).width;}));button.style.setProperty('--rule-type-width',Math.ceil(widest+34)+'px');}select.addEventListener('change',sync);new MutationObserver(sync).observe(select,{childList:true,subtree:true,characterData:true});
    button.addEventListener('click',function(e){e.stopPropagation();open(button,select);});
    button.addEventListener('keydown',function(e){if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();open(button,select);}});
  };
@@ -6048,4 +6049,95 @@ document.addEventListener('submit',async function(event){
   var overlay=document.querySelector('.config-deletion-overlay');overlay.classList.add('config-write-overlay');overlay.querySelector('.config-deletion-hint').textContent='Подождите, операция выполняется…';overlay.querySelector('.config-deletion-bin').innerHTML='<path d="m23 33 6 6 13-14"/>';
  });
  window.addEventListener('pageshow',function(e){if(e.persisted)location.reload();});
+})();
+function validRouterIPv4(value,partial){
+ if(!/^[0-9.]*$/.test(value)||value.length>15)return false;
+ var parts=value.split('.');if(parts.length>4||(!partial&&parts.length!==4))return false;
+ return parts.every(function(part,index){return (partial&&index===parts.length-1&&part==='')||(/^\d{1,3}$/.test(part)&&Number(part)<=255);});
+}
+document.addEventListener('DOMContentLoaded',function(){
+ var field=document.querySelector('#settings_modal input[name="proxy_host"]');if(!field)return;
+ field.inputMode='decimal';field.maxLength=15;
+ var previous=validRouterIPv4(field.value,true)?field.value:'';
+ function validate(){field.setCustomValidity(validRouterIPv4(field.value,false)?'':'Введите IPv4: четыре числа от 0 до 255, например 192.168.1.1');}
+ field.addEventListener('beforeinput',function(event){
+  if(!event.inputType.startsWith('insert')||event.data==null)return;
+  var next=field.value.slice(0,field.selectionStart)+event.data+field.value.slice(field.selectionEnd);
+  if(!validRouterIPv4(next,true))event.preventDefault();
+ });
+ field.addEventListener('paste',function(event){
+  var text=event.clipboardData.getData('text').trim();
+  var next=field.value.slice(0,field.selectionStart)+text+field.value.slice(field.selectionEnd);
+  if(!validRouterIPv4(next,true)){event.preventDefault();}
+ });
+ field.addEventListener('input',function(){
+  if(!validRouterIPv4(field.value,true)){var pos=field.selectionStart;field.value=previous;field.setSelectionRange(Math.max(0,pos-1),Math.max(0,pos-1));}
+  else previous=field.value;
+  validate();
+ });
+ field.addEventListener('blur',validate);
+});
+document.addEventListener('DOMContentLoaded',function(){
+ var field=document.querySelector('#settings_modal input[name="proxy_port"]');if(!field)return;
+ field.min='1';field.max='65535';field.step='1';field.inputMode='numeric';
+ var previous=field.value;
+ function partial(value){return value===''||(/^\d{1,5}$/.test(value)&&Number(value)<=65535);}
+ function validate(){field.setCustomValidity(/^\d{1,5}$/.test(field.value)&&Number(field.value)>=1&&Number(field.value)<=65535?'':'Введите порт от 1 до 65535');}
+ field.addEventListener('keydown',function(e){if(['e','E','+','-','.',','].includes(e.key))e.preventDefault();});
+ field.addEventListener('paste',function(e){var value=e.clipboardData.getData('text').trim();if(!/^\d{1,5}$/.test(value)||Number(value)<1||Number(value)>65535)e.preventDefault();});
+ field.addEventListener('input',function(){if(!partial(field.value))field.value=previous;else previous=field.value;validate();});
+ field.addEventListener('blur',validate);
+});
+document.addEventListener('DOMContentLoaded',function(){
+ var field=document.getElementById('ping_timeout_input');if(!field)return;
+ field.min='0.5';field.max='20';field.step='0.5';field.inputMode='decimal';
+ var previous=field.value;
+ function allowed(value){return value===''||(/^\d{1,2}(?:\.\d*)?$/.test(value)&&Number(value)<=20);}
+ function validate(){var value=Number(field.value);field.setCustomValidity(field.value!==''&&Number.isFinite(value)&&value>=0.5&&value<=20?'':'Введите таймаут от 0,5 до 20 секунд');}
+ field.addEventListener('keydown',function(event){if(['-','+','e','E'].includes(event.key))event.preventDefault();});
+ field.addEventListener('paste',function(event){var text=event.clipboardData.getData('text').trim();if(!allowed(text))event.preventDefault();});
+ field.addEventListener('input',function(){if(!allowed(field.value))field.value=previous;else previous=field.value;validate();});
+ field.addEventListener('blur',validate);
+});
+// Connected status doubles as the disconnect control, including newly rendered cards.
+(function(){
+ function enhance(root){
+  if(!root.querySelectorAll)return;
+  var items=Array.from(root.querySelectorAll('.badge-connected:not(button)'));
+  if(root.matches&&root.matches('.badge-connected:not(button)'))items.unshift(root);
+  items.forEach(function(status){var button=document.createElement('button');button.type='button';button.className=status.className+' disconnect-optiray';button.setAttribute('aria-label','Отключить OptiRay');button.title='Отключить OptiRay';button.innerHTML='<span class="connected-caption">Подключено</span><span class="disconnect-caption">Отключить</span>';status.replaceWith(button);});
+ }
+ document.addEventListener('DOMContentLoaded',function(){var root=document.getElementById('servers_container');if(!root)return;enhance(root);new MutationObserver(function(records){records.forEach(function(record){record.addedNodes.forEach(enhance);});}).observe(root,{childList:true,subtree:true});});
+ document.addEventListener('click',async function(event){
+  var button=event.target.closest('.disconnect-optiray');if(!button)return;
+  event.preventDefault();event.stopPropagation();var toggle=document.getElementById('optiray_power');if(!toggle||toggle.disabled||button.disabled)return;
+  button.disabled=true;toggle.checked=false;
+  var finish=showConfigDeletion('','Отключение OptiRay');
+  var overlay=document.querySelector('.config-deletion-overlay');overlay.classList.add('config-write-overlay');overlay.querySelector('.config-deletion-hint').textContent='Остановка подключения…';overlay.classList.add('disconnect-operation');overlay.querySelector('.config-deletion-icon').outerHTML='<svg class="disconnect-link-animation" viewBox="0 0 160 80" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><g class="disconnect-router"><rect x="8" y="30" width="36" height="26" rx="6"/><path d="M15 30V18m22 12V18M17 44h1m6 0h1m6 0h5"/></g><g class="disconnect-server"><rect x="116" y="20" width="35" height="40" rx="6"/><path d="M123 31h20m-20 10h20m-20 10h10"/><circle cx="141" cy="51" r="1"/></g><g class="disconnect-left-wire"><path d="M49 40h25m0-4v8"/></g><g class="disconnect-right-wire"><path d="M86 40h25m-25-4v8"/></g><circle class="disconnect-packet packet-a" cx="56" cy="40" r="2.5" fill="currentColor" stroke="none"/><circle class="disconnect-packet packet-b" cx="68" cy="40" r="2.5" fill="currentColor" stroke="none"/><circle class="disconnect-packet packet-c" cx="99" cy="40" r="2.5" fill="currentColor" stroke="none"/></svg>';
+  try{await toggleOptirayPower(toggle);if(toggle.checked){finish();button.disabled=false;var status=document.getElementById('optiray_power_status');alert(status?status.textContent:'Не удалось отключить OptiRay');}}
+  catch(error){finish();button.disabled=false;alert(error.message);}
+ });
+})();
+// Display connection state instead of the remembered server when the core is stopped.
+document.addEventListener('DOMContentLoaded',function(){
+ var panel=document.querySelector('.active-status-card'),dot=document.getElementById('active-status-dot');if(!panel||!dot)return;
+ var text=panel.querySelector('.active-status-text');if(!text)return;
+ var message=document.createElement('div');message.className='connection-absent-message';message.textContent='Соединение отсутствует';text.appendChild(message);
+ function sync(){var disconnected=!dot.classList.contains('connected');panel.classList.toggle('connection-absent',disconnected);if(disconnected)panel.style.setProperty('--active-subscription-color','#6c757d');}
+ sync();new MutationObserver(sync).observe(dot,{attributes:true,attributeFilter:['class']});
+});
+(function(){
+ var menu,anchor,dialog;
+ function closeMenu(){if(menu)menu.remove();menu=null;if(anchor)anchor.setAttribute('aria-expanded','false');}
+ function enhance(root){if(!root.querySelectorAll)return;var cards=Array.from(root.querySelectorAll('.server-card'));if(root.matches&&root.matches('.server-card'))cards.unshift(root);cards.forEach(function(card){if(card.querySelector('.server-menu-trigger'))return;var button=document.createElement('button');button.type='button';button.className='server-menu-trigger';button.setAttribute('aria-label','Действия с сервером');button.setAttribute('aria-haspopup','menu');button.setAttribute('aria-expanded','false');button.innerHTML='<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg>';card.appendChild(button);});}
+ async function viewConfig(card){
+  closeMenu();
+  if(!dialog){dialog=document.createElement('div');dialog.className='modal-overlay';dialog.id='server_config_viewer';dialog.innerHTML='<div class="modal-content"><div class="modal-header"><span>Просмотр конфига <span class="server-config-name"></span></span><button type="button" class="modal-close" aria-label="Закрыть"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="m6 6 12 12M6 18 18 6"/></svg></button></div><div class="server-config-body"><textarea readonly spellcheck="false" aria-label="Конфигурация сервера"></textarea><div class="server-config-error" role="alert"></div></div></div>';document.body.appendChild(dialog);dialog.querySelector('.modal-close').onclick=function(){dialog.style.display='none';if(anchor)anchor.focus();};dialog.addEventListener('click',function(e){if(e.target===dialog)dialog.querySelector('.modal-close').click();});}
+  dialog.querySelector('.server-config-name').textContent=card.dataset.name||'';dialog.querySelector('textarea').value='Загрузка…';dialog.querySelector('.server-config-error').textContent='';dialog.style.display='flex';dialog.querySelector('.modal-close').focus();
+  try{var response=await fetch('/api/server_config?sid='+encodeURIComponent(card.dataset.sid),{cache:'no-store'});var data=await response.json();if(!response.ok)throw Error(data.error||'Не удалось загрузить конфиг');dialog.querySelector('textarea').value=JSON.stringify(data.config,null,2);}catch(error){dialog.querySelector('textarea').value='';dialog.querySelector('.server-config-error').textContent=error.message;}
+ }
+ document.addEventListener('DOMContentLoaded',function(){var root=document.getElementById('servers_container');if(!root)return;enhance(root);new MutationObserver(function(records){records.forEach(function(record){record.addedNodes.forEach(enhance);});}).observe(root,{subtree:true,childList:true});});
+ document.addEventListener('click',function(e){var button=e.target.closest('.server-menu-trigger');if(button){e.preventDefault();e.stopPropagation();if(menu&&anchor===button){closeMenu();return;}closeMenu();anchor=button;menu=document.createElement('div');menu.id='server_actions_menu';menu.setAttribute('role','menu');var item=document.createElement('button');item.type='button';item.textContent='Просмотр конфига';item.setAttribute('role','menuitem');item.onclick=function(){viewConfig(button.closest('.server-card'));};menu.appendChild(item);document.body.appendChild(menu);button.setAttribute('aria-expanded','true');var rect=button.getBoundingClientRect();menu.style.left=Math.max(8,Math.min(rect.right-menu.offsetWidth,innerWidth-menu.offsetWidth-8))+'px';menu.style.top=(rect.bottom+menu.offsetHeight+6<innerHeight?rect.bottom+6:rect.top-menu.offsetHeight-6)+'px';item.focus();}else if(menu&&!menu.contains(e.target))closeMenu();});
+ document.addEventListener('keydown',function(e){if(e.key==='Escape'){if(menu){closeMenu();if(anchor)anchor.focus();}else if(dialog&&dialog.style.display!=='none'){dialog.querySelector('.modal-close').click();}}});
+ window.addEventListener('resize',closeMenu);document.addEventListener('scroll',closeMenu,true);
 })();

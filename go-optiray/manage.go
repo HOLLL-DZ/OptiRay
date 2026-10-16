@@ -46,6 +46,7 @@ func (a *App) manageSubscriptions(ctx context.Context, form url.Values) error {
 					}
 				}
 				d["favorites"] = favs
+				pruneEmptyConfigurationGroups(d)
 				return nil
 			}
 			return fmt.Errorf("Группа не найдена")
@@ -237,4 +238,17 @@ func collectStandaloneConfigs(d Object) error {
 	}
 	d["subscriptions"] = out
 	return nil
+}
+
+func pruneEmptyConfigurationGroups(d Object) {
+	kept := []any{}
+	for _, entry := range list(d["subscriptions"]) {
+		sub := obj(entry)
+		servers, valid := sub["servers"].([]any)
+		if boolean(sub["standalone_group"]) && valid && len(servers) == 0 {
+			continue
+		}
+		kept = append(kept, entry)
+	}
+	d["subscriptions"] = kept
 }

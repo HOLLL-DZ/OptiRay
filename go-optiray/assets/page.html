@@ -44,6 +44,9 @@
                 <span class="subs-selector-label">Подписки</span>
                 <span id="subs_count_badge">__SUBS_COUNT__</span>
             </button>
+        <div id="subs_add_row" style="margin-top:10px;">
+            <button type="submit" name="action" value="add" class="btn core-btn core-btn-install btn-add">+ Добавить подключение</button>
+        </div>
             <div class="subs-header-actions"><input type="checkbox" id="optiray_power" __OPTIRAY_ENABLED__ style="display:none!important" aria-hidden="true">
                 <button type="button" class="btn-settings-icon btn-refresh-icon" onclick="refreshSubsIcon(this)" title="Обновить подписки" aria-label="Обновить подписки"><svg class="action-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11a8 8 0 0 0-14-5L3 9m0-5v5h5M4 13a8 8 0 0 0 14 5l3-3m0 5v-5h-5"/></svg></button>
                 <a href="__ROUTING_URL__" target="_blank" rel="noopener noreferrer" onclick="handleRoutingClick(this); return false;" data-routing-engine="__ROUTING_ENGINE__" data-routing-external="__ROUTING_USE_EXTERNAL_VAL__" data-routing-url="__ROUTING_URL__" class="btn-settings-icon" title="Маршрутизация" aria-label="Маршрутизация"><svg class="action-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="5" height="5" rx="1"/><rect x="16" y="3" width="5" height="5" rx="1"/><rect x="9.5" y="16" width="5" height="5" rx="1"/><path d="M5.5 8v3.5h13V8M12 11.5V16"/></svg></a>
@@ -52,9 +55,7 @@
         </div>
         <div id="subs_names_container" class="subs-names" style="display:none;">__SUB_NAMES__</div>
         <div id="subs_container">__SUB_INPUTS__</div>
-        <div id="subs_add_row" style="margin-top:10px;">
-            <button type="submit" name="action" value="add" class="btn core-btn core-btn-install btn-add">+ Добавить подключение</button>
-        </div>
+
 
         <div id="settings_modal" role="dialog" aria-modal="true" aria-labelledby="settings_dialog_title" class="modal-overlay" onclick="if(event.target === this) closeSettingsModal();">
             <div class="modal-content">
@@ -74,8 +75,8 @@
                     <div class="setting-field">
                         <label class="setting-label">IP роутера и порт:</label>
                         <div style="display:flex;gap:8px;flex:1;">
-                            <input type="text" name="proxy_host" value="__PROXY_HOST__" class="setting-input" style="min-width:120px;" placeholder="192.168.1.1">
-                            <input type="number" name="proxy_port" value="__PROXY_PORT__" class="setting-input" style="width:80px;min-width:80px;">
+                            <input type="text" name="proxy_host" inputmode="decimal" maxlength="15" autocomplete="off" spellcheck="false" value="__PROXY_HOST__" class="setting-input" style="min-width:120px;" placeholder="192.168.1.1">
+                            <input type="number" name="proxy_port" min="1" max="65535" step="1" inputmode="numeric" value="__PROXY_PORT__" class="setting-input" style="width:80px;min-width:80px;">
                         </div>
                     </div>
                 </div>
@@ -139,7 +140,7 @@
                 </section><section id="settings_panel_testing" class="settings-panel" aria-label="Проверка серверов" hidden><div class="modal-section-title">Замеры задержки</div>
                 <div class="xray-manager-box">
                     <div class="setting-field"><label class="setting-label">Тестовый URL:</label><input type="text" name="test_url" value="__TEST_URL__" class="setting-input"></div>
-                    <div class="setting-field"><label class="setting-label">Таймаут (сек):</label><input type="number" step="0.5" id="ping_timeout_input" name="ping_timeout" value="__PING_TIMEOUT__" style="width:90px;padding:8px;"></div>
+                    <div class="setting-field"><label class="setting-label">Таймаут (сек):</label><input type="number" min="0.5" max="20" step="0.5" id="ping_timeout_input" name="ping_timeout" value="__PING_TIMEOUT__" style="width:90px;padding:8px;"></div>
                     <div class="setting-field"><label class="setting-label">Потоков TCP-пинга:</label><input type="number" min="1" max="20" id="ping_tcp_conc_input" name="ping_tcp_concurrency" value="__PING_TCP_CONC__" style="width:90px;padding:8px;"></div>
                     <div class="setting-field"><label class="setting-label">Потоков HTTP-пинга:</label><input type="number" min="1" max="10" id="ping_real_conc_input" name="ping_real_concurrency" value="__PING_REAL_CONC__" style="width:90px;padding:8px;"></div>
                     <div class="setting-field"><label class="setting-label">Пауза между замерами (мс):</label><input type="number" min="0" max="5000" step="50" id="ping_sample_delay_input" name="ping_sample_delay_ms" value="__PING_SAMPLE_DELAY_MS__" style="width:90px;padding:8px;"></div>

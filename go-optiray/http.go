@@ -200,6 +200,21 @@ func (a *App) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 		jsonReply(w, 200, result)
 		return
+	case r.Method == "GET" && r.URL.Path == "/api/server_config":
+		server, _ := findServer(a.store.snapshot(), r.URL.Query().Get("sid"), "")
+		if server == nil {
+			jsonReply(w, 404, Object{"error": "Сервер не найден"})
+			return
+		}
+		config := server["outbound"]
+		if boolean(server["composite"]) {
+			config = server["composite_data"]
+		}
+		if config == nil {
+			config = server
+		}
+		jsonReply(w, 200, Object{"ok": true, "name": server["name"], "config": config})
+		return
 	case r.Method == "GET" && r.URL.Path == "/api/ping":
 		d := a.store.snapshot()
 		q := r.URL.Query()
@@ -479,7 +494,7 @@ func (a *App) render(w http.ResponseWriter) {
 		s = strings.ReplaceAll(s, "__ROUTING_"+strings.ToUpper(key)+"_RULES__", esc(routes[key+"_rules"]))
 	}
 	s = strings.ReplaceAll(s, "__XRAY_AVAILABLE__", strconv.FormatBool(a.xrayInstalled()))
- stateTokens := map[string]bool{"__OPTIRAY_ENABLED__": optirayEnabled(d), "__AUTH_ENABLED__": boolean(auth["enabled"]), "__ASRC_ALL__": str(d["auto_select_source"]) != "favorites", "__ASRC_FAVS__": str(d["auto_select_source"]) == "favorites", "__ROUTING_ENABLED__": boolean(routes["enabled"]), "__ROUTING_MODE_DIRECT__": boolean(routes["direct_default"]), "__ROUTING_MODE_PROXY__": !boolean(routes["direct_default"])}
+	stateTokens := map[string]bool{"__OPTIRAY_ENABLED__": optirayEnabled(d), "__AUTH_ENABLED__": boolean(auth["enabled"]), "__ASRC_ALL__": str(d["auto_select_source"]) != "favorites", "__ASRC_FAVS__": str(d["auto_select_source"]) == "favorites", "__ROUTING_ENABLED__": boolean(routes["enabled"]), "__ROUTING_MODE_DIRECT__": boolean(routes["direct_default"]), "__ROUTING_MODE_PROXY__": !boolean(routes["direct_default"])}
 	for token, on := range stateTokens {
 		value := ""
 		if on {

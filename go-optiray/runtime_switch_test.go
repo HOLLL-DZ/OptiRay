@@ -116,3 +116,51 @@ func TestRoutingCanRunWithOptirayDisabled(t *testing.T) {
 		t.Fatal("independent routing state lost")
 	}
 }
+
+func TestRoutingPowerTransitionRestoresPreference(t *testing.T) {
+	for _, enabled := range []bool{true, false} {
+		store, err := newStore(t.TempDir())
+		if err != nil {
+			t.Fatal(err)
+		}
+		cfg, err := defaultOptirout()
+		if err != nil {
+			t.Fatal(err)
+		}
+		cfg["enabled"] = enabled
+		if err := writeObject(filepath.Join(store.dir, "routing", "optirout.json"), cfg); err != nil {
+			t.Fatal(err)
+		}
+		app := &App{store: store}
+		before := store.snapshot()
+		before["routing"] = Object{"enabled": true}
+		off := clone(before)
+		off["optiray_enabled"] = false
+		extra, err := app.routingPowerTransition(before, off, false)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err := store.persistExtra(off, extra); err != nil {
+			t.Fatal(err)
+		}
+		on := clone(off)
+		on["optiray_enabled"] = true
+		extra, err = app.routingPowerTransition(off, on, true)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err := store.persistExtra(on, extra); err != nil {
+			t.Fatal(err)
+		}
+		restored, err := readObject(filepath.Join(store.dir, "routing", "optirout.json"))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if configEnabled(restored) != enabled {
+			t.Fatal("routing preference lost")
+		}
+		if !boolean(obj(on["routing"])["enabled"]) {
+			t.Fatal("Xray routing preference lost")
+		}
+	}
+}

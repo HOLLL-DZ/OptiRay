@@ -8,6 +8,7 @@ func migrateLoadedData(d Object) error {
 	if _, ok := d["subscriptions"].([]any); !ok {
 		return fmt.Errorf("invalid subscriptions settings")
 	}
+	pruneEmptyConfigurationGroups(d)
 	ids := map[int]bool{}
 	valid := map[string]bool{}
 	byName := map[string][]string{}

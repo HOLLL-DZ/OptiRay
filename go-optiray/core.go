@@ -149,8 +149,8 @@ func (c *CoreManager) ApplyKind(cfg Object, port int, kind string) error {
 	if kind == "xray" {
 		check := exec.CommandContext(ctx, c.bin, "run", "-test", "-c", path)
 		check.Env = append(os.Environ(), "XRAY_LOCATION_ASSET="+filepath.Dir(c.bin))
-		if e := check.Run(); e != nil {
-			return fmt.Errorf("Xray rejected the configuration; active core was preserved")
+		if output, e := check.CombinedOutput(); e != nil {
+			return xrayValidationError(ctx, string(output))
 		}
 	} else {
 		bin := c.hysteriaBin
@@ -323,4 +323,17 @@ func xrayConfig(server, data Object, port int) (Object, error) {
 	cfg["routing"] = rt
 	cfg["outbounds"] = outbounds
 	return cfg, nil
+}
+
+func xrayValidationError(ctx context.Context, output string) error {
+	if ctx.Err() != nil {
+		return fmt.Errorf("Xray не завершил проверку за 10 секунд. Работающее подключение сохранено")
+	}
+	lower := strings.ToLower(output)
+	for _, marker := range []string{"fatal error:", "fatal:", "runtime:", "runtime stack:", "panic:"} {
+		if strings.Contains(lower, marker) {
+			return fmt.Errorf("Ядро Xray аварийно завершается до проверки настроек. Переустановите ядро в настройках; проверьте накопитель, если ошибка повторяется. Работающее подключение сохранено")
+		}
+	}
+	return fmt.Errorf("Xray отклонил конфигурацию. Работающее подключение сохранено")
 }

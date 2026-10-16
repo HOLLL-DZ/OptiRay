@@ -151,7 +151,22 @@ func (a *App) connectSelection(ctx context.Context, sid, name string) (Object, e
 	}
 	d := a.store.snapshot()
 	if !optirayEnabled(d) {
-		return nil, fmt.Errorf("OptiRay выключен. Включите переключатель на главной странице")
+		server, _ := findServer(d, sid, name)
+		if server == nil {
+			return nil, fmt.Errorf("server not found")
+		}
+		next := clone(d)
+		next["optiray_enabled"] = true
+		next["selected"] = str(server["sid"])
+		extra, err := a.routingPowerTransition(d, next, true)
+		if err != nil {
+			return nil, err
+		}
+		if err := a.commitState(ctx, d, next, extra); err != nil {
+			return nil, err
+		}
+		verified := warmupProxy(ctx, integer(next["proxy_port"]), first(str(next["test_button_url"]), str(next["test_url"])))
+		return Object{"status": "ok", "sid": str(server["sid"]), "name": str(server["name"]), "verified": verified, "warning": ""}, nil
 	}
 	server, _ := findServer(d, sid, name)
 	if server == nil {

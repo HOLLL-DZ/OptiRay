@@ -9737,9 +9737,9 @@ hr.subscriptions-divider { height:0; border:0; border-top:2px solid var(--line);
         min-width: 40px !important;
         width: 100% !important;
         padding: 0 12px !important;
-        background-image: linear-gradient(var(--ui-field-line),var(--ui-field-line)) !important;
-        background-size: calc(100% - 24px) 1px !important;
-        background-position: 12px 30px !important;
+        background-image:linear-gradient(var(--ui-field-line),var(--ui-field-line)),linear-gradient(var(--ui-field-line),var(--ui-field-line)),linear-gradient(var(--ui-field-line),var(--ui-field-line)) !important;
+        background-size:calc(100% - 24px) 1px,1px 4px,1px 4px !important;
+        background-position:12px 30px,12px 27px,calc(100% - 12px) 27px !important;
         background-repeat: no-repeat !important;
     }
     #mt_modal .mt-sticky-bar .mt-search-toolbar input[type="search"]::placeholder {
@@ -9748,8 +9748,9 @@ hr.subscriptions-divider { height:0; border:0; border-top:2px solid var(--line);
     }
     #mt_modal .mt-sticky-bar .mt-search-toolbar input[type="search"]:focus {
         outline: none !important;
-        background-image: linear-gradient(var(--btn-info-text),var(--btn-info-text)) !important;
-        background-size: calc(100% - 24px) 2px !important;
+        background-image:linear-gradient(var(--btn-info-text),var(--btn-info-text)),linear-gradient(var(--btn-info-text),var(--btn-info-text)),linear-gradient(var(--btn-info-text),var(--btn-info-text)) !important;
+        background-size:calc(100% - 24px) 2px,2px 5px,2px 5px !important;
+        background-position:center bottom 6px,left 12px bottom 6px,right 12px bottom 6px !important;
     }
     #mt_modal .mt-sticky-bar .mt-search-toolbar :is(select,.optiray-select-trigger) {
         flex: 0 0 auto !important;
@@ -10245,9 +10246,9 @@ hr.subscriptions-divider { height:0; border:0; border-top:2px solid var(--line);
         opacity:1 !important;
     }
     :is(#paste_group_modal,#bulk_rules_modal,#mt_bulk_rules_modal) textarea.setting-input:focus {
-        background-image:linear-gradient(var(--btn-info-text),var(--btn-info-text)) !important;
-        background-size:calc(100% - 24px) 2px !important;
-        background-position:12px calc(100% - 4px) !important;
+        background-image:linear-gradient(var(--btn-info-text),var(--btn-info-text)),linear-gradient(var(--btn-info-text),var(--btn-info-text)),linear-gradient(var(--btn-info-text),var(--btn-info-text)) !important;
+        background-size:calc(100% - 24px) 2px,2px 5px,2px 5px !important;
+        background-position:center bottom 6px,left 12px bottom 6px,right 12px bottom 6px !important;
         background-repeat:no-repeat !important;
     }
     :is(#paste_group_modal,#bulk_rules_modal,#mt_bulk_rules_modal) .setting-field > div:first-child,
@@ -10495,9 +10496,9 @@ hr.subscriptions-divider { height:0; border:0; border-top:2px solid var(--line);
     }
     #mt_modal #routing_modal textarea.setting-input:focus {
         background:var(--ui-control-surface) !important;
-        background-image:linear-gradient(var(--btn-info-text),var(--btn-info-text)) !important;
-        background-size:calc(100% - 24px) 2px !important;
-        background-position:12px calc(100% - 4px) !important;
+        background-image:linear-gradient(var(--btn-info-text),var(--btn-info-text)),linear-gradient(var(--btn-info-text),var(--btn-info-text)),linear-gradient(var(--btn-info-text),var(--btn-info-text)) !important;
+        background-size:calc(100% - 24px) 2px,2px 5px,2px 5px !important;
+        background-position:center bottom 6px,left 12px bottom 6px,right 12px bottom 6px !important;
         background-repeat:no-repeat !important;
         box-shadow:none !important;
     }
@@ -10620,14 +10621,15 @@ hr.subscriptions-divider { height:0; border:0; border-top:2px solid var(--line);
         background:var(--ui-control-bg) !important; color:var(--ui-control-text) !important;
         border:0 !important; border-radius:8px 0 0 8px !important;
         padding:0 12px !important; box-shadow:none !important;
-        background-image:linear-gradient(var(--ui-field-line),var(--ui-field-line)) !important;
-        background-size:calc(100% - 24px) 1px !important;
-        background-position:center calc(100% - 6px) !important; background-repeat:no-repeat !important;
+        background-image:linear-gradient(var(--ui-field-line),var(--ui-field-line)),linear-gradient(var(--ui-field-line),var(--ui-field-line)),linear-gradient(var(--ui-field-line),var(--ui-field-line)) !important;
+        background-size:calc(100% - 24px) 1px,1px 4px,1px 4px !important;
+        background-position:center calc(100% - 6px),left 12px bottom 6px,right 12px bottom 6px !important; background-repeat:no-repeat !important;
         font-size:14px !important; font-weight:400 !important;
     }
     .server-browser-toolbar #server_search:focus {
-        background-image:linear-gradient(var(--btn-info-text),var(--btn-info-text)) !important;
-        background-size:calc(100% - 24px) 2px !important;
+        background-image:linear-gradient(var(--btn-info-text),var(--btn-info-text)),linear-gradient(var(--btn-info-text),var(--btn-info-text)),linear-gradient(var(--btn-info-text),var(--btn-info-text)) !important;
+        background-size:calc(100% - 24px) 2px,2px 5px,2px 5px !important;
+        background-position:center bottom 6px,left 12px bottom 6px,right 12px bottom 6px !important;
         outline:none !important;
     }
     .server-browser-toolbar .optiray-select-trigger {
@@ -10944,14 +10946,15 @@ hr.subscriptions-divider { height:0; border:0; border-top:2px solid var(--line);
         background-color:var(--ui-control-bg) !important; color:var(--ui-control-text) !important;
         border:0 !important; border-radius:4px !important; padding:0 12px !important;
         box-shadow:none !important; font-size:14px !important; font-weight:400 !important;
-        background-image:linear-gradient(var(--ui-field-line),var(--ui-field-line)) !important;
-        background-size:calc(100% - 24px) 1px !important;
-        background-position:center calc(100% - 6px) !important; background-repeat:no-repeat !important;
+        background-image:linear-gradient(var(--ui-field-line),var(--ui-field-line)),linear-gradient(var(--ui-field-line),var(--ui-field-line)),linear-gradient(var(--ui-field-line),var(--ui-field-line)) !important;
+        background-size:calc(100% - 24px) 1px,1px 4px,1px 4px !important;
+        background-position:center calc(100% - 6px),left 12px bottom 6px,right 12px bottom 6px !important; background-repeat:no-repeat !important;
     }
     #settings_modal .settings-panel :is(input[type="text"],input[type="password"],input[type="number"],input[type="url"]):focus {
         outline:none !important;
-        background-image:linear-gradient(var(--btn-info-text),var(--btn-info-text)) !important;
-        background-size:calc(100% - 24px) 2px !important;
+        background-image:linear-gradient(var(--btn-info-text),var(--btn-info-text)),linear-gradient(var(--btn-info-text),var(--btn-info-text)),linear-gradient(var(--btn-info-text),var(--btn-info-text)) !important;
+        background-size:calc(100% - 24px) 2px,2px 5px,2px 5px !important;
+        background-position:center bottom 6px,left 12px bottom 6px,right 12px bottom 6px !important;
     }
     #settings_modal .settings-panel .optiray-select-trigger {
         height:38px !important; min-height:38px !important; box-sizing:border-box !important;
@@ -11041,8 +11044,9 @@ hr.subscriptions-divider { height:0; border:0; border-top:2px solid var(--line);
         background-color:var(--ui-control-bg) !important;
     }
     #mt_modal :is(.mt-group-head,.rt-group-head,.mt-rule,.rt-rule) > :is(.mt-group-name,.rt-group-title,.mt-rule-input,.rt-rule-input):focus {
-        background-image:linear-gradient(var(--btn-info-text),var(--btn-info-text)) !important;
-        background-size:calc(100% - 16px) 2px !important;
+        background-image:linear-gradient(var(--btn-info-text),var(--btn-info-text)),linear-gradient(var(--btn-info-text),var(--btn-info-text)),linear-gradient(var(--btn-info-text),var(--btn-info-text)) !important;
+        background-size:calc(100% - 16px) 2px,2px 5px,2px 5px !important;
+        background-position:center bottom 6px,left 8px bottom 6px,right 8px bottom 6px !important;
     }
     #mt_modal :is(.mt-group-card,.rt-group-card):not(.collapsed) > :is(.mt-group-head,.rt-group-head) {
         border-bottom:1px solid var(--line) !important;
@@ -11783,14 +11787,15 @@ hr.subscriptions-divider { height:0; border:0; border-top:2px solid var(--line);
         color:var(--ui-control-text) !important;
         border:0 !important; border-radius:0 !important;
         box-shadow:none !important;
-        background-image:linear-gradient(var(--ui-field-line),var(--ui-field-line)) !important;
-        background-size:calc(100% - 16px) 1px !important;
-        background-position:center calc(100% - 6px) !important;
+        background-image:linear-gradient(var(--ui-field-line),var(--ui-field-line)),linear-gradient(var(--ui-field-line),var(--ui-field-line)),linear-gradient(var(--ui-field-line),var(--ui-field-line)) !important;
+        background-size:calc(100% - 16px) 1px,1px 4px,1px 4px !important;
+        background-position:center calc(100% - 6px),left 8px bottom 6px,right 8px bottom 6px !important;
         background-repeat:no-repeat !important;
     }
     #subs_container .sub-row .sub-url-input:focus {
-        background-image:linear-gradient(var(--btn-info-text),var(--btn-info-text)) !important;
-        background-size:calc(100% - 16px) 2px !important;
+        background-image:linear-gradient(var(--btn-info-text),var(--btn-info-text)),linear-gradient(var(--btn-info-text),var(--btn-info-text)),linear-gradient(var(--btn-info-text),var(--btn-info-text)) !important;
+        background-size:calc(100% - 16px) 2px,2px 5px,2px 5px !important;
+        background-position:center bottom 6px,left 8px bottom 6px,right 8px bottom 6px !important;
         outline:none !important;
     }
     #subs_container .sub-row .color-btn {
@@ -12268,14 +12273,15 @@ hr.subscriptions-divider { height:0; border:0; border-top:2px solid var(--line);
     #mt_modal#mt_modal #mt_group_search {
         display:block !important; width:auto !important;
         flex:1 1 120px !important;
-        background-image:linear-gradient(var(--ui-field-line),var(--ui-field-line)) !important;
-        background-size:calc(100% - 20px) 1px !important;
-        background-position:center calc(100% - 6px) !important;
+        background-image:linear-gradient(var(--ui-field-line),var(--ui-field-line)),linear-gradient(var(--ui-field-line),var(--ui-field-line)),linear-gradient(var(--ui-field-line),var(--ui-field-line)) !important;
+        background-size:calc(100% - 20px) 1px,1px 4px,1px 4px !important;
+        background-position:center calc(100% - 6px),left 10px bottom 6px,right 10px bottom 6px !important;
         background-repeat:no-repeat !important;
     }
     #mt_modal#mt_modal #mt_group_search:focus {
-        background-image:linear-gradient(var(--btn-info-text),var(--btn-info-text)) !important;
-        background-size:calc(100% - 20px) 2px !important;
+        background-image:linear-gradient(var(--btn-info-text),var(--btn-info-text)),linear-gradient(var(--btn-info-text),var(--btn-info-text)),linear-gradient(var(--btn-info-text),var(--btn-info-text)) !important;
+        background-size:calc(100% - 20px) 2px,2px 5px,2px 5px !important;
+        background-position:center bottom 6px,left 10px bottom 6px,right 10px bottom 6px !important;
     }
 }
 
@@ -12350,15 +12356,16 @@ hr.subscriptions-divider { height:0; border:0; border-top:2px solid var(--line);
         background-color:transparent !important;
         border:0 !important; border-radius:0 !important;
         box-shadow:none !important;
-        background-image:linear-gradient(var(--ui-field-line),var(--ui-field-line)) !important;
-        background-size:calc(100% - 16px) 1px !important;
-        background-position:center calc(100% - 6px) !important;
+        background-image:linear-gradient(var(--ui-field-line),var(--ui-field-line)),linear-gradient(var(--ui-field-line),var(--ui-field-line)),linear-gradient(var(--ui-field-line),var(--ui-field-line)) !important;
+        background-size:calc(100% - 16px) 1px,1px 4px,1px 4px !important;
+        background-position:center calc(100% - 6px),left 8px bottom 6px,right 8px bottom 6px !important;
         background-repeat:no-repeat !important;
         color:#101010 !important;
     }
     #mt_modal#mt_modal .mt-group-head .mt-group-name:focus {
-        background-image:linear-gradient(var(--btn-info-text),var(--btn-info-text)) !important;
-        background-size:calc(100% - 16px) 2px !important;
+        background-image:linear-gradient(var(--btn-info-text),var(--btn-info-text)),linear-gradient(var(--btn-info-text),var(--btn-info-text)),linear-gradient(var(--btn-info-text),var(--btn-info-text)) !important;
+        background-size:calc(100% - 16px) 2px,2px 5px,2px 5px !important;
+        background-position:center bottom 6px,left 8px bottom 6px,right 8px bottom 6px !important;
         outline:none !important;
     }
 }
@@ -12369,14 +12376,15 @@ hr.subscriptions-divider { height:0; border:0; border-top:2px solid var(--line);
         background-color:transparent !important;
         border:0 !important; border-radius:0 !important; box-shadow:none !important;
         color:#101010 !important;
-        background-image:linear-gradient(var(--ui-field-line),var(--ui-field-line)) !important;
-        background-size:calc(100% - 16px) 1px !important;
-        background-position:center calc(100% - 6px) !important;
+        background-image:linear-gradient(var(--ui-field-line),var(--ui-field-line)),linear-gradient(var(--ui-field-line),var(--ui-field-line)),linear-gradient(var(--ui-field-line),var(--ui-field-line)) !important;
+        background-size:calc(100% - 16px) 1px,1px 4px,1px 4px !important;
+        background-position:center calc(100% - 6px),left 8px bottom 6px,right 8px bottom 6px !important;
         background-repeat:no-repeat !important;
     }
     #mt_modal#mt_modal .mt-rule-input:focus {
-        background-image:linear-gradient(var(--btn-info-text),var(--btn-info-text)) !important;
-        background-size:calc(100% - 16px) 2px !important; outline:none !important;
+        background-image:linear-gradient(var(--btn-info-text),var(--btn-info-text)),linear-gradient(var(--btn-info-text),var(--btn-info-text)),linear-gradient(var(--btn-info-text),var(--btn-info-text)) !important;
+        background-size:calc(100% - 16px) 2px,2px 5px,2px 5px !important;
+        background-position:center bottom 6px,left 8px bottom 6px,right 8px bottom 6px !important; outline:none !important;
     }
     #mt_modal#mt_modal .mt-rule-controls {
         height:32px !important; min-height:32px !important;
@@ -12593,8 +12601,9 @@ hr.subscriptions-divider { height:0; border:0; border-top:2px solid var(--line);
         background-repeat:no-repeat !important;
     }
     #mt_modal#mt_modal #routing_modal :is(.rt-group-title,.rt-rule-input):focus {
-        background-image:linear-gradient(var(--btn-info-text),var(--btn-info-text)) !important;
-        background-size:calc(100% - 16px) 2px !important; outline:none !important;
+        background-image:linear-gradient(var(--btn-info-text),var(--btn-info-text)),linear-gradient(var(--btn-info-text),var(--btn-info-text)),linear-gradient(var(--btn-info-text),var(--btn-info-text)) !important;
+        background-size:calc(100% - 16px) 2px,2px 5px,2px 5px !important;
+        background-position:center bottom 6px,left 8px bottom 6px,right 8px bottom 6px !important; outline:none !important;
     }
     #mt_modal#mt_modal #routing_modal input.routing-search-match {
         background-color:rgba(255,198,44,.20) !important;
@@ -12998,9 +13007,9 @@ hr.subscriptions-divider { height:0; border:0; border-top:2px solid var(--line);
     #settings_modal#settings_modal .settings-panel :is(input[type="text"],input[type="password"],input[type="number"],input[type="url"],textarea):focus,
     #settings_modal#settings_modal #hwid_input:focus {
         outline:none !important;
-        background-image:linear-gradient(var(--btn-info-text),var(--btn-info-text)) !important;
-        background-size:calc(100% - 16px) 2px !important;
-        background-position:center calc(100% - 6px) !important;
+        background-image:linear-gradient(var(--btn-info-text),var(--btn-info-text)),linear-gradient(var(--btn-info-text),var(--btn-info-text)),linear-gradient(var(--btn-info-text),var(--btn-info-text)) !important;
+        background-size:calc(100% - 16px) 2px,2px 5px,2px 5px !important;
+        background-position:center bottom 6px,left 8px bottom 6px,right 8px bottom 6px !important;
         background-repeat:no-repeat !important;
     }
     #settings_modal#settings_modal .optiray-select-trigger {
@@ -13065,15 +13074,16 @@ hr.subscriptions-divider { height:0; border:0; border-top:2px solid var(--line);
 @layer optiray-interactions {
     #settings_modal#settings_modal .settings-panel :is(input[type="text"],input[type="password"],input[type="number"],input[type="url"],textarea),
     #settings_modal#settings_modal #hwid_input {
-        background-image:linear-gradient(var(--ui-field-line),var(--ui-field-line)) !important;
-        background-size:calc(100% - 16px) 1px !important;
-        background-position:center calc(100% - 6px) !important;
+        background-image:linear-gradient(var(--ui-field-line),var(--ui-field-line)),linear-gradient(var(--ui-field-line),var(--ui-field-line)),linear-gradient(var(--ui-field-line),var(--ui-field-line)) !important;
+        background-size:calc(100% - 16px) 1px,1px 4px,1px 4px !important;
+        background-position:center calc(100% - 6px),left 8px bottom 6px,right 8px bottom 6px !important;
         background-repeat:no-repeat !important;
     }
     #settings_modal#settings_modal .settings-panel :is(input[type="text"],input[type="password"],input[type="number"],input[type="url"],textarea):focus,
     #settings_modal#settings_modal #hwid_input:focus {
-        background-image:linear-gradient(var(--btn-info-text),var(--btn-info-text)) !important;
-        background-size:calc(100% - 16px) 2px !important;
+        background-image:linear-gradient(var(--btn-info-text),var(--btn-info-text)),linear-gradient(var(--btn-info-text),var(--btn-info-text)),linear-gradient(var(--btn-info-text),var(--btn-info-text)) !important;
+        background-size:calc(100% - 16px) 2px,2px 5px,2px 5px !important;
+        background-position:center bottom 6px,left 8px bottom 6px,right 8px bottom 6px !important;
     }
     #settings_modal#settings_modal .modal-header > div:last-child {
         border:0 !important; outline:none !important; box-shadow:none !important;
@@ -13534,4 +13544,254 @@ hr.subscriptions-divider { height:0; border:0; border-top:2px solid var(--line);
   font-size:14px !important; font-weight:400 !important;
  }
  .config-write-overlay .config-deletion-icon { color:var(--ui-primary-button-bg); }
+}
+/* Input baselines gain ten percent of the theme's text color. */
+:root, [data-theme="dark"] {
+    --ui-field-line:color-mix(in srgb,var(--line) 80%,var(--text) 20%);
+}
+/* Text sits six pixels inside the raised baseline edges. */
+@layer optiray-interactions {
+ #server_browser_toolbar#server_browser_toolbar #server_search { padding-left:18px !important; padding-right:18px !important; }
+ #mt_modal#mt_modal #mt_group_search { padding-left:16px !important; padding-right:16px !important; }
+ #settings_modal#settings_modal .settings-panel :is(input[type="text"],input[type="password"],input[type="number"],input[type="url"],textarea),
+ #settings_modal#settings_modal #hwid_input,
+ #subs_container#subs_container .sub-row input.sub-url-input,
+ #mt_modal#mt_modal :is(.mt-group-name,.mt-rule-input),
+ #mt_modal#mt_modal #routing_modal :is(.rt-group-title,.rt-rule-input) {
+  padding-left:14px !important; padding-right:14px !important; box-sizing:border-box !important;
+ }
+}
+/* Compact credentials fields on desktop; retain usable mobile widths. */
+@layer optiray-interactions {
+ #settings_modal#settings_modal .settings-panel input:is([name="auth_user"],[name="auth_pass"]) {
+  width:50% !important; min-width:0 !important; justify-self:start !important; flex:0 0 50% !important;
+ }
+ @media(max-width:760px) {
+  #settings_modal#settings_modal .settings-panel input:is([name="auth_user"],[name="auth_pass"]) { width:100% !important; flex-basis:100% !important; }
+ }
+}
+/* Header theme and close controls share a 38px circular target and center line. */
+@layer optiray-interactions {
+ #settings_modal#settings_modal#settings_modal .modal-header > div:last-child > :is(.theme-toggle-btn,.modal-close),
+ #mt_modal#mt_modal#mt_modal .mt-sticky-top > .modal-header > button.modal-close,
+ #routing_modal#routing_modal#routing_modal .modal-header > button.modal-close {
+  width:38px !important; min-width:38px !important; max-width:38px !important;
+  height:38px !important; min-height:38px !important; max-height:38px !important;
+  flex:0 0 38px !important; border-radius:50% !important; padding:0 !important;
+  display:inline-flex !important; align-items:center !important; justify-content:center !important;
+ }
+ #settings_modal#settings_modal#settings_modal .modal-header > div:last-child > :is(.theme-toggle-btn,.modal-close) {
+  position:absolute !important; top:calc(50% - 19px) !important; margin:0 !important;
+ }
+ #settings_modal#settings_modal#settings_modal .modal-header > div:last-child > .modal-close { right:15px !important; }
+ #settings_modal#settings_modal#settings_modal .modal-header > div:last-child > .theme-toggle-btn { right:58px !important; }
+ #settings_modal#settings_modal#settings_modal .modal-header > div:first-child { padding-right:90px; }
+ #mt_modal#mt_modal#mt_modal .mt-sticky-top > .modal-header,
+ #routing_modal#routing_modal#routing_modal .modal-header { align-items:center !important; }
+ #mt_modal#mt_modal#mt_modal .mt-sticky-top > .modal-header > button.modal-close,
+ #routing_modal#routing_modal#routing_modal .modal-header > button.modal-close {
+  position:static !important; top:auto !important; right:auto !important;
+  align-self:center !important; margin-top:0 !important; margin-bottom:0 !important;
+ }
+}
+/* Align routing close inset with settings and place backups before import. */
+@layer optiray-interactions {
+ #mt_modal#mt_modal#mt_modal .mt-sticky-top > .modal-header { padding-right:15px !important; }
+ #mt_modal#mt_modal#mt_modal .mt-sticky-top > .modal-header > button.modal-close { margin-right:0 !important; }
+ #mt_modal#mt_modal#mt_modal .routing-header-actions > .mt-io-backup { order:0 !important; }
+}
+@layer optiray-interactions {
+ #mt_modal#mt_modal#mt_modal .mt-sticky-top > .modal-header > button.modal-close { margin-left:10px !important; }
+}
+/* Short, subdued separator between automatic selection and ping controls. */
+@layer optiray-interactions {
+ #servers_container#servers_container .sub-header .sub-actions.sub-actions .btn-auto-select {
+  position:relative !important; margin-right:5px !important;
+ }
+ #servers_container#servers_container .sub-header .sub-actions.sub-actions .btn-auto-select::after {
+  content:"" !important; position:absolute !important;
+  top:7px !important; bottom:7px !important; right:-3px !important;
+  width:1px !important; height:auto !important; border:0 !important;
+  border-radius:1px !important; transform:none !important;
+  background:color-mix(in srgb,var(--text) 15%,transparent) !important;
+  pointer-events:none !important;
+ }
+}
+/* Shared inset separators in interface and rule action pills. */
+@layer optiray-interactions {
+ #mt_modal#mt_modal#mt_modal .mt-group-controls > .mt-group-actions,
+ #mt_modal#mt_modal#mt_modal .mt-rule-controls > .rt-rule-del { position:relative !important; }
+ #mt_modal#mt_modal#mt_modal .mt-group-controls > .mt-group-actions::before,
+ #mt_modal#mt_modal#mt_modal .mt-rule-controls:not(.xr-rule-controls) > .rt-rule-del::before {
+  content:"" !important; display:block !important; position:absolute !important;
+  left:0 !important; right:auto !important; top:7px !important; bottom:7px !important;
+  width:1px !important; height:auto !important; border:0 !important;
+  border-radius:1px !important; transform:none !important;
+  background:color-mix(in srgb,var(--text) 15%,transparent) !important;
+  pointer-events:none !important;
+ }
+}
+/* Size the rule type selector to its longest available label. */
+@layer optiray-interactions {
+ #mt_modal#mt_modal#mt_modal .mt-rule-controls:not(.xr-rule-controls) { width:max-content !important; min-width:0 !important; flex:0 0 auto !important; }
+ #mt_modal#mt_modal#mt_modal .mt-rule-controls > .optiray-select-trigger {
+  width:var(--rule-type-width,100px) !important;
+  min-width:var(--rule-type-width,100px) !important; max-width:var(--rule-type-width,100px) !important;
+  flex:0 0 var(--rule-type-width,100px) !important;
+  padding-left:8px !important; padding-right:8px !important; gap:6px !important;
+ }
+}
+/* Intrinsic label sizing also works while the routing dialog is hidden. */
+@layer optiray-interactions {
+ #mt_modal#mt_modal#mt_modal .mt-rule-controls > .optiray-select-trigger {
+  display:inline-grid !important; grid-template-columns:max-content 16px !important;
+  align-items:center !important; column-gap:6px !important;
+  width:max-content !important; min-width:0 !important; max-width:none !important; flex:0 0 auto !important;
+ }
+ #mt_modal#mt_modal#mt_modal .mt-rule-controls > .optiray-select-trigger::before {
+  content:"namespace" !important; visibility:hidden !important; position:static !important;
+  grid-column:1 !important; grid-row:1 !important; font:inherit !important;
+  width:auto !important; height:auto !important; transform:none !important;
+  padding:0 !important; margin:0 !important; pointer-events:none !important;
+ }
+ #mt_modal#mt_modal#mt_modal .mt-rule-controls > .optiray-select-trigger > span {
+  grid-column:1 !important; grid-row:1 !important; overflow:visible !important; text-overflow:clip !important;
+ }
+ #mt_modal#mt_modal#mt_modal .mt-rule-controls > .optiray-select-trigger > svg { grid-column:2 !important; grid-row:1 !important; }
+}
+@layer optiray-interactions {
+ #servers_container#servers_container .disconnect-optiray { cursor:pointer !important; font-family:inherit; }
+ #servers_container#servers_container .disconnect-optiray .disconnect-caption { display:none; }
+ #servers_container#servers_container .disconnect-optiray:is(:hover,:focus-visible) .connected-caption { display:none; }
+ #servers_container#servers_container .disconnect-optiray:is(:hover,:focus-visible) .disconnect-caption { display:inline; }
+ #servers_container#servers_container .disconnect-optiray:is(:hover,:focus-visible) {
+  color:var(--ui-danger-button-bg) !important;
+  background:color-mix(in srgb,var(--ui-danger-button-bg) 8%,var(--ui-control-surface)) !important;
+  border-color:color-mix(in srgb,var(--ui-danger-button-bg) 25%,var(--line)) !important;
+ }
+}
+/* Disconnect uses the shared solid danger action treatment. */
+@layer optiray-interactions {
+ #servers_container#servers_container .disconnect-optiray:is(:hover,:focus-visible) {
+  color:#fff !important; background:var(--ui-danger-button-bg) !important;
+  border-color:transparent !important;
+ }
+ #servers_container#servers_container .disconnect-optiray:active:not(:disabled) {
+  color:#fff !important; background:var(--ui-danger-button-active) !important;
+  transform:scale(.96) !important;
+ }
+}
+@layer optiray-interactions {
+ .active-status-card .connection-absent-message { display:none; font-size:14px; font-weight:400; color:var(--text); }
+ .active-status-card.connection-absent :is(.active-status-caption,.active-server-line) { display:none !important; }
+ .active-status-card.connection-absent .connection-absent-message { display:block; order:-1; }
+ .active-status-card.connection-absent .active-status-text { display:flex; flex-direction:column; gap:5px; }
+}
+@layer optiray-interactions {
+ .disconnect-link-animation { display:block; width:160px; height:80px; margin:0 auto 14px; color:var(--ui-primary-button-bg); }
+ .disconnect-left-wire { animation:disconnect-left 2.4s ease-in-out infinite; }
+ .disconnect-right-wire { animation:disconnect-right 2.4s ease-in-out infinite; }
+ .disconnect-server { animation:disconnect-server-fade 2.4s ease-in-out infinite; }
+ .disconnect-packet { animation:disconnect-data 2.4s ease-in-out infinite; }
+ .disconnect-packet.packet-b { animation-delay:.12s; }
+ .disconnect-packet.packet-c { animation-delay:.24s; }
+ @keyframes disconnect-left { 0%,15% { transform:translateX(4px); opacity:.8; } 55%,85% { transform:translateX(-5px); opacity:.35; } 100% { transform:translateX(4px); opacity:.8; } }
+ @keyframes disconnect-right { 0%,15% { transform:translateX(-4px); opacity:.8; } 55%,85% { transform:translateX(5px); opacity:.35; } 100% { transform:translateX(-4px); opacity:.8; } }
+ @keyframes disconnect-data { 0%,10% { opacity:.8; transform:translateX(0); } 40% { opacity:0; transform:translateX(8px); } 85% { opacity:0; transform:translateX(0); } 100% { opacity:.8; } }
+ @keyframes disconnect-server-fade { 0%,15%,100% { opacity:.8; } 55%,85% { opacity:.3; } }
+ @media(prefers-reduced-motion:reduce) { .disconnect-link-animation * { animation:none !important; } }
+}
+@layer optiray-interactions {
+ #servers_container#servers_container .server-card { position:relative; }
+ #servers_container#servers_container .server-menu-trigger { position:absolute; right:8px; bottom:12px; width:30px; height:38px; display:flex; align-items:center; justify-content:center; padding:0; border:0; border-radius:999px; background:transparent; color:var(--text-2); cursor:pointer; }
+ #servers_container#servers_container .server-menu-trigger:hover { background:var(--popup-hover);color:var(--text); }
+ #server_actions_menu { position:fixed; z-index:10050; padding:4px; background:var(--popup-surface); border:1px solid var(--line); border-radius:8px; box-shadow:var(--popup-shadow); }
+ #server_actions_menu > button { display:block; padding:9px 12px; border:0; border-radius:4px; background:transparent; color:var(--popup-ink); font:400 14px var(--text-font-family); cursor:pointer; }
+ #server_actions_menu > button:is(:hover,:focus-visible) { background:var(--popup-hover); outline:none; }
+ #server_config_viewer .modal-content { width:760px;max-width:calc(100vw - 32px);padding:0;overflow:hidden; }
+ #server_config_viewer .modal-header { display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 16px 14px 20px; margin:0; }
+ #server_config_viewer .modal-close { width:38px;height:38px;min-width:38px;max-height:38px;flex:0 0 38px;border:0;border-radius:50%;padding:0;display:flex;align-items:center;justify-content:center;background:var(--popup-hover);color:var(--text); }
+ #server_config_viewer .server-config-name { color:var(--text-2);margin-left:8px;overflow-wrap:anywhere; }
+ #server_config_viewer .server-config-body { padding:12px 16px 16px; }
+ #server_config_viewer textarea { width:100%;height:55dvh;resize:vertical;box-sizing:border-box;padding:12px;font:13px/1.5 Consolas,monospace;color:var(--text);background:var(--ui-control-surface);border:1px solid var(--line);border-radius:10px; }
+ #server_config_viewer .server-config-error {color:var(--danger);}
+}
+/* Server configuration viewer uses the shared menu typography and dialog header. */
+@layer optiray-interactions {
+ #server_actions_menu#server_actions_menu > button {
+  font-family:var(--text-font-family) !important; font-size:14px !important;
+  font-weight:400 !important; line-height:20px !important;
+  min-height:38px !important; padding:8px 10px !important;
+ }
+ #server_config_viewer#server_config_viewer .modal-content {
+  padding:0 !important; width:760px !important; max-width:calc(100vw - 32px) !important;
+  box-sizing:border-box !important; overflow:hidden !important;
+ }
+ #server_config_viewer#server_config_viewer .modal-header {
+  position:relative !important; min-height:68px !important; box-sizing:border-box !important;
+  margin:0 !important; padding:16px 68px 16px 20px !important;
+  border-bottom:1px solid var(--line) !important; align-items:center !important;
+  font-family:var(--text-font-family) !important; font-size:14px !important; font-weight:400 !important;
+ }
+ #server_config_viewer#server_config_viewer .modal-header > span {
+  display:flex !important; flex-wrap:wrap !important; align-items:baseline !important;
+  gap:4px 12px !important; min-width:0 !important;
+  font-size:14px !important; font-weight:400 !important;
+ }
+ #server_config_viewer#server_config_viewer .server-config-name {
+  margin:0 !important; color:var(--text-2) !important;
+  font-size:14px !important; font-weight:400 !important;
+ }
+ #server_config_viewer#server_config_viewer .modal-header > button.modal-close {
+  position:absolute !important; top:calc(50% - 19px) !important; right:15px !important;
+  width:38px !important; min-width:38px !important; max-width:38px !important;
+  height:38px !important; min-height:38px !important; max-height:38px !important;
+  padding:0 !important; margin:0 !important; border:0 !important; border-radius:50% !important;
+  display:inline-flex !important; align-items:center !important; justify-content:center !important;
+  background:rgba(0,0,0,.06) !important; color:var(--text) !important; box-shadow:none !important;
+ }
+ #server_config_viewer#server_config_viewer .modal-header > button.modal-close:hover {
+  background:rgba(220,53,69,.10) !important; color:#d93645 !important;
+ }
+ #server_config_viewer#server_config_viewer .modal-header > button.modal-close:focus:not(:focus-visible) { outline:none !important; }
+ #server_config_viewer#server_config_viewer .modal-close svg { width:18px !important; height:18px !important; }
+ #server_config_viewer#server_config_viewer .server-config-body { padding:12px 16px 16px !important; margin:0 !important; width:100% !important; box-sizing:border-box !important; }
+ #server_config_viewer#server_config_viewer textarea {
+  display:block !important; width:100% !important; max-width:none !important; margin:0 !important;
+  box-sizing:border-box !important; height:55dvh !important; padding:12px !important;
+ }
+ #server_config_viewer#server_config_viewer .server-config-error:empty { display:none !important; }
+ [data-theme="dark"] #server_config_viewer#server_config_viewer .modal-header > button.modal-close { background:rgba(255,255,255,.06) !important; }
+ [data-theme="dark"] #server_config_viewer#server_config_viewer .modal-header > button.modal-close:hover { background:rgba(255,255,255,.12) !important; color:var(--app-dark-ink) !important; }
+}
+/* Match settings close hover without an extra ring. */
+@layer optiray-interactions {
+ #server_config_viewer#server_config_viewer .modal-header > button.modal-close,
+ #server_config_viewer#server_config_viewer .modal-header > button.modal-close:is(:hover,:active,:focus) {
+  border:0 !important; box-shadow:none !important;
+ }
+ #server_config_viewer#server_config_viewer .modal-header > button.modal-close:focus:not(:focus-visible) { outline:none !important; }
+ #server_config_viewer#server_config_viewer .modal-header > button.modal-close:hover {
+  background:rgba(0,0,0,.06) !important;
+  background-image:linear-gradient(rgba(220,53,69,.10),rgba(220,53,69,.10)) !important;
+  color:#d93645 !important;
+ }
+ [data-theme="dark"] #server_config_viewer#server_config_viewer .modal-header > button.modal-close:hover {
+  background:rgba(255,255,255,.12) !important; background-image:none !important; color:var(--app-dark-ink) !important;
+ }
+}
+/* Floating page actions match the circular toolbar controls. */
+@layer optiray-interactions {
+ :is(#scroll_top_btn,#test_float_btn) {
+  width:40px !important; min-width:40px !important; height:40px !important;
+  padding:0 !important; border:0 !important; border-radius:50% !important;
+  display:inline-flex !important; align-items:center !important; justify-content:center !important;
+  background:rgba(0,0,0,.06) !important; background-image:none !important;
+  color:#101010 !important; box-shadow:none !important;
+  transition:background-color .15s ease,transform .1s ease,opacity .2s ease !important;
+ }
+ :is(#scroll_top_btn,#test_float_btn):hover { background:rgba(0,0,0,.12) !important; }
+ :is(#scroll_top_btn,#test_float_btn):active { transform:scale(.96) !important; }
+ [data-theme="dark"] :is(#scroll_top_btn,#test_float_btn) { background:rgba(255,255,255,.06) !important; color:var(--app-dark-ink) !important; }
+ [data-theme="dark"] :is(#scroll_top_btn,#test_float_btn):hover { background:rgba(255,255,255,.12) !important; }
 }
