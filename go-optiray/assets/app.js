@@ -6141,3 +6141,77 @@ document.addEventListener('DOMContentLoaded',function(){
  document.addEventListener('keydown',function(e){if(e.key==='Escape'){if(menu){closeMenu();if(anchor)anchor.focus();}else if(dialog&&dialog.style.display!=='none'){dialog.querySelector('.modal-close').click();}}});
  window.addEventListener('resize',closeMenu);document.addEventListener('scroll',closeMenu,true);
 })();
+/* Keep protocol summaries compact without repeating protocol as transport. */
+document.addEventListener('DOMContentLoaded',function(){
+ function updateSubtitles(){
+  document.querySelectorAll('#servers_container .server-card .server-subtitle').forEach(function(line){
+   var card=line.closest('.server-card'),protocol=(card.dataset.protocol||'').toUpperCase();
+   var parts=line.textContent.split('/').map(function(value){return value.trim();}).filter(Boolean);
+   var result=[];
+   parts.forEach(function(value,index){
+    if(index===0&&protocol)value=protocol;
+    if(result.length&&value===result[result.length-1])return;
+    if(index===1&&/^HYSTERIA2?$/.test(protocol)&&/^HYSTERIA2?$/.test(value))return;
+    result.push(value);
+   });
+   var fragment=document.createDocumentFragment();
+   result.forEach(function(value,index){
+    if(index)fragment.appendChild(document.createTextNode(' / '));
+    var badgeClass=value==='GRPC'?'badge-tr-grpc':/^HYSTERIA2?$/.test(value)?'badge-tr-hysteria':value==='BALANCER'?'badge-tr-balancer':'';
+    if(badgeClass){var badge=document.createElement('span');badge.className='tr-badge '+badgeClass;badge.textContent=value;fragment.appendChild(badge);}
+    else fragment.appendChild(document.createTextNode(value));
+   });
+   var holder=document.createElement('div');holder.appendChild(fragment);
+   if(line.innerHTML!==holder.innerHTML)line.replaceChildren.apply(line,Array.from(holder.childNodes));
+  });
+ }
+ updateSubtitles();
+ var container=document.getElementById('servers_container');
+ if(container)new MutationObserver(updateSubtitles).observe(container,{childList:true,subtree:true});
+});
+
+/* One OptiRout group-paste handler for button and keyboard submission. */
+(function(){
+ var routingApply=window.applyPasteGroup;
+ function close(){
+  var modal=document.getElementById('paste_group_modal');if(modal)modal.style.display='none';
+  window.__mt_paste_ctx=null;window.__paste_group_ctx=null;
+ }
+ function open(button){
+  window.__paste_group_ctx=null;window.__mt_paste_ctx={isMt:true,btn:button||null};
+  var modal=document.getElementById('paste_group_modal');
+  modal.querySelector('textarea').value='';
+  selectPasteMode(modal.querySelector('.paste-mode-toggle button'),false);
+  document.getElementById('paste_group_hint').textContent='Первая строка — название группы, далее правила. Ctrl+Enter — добавить.';
+  modal.style.display='flex';setTimeout(function(){modal.querySelector('textarea').focus();},60);
+ }
+ function apply(){
+  if(!window.__mt_paste_ctx||!window.__mt_paste_ctx.isMt){if(routingApply)return routingApply();return;}
+  var hint=document.getElementById('paste_group_hint');
+  var lines=document.getElementById('paste_group_textarea').value.split(/\r\n|\n|\r/).map(function(v){return v.trim();}).filter(function(v){return v&&v[0]!=='#';});
+  if(lines.length<2){hint.textContent='Укажите название группы и хотя бы одно правило.';return;}
+  var name=lines.shift(),rules=[],seen=new Set();
+  lines.forEach(function(value){var parsed=window.mtParseImportedRule?window.mtParseImportedRule(value):{rule:value,type:'namespace'};var key=parsed.type+'\n'+parsed.rule;if(!seen.has(key)){seen.add(key);rules.push({id:_mtNewId(),name:'',type:parsed.type,rule:parsed.rule,enable:true});}});
+  if(typeof _mtCollectFromUi==='function')_mtCollectFromUi(true);
+  var state=window.MT_STATE,config=state&&state.config;
+  if(!config){hint.textContent='Конфиг OptiRout не загружен.';return;}
+  config.groups=config.groups||[];
+  var group=config.groups.find(function(g){return g.name===name;});
+  var replace=document.getElementById('paste_group_modal_replace').checked;
+  if(group){
+   if(replace)group.rules=rules;
+   else {var existing=new Set((group.rules||[]).map(function(r){return r.type+'\n'+r.rule;}));group.rules=(group.rules||[]).concat(rules.filter(function(r){return !existing.has(r.type+'\n'+r.rule);}));}
+   group.collapsed=false;
+  }else{
+   var iface=state.interfaces&&state.interfaces[0];
+   config.groups.unshift({id:_mtNewId(),name:name,color:randomRoutingGroupColor(),interface:iface?(_mtIfaceName(iface)||'t2s0'):'t2s0',enable:true,rules:rules});
+  }
+  state.dirty=true;mtRenderGroups();close();
+  _mtSetStatus('Группа «'+name+'» обновлена. Нажмите «Сохранить» для применения.','ok');
+  if(window.__mtScanDups)setTimeout(window.__mtScanDups,150);
+ }
+ window.mtOpenPasteModal=open;window.mtPasteGroupFromClipboard=open;
+ window.applyPasteGroupMt=apply;window.applyPasteGroupAny=apply;window.applyPasteGroup=apply;
+ var previousClose=window.closePasteGroupModal;
+ window.closePasteGroupModal=function(){if(previousClose)previousClose();window.__mt_paste_ctx=null;};
+})();

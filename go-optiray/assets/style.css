@@ -1,6 +1,19 @@
 
 @layer optiray-danger, optiray-interactions;
 
+/* Shared background palette. Change --app-background to recolor page and dialogs. */
+:root {
+ --app-background:#FFFFFF;
+ --app-group-background:color-mix(in srgb,var(--app-background) 91%,#26364A);
+ --app-sidebar-background:color-mix(in srgb,var(--app-background) 94%,#26364A);
+}
+[data-theme="dark"] {
+ --app-background:#141414;
+ --app-group-background:color-mix(in srgb,var(--app-background) 88%,#000);
+ --app-sidebar-background:color-mix(in srgb,var(--app-background) 92%,#fff);
+}
+
+
 :root {
     --ui-control-outline:var(--line);
     --ui-segment-divider:color-mix(in srgb,var(--ui-control-bg) 88%,var(--ui-control-text));
@@ -13425,8 +13438,8 @@ hr.subscriptions-divider { height:0; border:0; border-top:2px solid var(--line);
 }
 /* Shared popup menu surface and selection treatment. */
 @layer optiray-interactions {
-    :root { --popup-surface:#fff; --popup-ink:#101010; --popup-hover:rgba(0,0,0,.06); --popup-shadow:0 4px 14px rgba(0,0,0,.10); }
-    [data-theme="dark"] { --popup-surface:#242628; --popup-ink:#e5e7eb; --popup-hover:rgba(255,255,255,.06); --popup-shadow:0 4px 14px rgba(0,0,0,.25); }
+    :root { --popup-surface:#fff; --popup-ink:#101010; --popup-hover:rgba(0,0,0,.06); --popup-shadow:0 2px 6px rgba(0,0,0,.12),0 8px 24px rgba(0,0,0,.06); }
+    [data-theme="dark"] { --popup-surface:#242628; --popup-ink:#e5e7eb; --popup-hover:rgba(255,255,255,.06); --popup-shadow:0 2px 6px rgba(0,0,0,.30),0 8px 24px rgba(0,0,0,.20); }
     :is(#optiray_select_dd#optiray_select_dd,#mt_global_iface_dd#mt_global_iface_dd,#mt_group_iface_dd#mt_group_iface_dd) {
         background:var(--popup-surface) !important;
         border:1px solid var(--line) !important;
@@ -13794,4 +13807,752 @@ hr.subscriptions-divider { height:0; border:0; border-top:2px solid var(--line);
  :is(#scroll_top_btn,#test_float_btn):active { transform:scale(.96) !important; }
  [data-theme="dark"] :is(#scroll_top_btn,#test_float_btn) { background:rgba(255,255,255,.06) !important; color:var(--app-dark-ink) !important; }
  [data-theme="dark"] :is(#scroll_top_btn,#test_float_btn):hover { background:rgba(255,255,255,.12) !important; }
+}
+/* Softer connection action in both server views. */
+@layer optiray-interactions {
+ #servers_container .server-card .action-slot .btn-connect {
+  --connect-soft-bg:rgba(0,0,0,.06);
+  --connect-soft-text:#101010;
+  --connect-soft-hover:rgba(0,0,0,.12);
+  background:var(--connect-soft-bg) !important;
+  background-image:none !important;
+  color:var(--connect-soft-text) !important;
+  border:0 !important;
+  box-shadow:none !important;
+  filter:none !important;
+  transition:background-color .15s ease,transform .1s ease !important;
+ }
+ #servers_container .server-card .action-slot .btn-connect:hover:not(:disabled) {
+  background:var(--connect-soft-hover) !important;
+  filter:none !important;
+ }
+ [data-theme="dark"] #servers_container .server-card .action-slot .btn-connect {
+  --connect-soft-bg:rgba(255,255,255,.06);
+  --connect-soft-text:var(--app-dark-ink);
+  --connect-soft-hover:rgba(255,255,255,.12);
+ }
+}
+
+/* Subtle depth around subscription groups. */
+@layer optiray-interactions {
+ #servers_container .sub-section {
+  box-shadow:none !important; border-color:#CDD3DA !important;
+ }
+ [data-theme="dark"] #servers_container .sub-section {
+  box-shadow:none !important; border-color:#42474E !important;
+ }
+}
+
+/* A faint outline keeps the connection action distinct from the card. */
+@layer optiray-interactions {
+ #servers_container .server-card .action-slot .btn-connect {
+  border:2px solid rgba(0,0,0,.06) !important;
+ }
+ [data-theme="dark"] #servers_container .server-card .action-slot .btn-connect {
+  border-color:rgba(255,255,255,.08) !important;
+ }
+}
+
+/* Status panel follows the active subscription's server-area tint. */
+@layer optiray-interactions {
+ .header-right > .active-status-card {
+  background:color-mix(in srgb,var(--active-subscription-color,#6c757d) 5%,var(--bg)) !important;
+  border:1px solid color-mix(in srgb,var(--active-subscription-color,#6c757d) 10%,var(--line)) !important;
+  box-shadow:0 1px 4px rgba(24,39,58,.07) !important;
+ }
+ [data-theme="dark"] .header-right > .active-status-card {
+  box-shadow:0 1px 4px rgba(0,0,0,.18) !important;
+ }
+}
+
+.badge-tr-balancer { color:#39756b; background:rgba(57,117,107,.08); border:1px solid rgba(57,117,107,.22); }
+[data-theme="dark"] .badge-tr-balancer { color:#91c9bc; background:rgba(145,201,188,.08); border-color:rgba(145,201,188,.25); }
+
+/* Compact, centered protocol details within server cards. */
+@layer optiray-interactions {
+ #servers_container .server-card .server-subtitle {
+  font-size:11px !important;
+  text-align:center !important;
+  width:100%;
+ }
+ #servers_container .server-card .server-subtitle .tr-badge {
+  font-size:11px !important;
+ }
+}
+
+@layer optiray-interactions {
+ #servers_container.server-view-cards .server-card .server-row-main .server-subtitle {
+  display:block !important;
+  width:100% !important;
+  text-align:center !important;
+  justify-content:center !important;
+  align-items:center !important;
+  font-size:11px !important;
+ }
+}
+
+/* Keep list actions in the row flow, with a separate slot for the menu. */
+@layer optiray-interactions {
+ #servers_container#servers_container.server-view-list .server-card > .server-menu-trigger {
+  position:static !important;
+  order:4;
+  flex:0 0 30px;
+  width:30px !important;
+  height:38px !important;
+  margin:0 !important;
+  align-self:center;
+ }
+ #servers_container.server-view-list .server-card > .action-slot {
+  display:flex; align-items:center; justify-content:center;
+  flex:0 0 138px; min-width:138px;
+ }
+ #servers_container.server-view-list .server-card > .ping-badge {
+  position:static !important;
+  flex:0 0 60px; min-width:60px; box-sizing:border-box;
+  padding:3px 6px !important; margin:0 !important;
+  text-align:center; border:0 !important;
+  background:rgba(0,0,0,.04) !important;
+  box-shadow:none !important;
+ }
+ [data-theme="dark"] #servers_container.server-view-list .server-card > .ping-badge {
+  background:rgba(255,255,255,.04) !important;
+ }
+}
+
+/* Mobile layouts: allow toolbars to wrap and reserve space for actions. */
+@layer optiray-interactions {
+ @media(max-width:760px) {
+  .header-right > .active-status-card {
+   position:static !important; top:auto !important; width:100% !important;
+   box-sizing:border-box !important; margin:6px 0 !important;
+  }
+  #servers_container .sub-header {
+   height:auto !important; min-height:0 !important;
+   display:flex !important; flex-wrap:wrap !important;
+   gap:8px !important; padding:10px 8px 10px 22px !important;
+  }
+  #servers_container .sub-header .sub-title { flex:1 1 auto !important; min-width:0 !important; }
+  #servers_container .sub-header .sub-actions.sub-actions {
+   flex:1 1 100% !important; width:100% !important; max-width:100% !important;
+   height:auto !important; min-height:32px !important;
+   display:flex !important; flex-wrap:wrap !important; justify-content:center !important;
+   padding:3px !important; border-radius:14px !important; row-gap:4px !important;
+  }
+  #servers_container .sub-header .sub-actions .ping-block {
+   flex:0 0 auto !important; width:auto !important;
+  }
+  #servers_container.server-view-cards .server-grid {
+   grid-template-columns:minmax(0,1fr) !important; gap:8px !important;
+  }
+  #servers_container.server-view-cards .server-card { min-width:0 !important; }
+  #servers_container.server-view-cards .server-card > .action-slot {
+   box-sizing:border-box !important; padding-right:36px !important;
+  }
+  #servers_container.server-view-cards .server-card .action-slot :is(.btn-connect,.badge-connected) {
+   max-width:100% !important; min-width:0 !important;
+  }
+  #servers_container.server-view-cards .server-card .server-row-main .server-subtitle {
+   height:auto !important; min-height:20px !important; max-height:none !important;
+   overflow:visible !important; white-space:normal !important;
+  }
+  #servers_container.server-view-list .server-card { flex-wrap:wrap !important; gap:6px !important; }
+  #servers_container.server-view-list .server-row-main { flex:1 1 100% !important; width:100% !important; }
+  #servers_container.server-view-list .server-card > .action-slot { margin-left:auto !important; }
+  #settings_modal#settings_modal .modal-content,
+  #mt_modal#mt_modal > .modal-content {
+   width:100% !important; max-width:100% !important;
+   height:100dvh !important; max-height:100dvh !important;
+   margin:0 !important; border-radius:0 !important; box-sizing:border-box !important;
+  }
+  #settings_modal#settings_modal .modal-header { padding:14px 100px 14px 16px !important; }
+  #settings_modal#settings_modal .settings-header-description { font-size:12px !important; line-height:1.4 !important; }
+  #settings_modal#settings_modal .settings-sidebar {
+   padding:6px !important; gap:4px !important; scrollbar-width:thin;
+  }
+  #settings_modal#settings_modal .settings-nav-item { padding:10px 12px !important; }
+  #settings_modal#settings_modal .settings-scroll { padding:16px !important; min-height:0 !important; }
+  #settings_modal#settings_modal .setting-field { gap:6px !important; margin-bottom:14px !important; }
+  #settings_modal#settings_modal .modal-footer-btns,
+  #mt_modal#mt_modal .mt-modal-footer {
+   padding:8px !important; gap:8px !important; flex-shrink:0 !important;
+   padding-bottom:max(8px,env(safe-area-inset-bottom)) !important;
+  }
+  #mt_modal#mt_modal .mt-sticky-top > .modal-header { padding:8px 10px !important; }
+  #mt_modal#mt_modal .mt-sticky-bar {
+   display:flex !important; flex-direction:column !important;
+   padding:8px !important; gap:8px !important; width:100% !important; box-sizing:border-box !important;
+  }
+  #mt_modal#mt_modal .mt-sticky-bar .mt-groups-toolbar,
+  #mt_modal#mt_modal .mt-sticky-bar .mt-search-toolbar {
+   display:flex !important; flex-wrap:wrap !important;
+   width:100% !important; min-width:0 !important; max-width:100% !important;
+   height:auto !important; gap:4px !important; padding:0 !important;
+   overflow:visible !important; box-sizing:border-box !important;
+  }
+  #mt_modal#mt_modal .mt-sticky-bar .mt-groups-toolbar { order:0 !important; }
+  #mt_modal#mt_modal .mt-sticky-bar .mt-search-toolbar { order:1 !important; }
+  #mt_modal#mt_modal .mt-sticky-bar .mt-search-toolbar input[type="search"] {
+   flex:1 1 100% !important; width:100% !important; min-width:0 !important;
+  }
+  #mt_modal#mt_modal .mt-sticky-bar .mt-groups-toolbar > :is(button,.rt-io-group) {
+   flex:0 0 auto !important; margin:0 !important;
+  }
+  #mt_modal#mt_modal .mt-sticky-bar .mt-groups-toolbar > button { padding-inline:8px !important; }
+  #mt_modal#mt_modal .mt-group-head { padding:8px !important; column-gap:6px !important; }
+  #mt_modal#mt_modal .mt-group-head > .mt-group-controls.mt-group-controls {
+   grid-column:1 / -1 !important; justify-self:end !important;
+   max-width:100% !important; min-width:0 !important; width:284px !important;
+  }
+ }
+ @media(min-width:480px) and (max-width:760px) {
+  #servers_container.server-view-cards .server-grid { grid-template-columns:repeat(2,minmax(0,1fr)) !important; }
+ }
+}
+@layer optiray-interactions {
+ @media(max-width:760px) {
+  #mt_modal#mt_modal .mt-sticky-top,
+  #mt_modal#mt_modal .mt-sticky-bar,
+  #mt_modal#mt_modal .mt-sticky-bar .mt-groups-toolbar,
+  #mt_modal#mt_modal .mt-sticky-bar .mt-search-toolbar {
+   flex:0 0 auto !important; min-height:0 !important;
+   align-content:flex-start !important; align-items:center !important;
+  }
+  #settings_modal#settings_modal .hwid-input-row { display:flex !important; width:100% !important; min-width:0 !important; }
+  #settings_modal#settings_modal #hwid_input { flex:1 1 0 !important; width:0 !important; min-width:0 !important; }
+ }
+}
+@layer optiray-interactions {
+ @media(max-width:760px) {
+  #mt_modal#mt_modal#mt_modal .mt-sticky-bar .mt-search-toolbar { flex-wrap:wrap !important; }
+  #mt_modal#mt_modal#mt_modal #mt_group_search {
+   flex:1 0 100% !important; width:100% !important; max-width:100% !important;
+   min-width:0 !important; box-sizing:border-box !important;
+  }
+  #mt_modal#mt_modal .mt-sticky-bar .rt-io-group > button { border:0 !important; border-radius:50% !important; }
+ }
+}
+
+/* On phones the header scrolls with the modal body; only the footer stays. */
+@layer optiray-interactions {
+ @media(max-width:760px) {
+  :is(#settings_modal#settings_modal,#mt_modal#mt_modal) .mobile-modal-scroll {
+   display:block !important; flex:1 1 0 !important; min-height:0 !important;
+   overflow-y:auto !important; overflow-x:hidden !important;
+  }
+  #mt_modal#mt_modal .mobile-modal-scroll > .mt-root,
+  #mt_modal#mt_modal .mobile-modal-scroll #routing_modal,
+  #mt_modal#mt_modal .mobile-modal-scroll .rt-routing-root,
+  #settings_modal#settings_modal .mobile-modal-scroll .settings-workspace,
+  #settings_modal#settings_modal .mobile-modal-scroll .settings-scroll {
+   flex:none !important; height:auto !important; max-height:none !important;
+   overflow:visible !important; min-height:0 !important;
+  }
+  :is(#settings_modal#settings_modal,#mt_modal#mt_modal) .mobile-modal-scroll :is(.mt-sticky-top,.mt-sticky-bar,.settings-sidebar) {
+   position:static !important; top:auto !important;
+  }
+  #settings_modal#settings_modal .mobile-modal-scroll .settings-sidebar { overflow-x:auto !important; }
+ }
+}
+
+/* Mobile controls use one consistent grid instead of desktop joins. */
+@layer optiray-interactions {
+ @media(max-width:760px) {
+  #settings_modal#settings_modal .mobile-modal-scroll .modal-header {
+   position:relative !important; display:block !important;
+   padding:16px 104px 16px 16px !important;
+  }
+  #settings_modal#settings_modal .modal-header > div:first-child {
+   width:100% !important; max-width:none !important; flex:none !important;
+  }
+  #settings_modal#settings_modal .modal-title { white-space:nowrap !important; }
+  #settings_modal#settings_modal .settings-sidebar {
+   border:0 !important; scrollbar-width:none !important;
+  }
+  #settings_modal#settings_modal .settings-sidebar::-webkit-scrollbar { display:none; }
+  #settings_modal#settings_modal .settings-nav-item { border:0 !important; box-shadow:none !important; }
+  #mt_modal#mt_modal .mt-sticky-bar .mt-groups-toolbar {
+   display:grid !important; grid-template-columns:repeat(3,minmax(0,1fr)) !important;
+   gap:6px !important; align-items:center !important;
+  }
+  #mt_modal#mt_modal .mt-sticky-bar .mt-groups-toolbar > :is(.mt-add-group,.mt-paste-group-btn,.mt-global-iface-btn) {
+   width:100% !important; min-width:0 !important; padding:0 4px !important;
+   justify-content:center !important; height:38px !important;
+   border:0 !important; border-radius:10px !important;
+  }
+  #mt_modal#mt_modal .mt-sticky-bar .rt-io-group {
+   grid-column:1 / -1; display:flex !important; gap:6px !important;
+   border:0 !important; padding:0 !important; margin:0 !important;
+  }
+  #mt_modal#mt_modal .mt-sticky-bar .mt-groups-toolbar :is(button,.rt-io-group)::before,
+  #mt_modal#mt_modal .mt-sticky-bar .mt-groups-toolbar :is(button,.rt-io-group)::after {
+   content:none !important;
+  }
+  #mt_modal#mt_modal .mt-sticky-bar .mt-search-toolbar {
+   display:grid !important; grid-template-columns:minmax(0,1fr) minmax(0,1fr) !important;
+   gap:6px !important;
+  }
+  #mt_modal#mt_modal#mt_modal #mt_group_search { grid-column:1 / -1 !important; }
+  #mt_modal#mt_modal .mt-search-toolbar > :is(button,.optiray-select-trigger) {
+   width:100% !important; min-width:0 !important; justify-content:center !important;
+  }
+  #servers_container#servers_container .sub-header .sub-actions.sub-actions {
+   display:grid !important; grid-template-columns:1fr 1fr !important;
+   gap:4px !important; padding:4px !important; border-radius:12px !important;
+  }
+  #servers_container#servers_container .sub-actions.sub-actions > .ping-block {
+   grid-column:1 / -1 !important; justify-self:center !important;
+  }
+  #servers_container#servers_container .sub-actions.sub-actions .btn-auto-select::after {
+   content:none !important;
+  }
+  .subs-header-group.subs-header-group #subs_names_container .subs-name-chip {
+   background:transparent !important; border:0 !important; box-shadow:none !important;
+   padding:4px 8px !important; font-weight:400 !important;
+  }
+ }
+}
+@layer optiray-interactions {
+ @media(max-width:760px) {
+  #settings_modal#settings_modal .setting-field > .hwid-editor {
+   width:100% !important; max-width:100% !important; min-width:0 !important;
+   flex:0 0 auto !important; align-self:stretch !important;
+  }
+  #settings_modal#settings_modal .hwid-input-row { flex-direction:row !important; align-items:center !important; }
+  #settings_modal#settings_modal #hwid_input { font-size:11px !important; }
+ }
+}
+
+/* Clear surface hierarchy: page, neutral groups, white server cards. */
+@layer optiray-interactions {
+ :root:not([data-theme="dark"]), :root:not([data-theme="dark"]) body { background:var(--app-background) !important; }
+ :root:not([data-theme="dark"]) #servers_container .sub-section {
+  background:var(--app-group-background) !important; border-color:#D0D6DE !important;
+ }
+ :root:not([data-theme="dark"]) #servers_container .sub-header {
+  background:color-mix(in srgb,var(--subscription-color,#1971c2) 13.2%,var(--app-background)) !important;
+ }
+ :root:not([data-theme="dark"]) #servers_container .server-card:not(.active-card) { background:#FFFFFF !important; }
+ #servers_container#servers_container .sub-header .sub-actions.sub-actions,
+ #servers_container#servers_container .sub-header .sub-actions.sub-actions :is(.ping-block,.ping-block-buttons) {
+  background:transparent !important; background-image:none !important;
+  border:0 !important; box-shadow:none !important;
+ }
+ #servers_container#servers_container .sub-header .sub-actions.sub-actions :is(.btn-test-site,.btn-auto-select,.ping-block-buttons > button) {
+  background:transparent !important; background-image:none !important;
+  border-radius:8px !important; box-shadow:none !important;
+ }
+ #servers_container#servers_container .sub-header .sub-actions.sub-actions :is(.btn-test-site,.btn-auto-select,.ping-block-buttons > button):hover:not(:disabled) {
+  background:rgba(0,0,0,.06) !important;
+ }
+ [data-theme="dark"] #servers_container .sub-section { background:#1D2024 !important; }
+ [data-theme="dark"] #servers_container .sub-header { background:color-mix(in srgb,var(--subscription-color,#1971c2) 13.2%,#25282D) !important; }
+ [data-theme="dark"] #servers_container#servers_container .sub-header .sub-actions.sub-actions :is(.btn-test-site,.btn-auto-select,.ping-block-buttons > button):hover:not(:disabled) {
+  background:rgba(255,255,255,.08) !important;
+ }
+}
+
+/* Dialog surfaces follow the same neutral palette as the main page. */
+@layer optiray-interactions {
+ :root:not([data-theme="dark"]) :is(.modal-overlay,.wait-modal-overlay,.update-overlay,.config-deletion-overlay) {
+  --bg:var(--app-background);
+  --line:#D4DAE1;
+ }
+ :root:not([data-theme="dark"]) :is(.modal-overlay .modal-content,.wait-modal-card,.update-card,.config-deletion-card) {
+  background:var(--app-background) !important;
+  border-color:#D4DAE1 !important;
+ }
+ :root:not([data-theme="dark"]) .modal-overlay :is(.modal-header,.modal-footer-btns,.mt-modal-footer,.mt-sticky-top,.mt-sticky-bar) {
+  background:var(--app-background) !important;
+  border-color:#D4DAE1 !important;
+ }
+ :root:not([data-theme="dark"]) #settings_modal#settings_modal .settings-sidebar {
+  background:var(--app-sidebar-background) !important;
+  border-color:#CCD3DC !important;
+ }
+ :root:not([data-theme="dark"]) #settings_modal#settings_modal .settings-scroll { background:var(--app-background) !important; }
+ :root:not([data-theme="dark"]) #server_config_viewer#server_config_viewer .server-config-body { background:var(--app-background) !important; }
+ :root:not([data-theme="dark"]) #server_config_viewer#server_config_viewer textarea {
+  background:#FFFFFF !important; border:1px solid #D4DAE1 !important;
+ }
+}
+
+/* Separate subscription headings and keep dark card wells recessed. */
+@layer optiray-interactions {
+ #servers_container .sub-section > .sub-header {
+  border-bottom:1px solid #C9D0D9 !important;
+ }
+ [data-theme="dark"] #servers_container .sub-section {
+  background:var(--app-group-background) !important;
+ }
+ [data-theme="dark"] #servers_container .sub-section > .sub-header {
+  border-bottom:1px solid #363C43 !important;
+ }
+}
+
+/* Paste dialogs share routing's neutral segmented switch and close control. */
+@layer optiray-interactions {
+ :is(#paste_group_modal#paste_group_modal,#bulk_rules_modal#bulk_rules_modal,#mt_bulk_rules_modal#mt_bulk_rules_modal) .paste-mode-toggle {
+  display:inline-flex !important; gap:4px !important; padding:4px !important;
+  height:40px !important; box-sizing:border-box !important;
+  background:rgba(0,0,0,.06) !important; border:0 !important;
+  border-radius:10px !important; box-shadow:none !important;
+ }
+ :is(#paste_group_modal#paste_group_modal,#bulk_rules_modal#bulk_rules_modal,#mt_bulk_rules_modal#mt_bulk_rules_modal) .paste-mode-toggle > button {
+  height:32px !important; padding:0 12px !important; border:0 !important;
+  border-radius:7px !important; color:var(--text-2) !important;
+  background:transparent !important; box-shadow:none !important; font-weight:400 !important;
+ }
+ :is(#paste_group_modal#paste_group_modal,#bulk_rules_modal#bulk_rules_modal,#mt_bulk_rules_modal#mt_bulk_rules_modal) .paste-mode-toggle > button[aria-pressed="true"] {
+  background:var(--ui-control-surface,#fff) !important; color:var(--text) !important;
+ }
+ :is(#paste_group_modal#paste_group_modal,#bulk_rules_modal#bulk_rules_modal,#mt_bulk_rules_modal#mt_bulk_rules_modal) .modal-close {
+  width:38px !important; min-width:38px !important; height:38px !important;
+  padding:0 !important; border:0 !important; border-radius:50% !important;
+  background:rgba(0,0,0,.06) !important; color:var(--text) !important;
+  box-shadow:none !important; display:inline-flex !important; align-items:center !important; justify-content:center !important;
+ }
+ :is(#paste_group_modal#paste_group_modal,#bulk_rules_modal#bulk_rules_modal,#mt_bulk_rules_modal#mt_bulk_rules_modal) .modal-close:hover {
+  background:rgba(220,53,69,.10) !important; color:#d93645 !important;
+ }
+ [data-theme="dark"] :is(#paste_group_modal,#bulk_rules_modal,#mt_bulk_rules_modal) :is(.paste-mode-toggle,.modal-close) { background:rgba(255,255,255,.06) !important; }
+}
+@layer optiray-danger {
+ :is(#paste_group_modal,#bulk_rules_modal,#mt_bulk_rules_modal) .modal-header > button.modal-close {
+  border:0 !important; box-shadow:none !important;
+  background:rgba(0,0,0,.06) !important; color:var(--text) !important;
+ }
+ :is(#paste_group_modal,#bulk_rules_modal,#mt_bulk_rules_modal) .modal-header > button.modal-close:hover {
+  background:rgba(220,53,69,.10) !important; color:#d93645 !important;
+ }
+ [data-theme="dark"] :is(#paste_group_modal,#bulk_rules_modal,#mt_bulk_rules_modal) .modal-header > button.modal-close { background:rgba(255,255,255,.06) !important; }
+}
+
+@layer optiray-interactions {
+ :root { --bg:var(--app-background) !important; }
+ .modal-overlay { --bg:var(--app-background) !important; }
+ :is(.modal-overlay .modal-content,.wait-modal-card,.config-deletion-card) {
+  background:var(--app-background) !important;
+ }
+}
+
+/* Flat connection controls and quieter favorite indicators. */
+@layer optiray-interactions {
+ #servers_container .server-card .action-slot .btn-connect {
+  border:1px solid rgba(0,0,0,.09) !important;
+  background:#F0F1F3 !important; background-image:none !important;
+  box-shadow:none !important;
+ }
+ #servers_container .server-card .action-slot .btn-connect:hover:not(:disabled) { background:#E4E7EB !important; }
+ #servers_container .server-card .fav-btn { color:#858D97 !important; }
+ #servers_container .server-card .fav-btn.active { color:#BC7882 !important; }
+ [data-theme="dark"] #servers_container .server-card .action-slot .btn-connect {
+  background:#2B2E32 !important; border-color:rgba(255,255,255,.10) !important;
+ }
+ [data-theme="dark"] #servers_container .server-card .action-slot .btn-connect:hover:not(:disabled) { background:#363B41 !important; }
+ [data-theme="dark"] #servers_container .server-card .fav-btn { color:#929AA5 !important; }
+ [data-theme="dark"] #servers_container .server-card .fav-btn.active { color:#C98D96 !important; }
+}
+
+/* Slightly shaded subscription editor rows on the white page. */
+@layer optiray-interactions {
+ :root:not([data-theme="dark"]) #subs_container .sub-row {
+  background:color-mix(in srgb,var(--app-background) 96%,#26364A) !important;
+ }
+}
+
+/* Tighter header rhythm, inline counters, and compact two-line server cards. */
+@layer optiray-interactions {
+ .header-top { margin-bottom:10px !important; }
+ .subs-header-group #subs_collapse_btn#subs_collapse_btn {
+  display:inline-flex !important; align-items:center !important; gap:6px !important;
+ }
+ .subs-header-group #subs_collapse_btn #subs_count_badge,
+ #server_browser_toolbar#server_browser_toolbar #server_results_count {
+  position:static !important; transform:none !important;
+  margin:0 0 0 3px !important; padding:2px 5px !important;
+  border-radius:5px; background:rgba(0,0,0,.04);
+  color:var(--text-2) !important; line-height:14px !important;
+  white-space:nowrap;
+ }
+ #server_browser_toolbar > .optiray-select-trigger[data-select-id="server_filter"] {
+  display:inline-flex !important; align-items:center !important; gap:5px !important;
+ }
+ #servers_container.server-view-cards .server-card {
+  --server-card-height:148.4px;
+  --server-card-title-gap:2px;
+  --server-card-action-gap:4px;
+  grid-template-rows:22.4px 62px 38px !important;
+ }
+ [data-theme="dark"] :is(#subs_count_badge,#server_results_count) { background:rgba(255,255,255,.06) !important; }
+}
+
+/* Connection summary: status, prominent server, then technical details. */
+@layer optiray-interactions {
+ .header-right > .active-status-card {
+  display:grid !important; grid-template-columns:auto minmax(0,1fr) !important;
+  gap:7px 8px !important; padding:12px 14px !important;
+  min-width:250px !important; max-width:340px !important; border-radius:12px !important;
+  box-shadow:none !important;
+ }
+ .active-status-card .status-column,
+ .active-status-card .active-status-text { display:contents !important; }
+ .active-status-card #active-status-dot {
+  grid-row:1; grid-column:1; align-self:center;
+  width:8px !important; height:8px !important; margin:0 3px !important;
+  box-shadow:0 0 0 3px rgba(44,160,88,.12) !important;
+ }
+ .active-status-card .active-status-caption {
+  grid-row:1; grid-column:2; font-size:11px !important;
+  text-transform:none !important; letter-spacing:0 !important;
+ }
+ .active-status-card .active-server-line {
+  grid-row:2; grid-column:1 / -1; gap:7px !important;
+ }
+ .active-status-card #active-srv-name {
+  font-size:15px !important; font-weight:500 !important; line-height:20px !important;
+ }
+ .active-status-card #active-core-badge {
+  grid-row:3; grid-column:1; align-self:center;
+  font-size:10px !important; padding:2px 5px !important; line-height:14px !important;
+ }
+ .active-status-card .active-proxy-name {
+  grid-row:3; grid-column:2; margin:0 !important; align-self:center;
+  font-size:11px !important; line-height:18px !important;
+ }
+ .active-status-card.connection-absent .connection-absent-message {
+  grid-row:2; grid-column:1 / -1;
+ }
+ .active-status-card.connection-absent #active-status-dot { box-shadow:none !important; }
+ .active-status-card .xray-install-notice:not([hidden]) { grid-column:1 / -1; }
+ @media(max-width:760px) {
+  .header-right > .active-status-card { min-width:0 !important; max-width:none !important; }
+ }
+}
+
+/* Compact connection summary, with details on the second line. */
+@layer optiray-interactions {
+ .header-right > .active-status-card {
+  min-width:0 !important; width:max-content !important; max-width:340px !important;
+  grid-template-columns:auto auto minmax(0,1fr) !important;
+  gap:4px 6px !important; padding:8px 10px !important; border-radius:10px !important;
+ }
+ .active-status-card #active-status-dot { grid-row:1; grid-column:1; margin:0 2px !important; }
+ .active-status-card .active-status-caption { grid-row:1; grid-column:2; font-size:10px !important; }
+ .active-status-card .active-server-line { grid-row:1; grid-column:3; gap:5px !important; }
+ .active-status-card #active-srv-name { font-size:12px !important; font-weight:400 !important; line-height:16px !important; }
+ .active-status-card #active-server-flag .srv-flag { width:18px !important; height:12px !important; }
+ .active-status-card #active-core-badge { grid-row:2; grid-column:1 / 3; justify-self:start; padding:1px 4px !important; }
+ .active-status-card .active-proxy-name { grid-row:2; grid-column:3; font-size:10px !important; line-height:16px !important; }
+ .active-status-card.connection-absent .connection-absent-message { grid-row:1; grid-column:2 / -1; }
+ @media(max-width:760px) {
+  .header-right > .active-status-card { width:100% !important; max-width:none !important; }
+ }
+}
+
+/* Restore aligned status rows while retaining compact spacing. */
+@layer optiray-interactions {
+ .header-right > .active-status-card {
+  display:flex !important; align-items:center !important; gap:9px !important;
+  padding:8px 10px !important;
+ }
+ .active-status-card .status-column {
+  display:flex !important; flex-direction:column !important;
+  align-items:center !important; gap:5px !important; flex:0 0 auto;
+ }
+ .active-status-card .active-status-text {
+  display:flex !important; flex-direction:column !important;
+  align-items:flex-start !important; gap:3px !important; min-width:0;
+ }
+ .active-status-card .active-status-caption { font-size:11px !important; line-height:14px !important; }
+ .active-status-card .active-server-line { align-self:stretch; }
+ .active-status-card .active-proxy-name { font-size:11px !important; line-height:14px !important; }
+}
+
+/* Connection summary typography. */
+@layer optiray-interactions {
+ .active-status-card .active-status-caption,
+ .active-status-card .active-proxy-name {
+  font-size:12px !important; font-weight:400 !important;
+  line-height:17px !important; text-transform:uppercase !important;
+ }
+ .active-status-card #active-sub-name,
+ .active-status-card #active-srv-name {
+  font-size:13px !important; font-weight:600 !important;
+  line-height:18px !important; text-transform:none !important;
+ }
+ .active-status-card .active-socks-name { text-transform:none !important; }
+ .active-status-card .active-server-line {
+  width:100%; justify-content:flex-end !important;
+ }
+ .active-status-card #active-srv-name { text-align:right !important; }
+}
+
+/* One soft elevation style for dialogs and popup menus. */
+@layer optiray-interactions {
+ .modal-overlay:not(#routing_modal) > .modal-content,
+ :is(.wait-modal-card,.update-spinner-card,.config-deletion-card,#server_actions_menu) {
+  box-shadow:var(--popup-shadow) !important;
+ }
+ @media(max-width:760px) {
+  :is(#settings_modal,#mt_modal) > .modal-content { box-shadow:none !important; }
+ }
+}
+
+@layer optiray-interactions {
+ #servers_container .server-card .action-slot .btn-connect { font-weight:400 !important; }
+}
+
+@layer optiray-interactions {
+ #servers_container .server-card .action-slot .btn-connect {
+  font-weight:400 !important;
+  color:color-mix(in srgb,var(--subscription-color,#1971c2) 30%,#17212B) !important;
+ }
+ [data-theme="dark"] #servers_container .server-card .action-slot .btn-connect {
+  color:color-mix(in srgb,var(--subscription-color,#1971c2) 25%,#E5E7EB) !important;
+ }
+}
+
+/* Active server uses its subscription heading tint with a soft outline. */
+@layer optiray-interactions {
+ #servers_container .server-card.active-card {
+  background:color-mix(in srgb,var(--subscription-color,#1971c2) 13.2%,var(--app-background)) !important;
+  border:1px solid color-mix(in srgb,var(--subscription-color,#1971c2) 25%,#D4DAE1) !important;
+ }
+ [data-theme="dark"] #servers_container .server-card.active-card {
+  background:color-mix(in srgb,var(--subscription-color,#1971c2) 13.2%,#25282D) !important;
+  border-color:color-mix(in srgb,var(--subscription-color,#1971c2) 25%,#363C43) !important;
+ }
+ #servers_container .server-card .badge-connected:not(:hover):not(:focus-visible) {
+  background:#5B9E73 !important; background-image:none !important;
+  color:#FFFFFF !important; border:1px solid transparent !important;
+  box-shadow:none !important; border-radius:10px !important; font-weight:400 !important;
+ }
+ [data-theme="dark"] #servers_container .server-card .badge-connected:not(:hover):not(:focus-visible) {
+  background:#4E8965 !important; color:#FFFFFF !important;
+ }
+}
+
+/* Elevate expanded routing group headings above their rules. */
+@layer optiray-interactions {
+ #mt_modal#mt_modal .mt-group-card:not(.collapsed) > .mt-group-head {
+  position:relative !important; z-index:1;
+  box-shadow:0 3px 6px -3px rgba(24,39,58,.22) !important;
+ }
+ [data-theme="dark"] #mt_modal#mt_modal .mt-group-card:not(.collapsed) > .mt-group-head {
+  box-shadow:0 3px 6px -3px rgba(0,0,0,.45) !important;
+ }
+}
+
+/* Unified phone popup geometry and compact collapsed subscription labels. */
+@layer optiray-interactions {
+ @media(max-width:760px) {
+  #subs_names_container#subs_names_container .subs-name-chip {
+   background:transparent !important; border:0 !important; outline:0 !important;
+   box-shadow:none !important; border-radius:0 !important;
+   height:30px !important; min-height:30px !important;
+   padding:2px 6px 8px !important; font-size:13px !important; font-weight:400 !important;
+  }
+  #subs_names_container#subs_names_container {
+   margin:0 !important; padding:0 !important; scrollbar-width:none !important;
+  }
+  #subs_names_container#subs_names_container::-webkit-scrollbar { display:none; }
+  #subs_names_container#subs_names_container .subs-name-dot { height:4px !important; border-radius:3px !important; }
+  .subs-header-row.subs-header-row { row-gap:6px !important; }
+  body .modal-overlay:not(#routing_modal) {
+   inset:0 !important; width:100% !important; height:100dvh !important;
+   padding:0 !important; box-sizing:border-box !important;
+   align-items:stretch !important; justify-content:center !important;
+  }
+  body .modal-overlay:not(#routing_modal) > .modal-content {
+   width:100% !important; min-width:0 !important; max-width:100% !important;
+   height:100% !important; max-height:100% !important;
+   margin:0 !important; border-radius:0 !important; box-sizing:border-box !important;
+   overflow-x:hidden !important; overflow-y:auto !important;
+  }
+  #server_config_viewer#server_config_viewer#server_config_viewer > .modal-content {
+   width:100% !important; max-width:100% !important; height:100dvh !important;
+   display:flex !important; flex-direction:column !important;
+   margin:0 !important; border-radius:0 !important; overflow:hidden !important;
+  }
+  #server_config_viewer#server_config_viewer .modal-header {
+   flex:0 0 auto !important; min-height:60px !important;
+   padding:12px 60px 12px 16px !important;
+  }
+  #server_config_viewer#server_config_viewer .server-config-body {
+   flex:1 1 0 !important; min-height:0 !important;
+   display:flex !important; flex-direction:column !important;
+   padding:12px !important; overflow:hidden !important;
+  }
+  #server_config_viewer#server_config_viewer textarea {
+   flex:1 1 0 !important; min-height:0 !important; height:100% !important;
+   width:100% !important; max-width:100% !important;
+   font:12px/1.5 Consolas,monospace !important; resize:none !important;
+   white-space:pre !important; overflow:auto !important;
+   overflow-wrap:normal !important; word-break:normal !important;
+  }
+  body .modal-overlay .modal-header { min-width:0 !important; box-sizing:border-box !important; }
+  body .modal-overlay .modal-footer-btns { flex-wrap:wrap !important; }
+  #mt_modal#mt_modal > .modal-content,
+  #settings_modal#settings_modal > .modal-content { overflow:hidden !important; }
+ }
+}
+
+@layer optiray-interactions {
+ @media(max-width:760px) {
+  #servers_container#servers_container .sub-header .sub-actions.sub-actions .ping-block-buttons {
+   gap:8px !important;
+  }
+  #global_ping_row { gap:8px !important; }
+ }
+}
+
+@layer optiray-interactions {
+ @media(max-width:760px) {
+  #mt_modal#mt_modal .mt-rules > .mt-rule,
+  #mt_modal#mt_modal #routing_modal .rt-rules > .rt-rule {
+   border:0 !important; box-shadow:none !important;
+   outline:0 !important; margin-block:0 !important; border-radius:0 !important;
+  }
+ }
+}
+
+/* Keep the connection summary visible while scrolling on phones. */
+@layer optiray-interactions {
+ @media(max-width:760px) {
+  .header-right > .active-status-card {
+   position:fixed !important;
+   top:calc(8px + env(safe-area-inset-top)) !important;
+   right:10px !important; left:auto !important;
+   width:max-content !important; max-width:calc(100vw - 20px) !important;
+   min-width:0 !important; margin:0 !important;
+   z-index:100 !important;
+  }
+  .header-top { padding-top:80px !important; }
+ }
+}
+
+/* Align all summary text rows to the same starting edge. */
+@layer optiray-interactions {
+ .active-status-card .active-status-text {
+  align-items:flex-start !important; text-align:left !important;
+ }
+ .active-status-card .active-server-line {
+  justify-content:flex-start !important; text-align:left !important;
+ }
+ .active-status-card #active-srv-name,
+ .active-status-card .active-proxy-name {
+  text-align:left !important; margin-left:0 !important; padding-left:0 !important;
+ }
+}
+
+@layer optiray-interactions {
+ .header-right > .active-status-card .active-status-text > .active-proxy-name {
+  align-self:stretch !important; width:100% !important;
+  box-sizing:border-box !important; margin:0 !important; padding:0 !important;
+  text-align:left !important; text-indent:0 !important; transform:none !important;
+ }
+}
+
+@layer optiray-interactions {
+ .active-status-card .active-status-text .active-proxy-name .active-socks-name { font-weight:600 !important; }
 }
