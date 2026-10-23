@@ -18,7 +18,7 @@ import (
 //go:embed assets/*
 var assets embed.FS
 
-const version = "1.0.10"
+const version = "1.0.11"
 
 func main() {
 	dir := flag.String("data-dir", "/opt/etc/optiray-go", "settings directory")
@@ -86,7 +86,9 @@ func main() {
 		return
 	}
 	if *checkService {
-		if e := checkInstalledService(context.Background(), *dir, *serviceAddress); e != nil {
+		ctx, cancel := context.WithTimeout(context.Background(), 90*time.Second)
+		defer cancel()
+		if e := waitInstalledService(ctx, *dir, *serviceAddress, time.Second); e != nil {
 			log.Fatal(e)
 		}
 		return

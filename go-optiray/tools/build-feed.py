@@ -50,6 +50,15 @@ case "${IPKG_INSTROOT:-}" in ''|/) ;; *) exit 0;; esac
 ROOT=/opt/etc/optiray-go
 SERVICE=/opt/etc/init.d/S99optiray-go
 STATE=/tmp/optiray-opkg-state
+EXPECTED='@VERSION@'
+# Validate the delivered files before arming rollback. A repeated configure after
+# rollback must fail without deleting the recovery copy or accepting old code.
+DISK_VERSION=$(cat "$ROOT/VERSION" 2>/dev/null || true)
+BINARY_VERSION=$("$ROOT/bin/optiray" --version 2>/dev/null || true)
+if [ "$DISK_VERSION" != "$EXPECTED" ] || [ "$BINARY_VERSION" != "$EXPECTED" ]; then
+ echo "Package expects OptiRay $EXPECTED but files/binary are $DISK_VERSION/$BINARY_VERSION. Reinstall the corrected package; preserve $STATE." >&2
+ exit 1
+fi
 recover() {
  "$SERVICE" stop >/dev/null 2>&1 || true
  if [ -d "$STATE/root" ]; then
@@ -134,7 +143,7 @@ def build(source, output, version, revision):
                    'Description: Go manager for Xray, Hysteria and OptiRout on Keenetic\n')
         control_data = archive([('./control', control.encode(), 0o644),
                                 ('./preinst', PREINST.encode(), 0o755),
-                                ('./postinst', POSTINST.encode(), 0o755),
+                                ('./postinst', POSTINST.replace('@VERSION@', version).encode(), 0o755),
                                 ('./prerm', PRERM.encode(), 0o755)])
         ipk = archive([('debian-binary', b'2.0\n', 0o644),
                        ('control.tar.gz', control_data, 0o644),

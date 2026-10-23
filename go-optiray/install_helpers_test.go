@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 )
 
 func TestFreshInstallUsesLANAddressAndUpdatesKeepSettings(t *testing.T) {
@@ -98,5 +99,33 @@ func TestStoppedLegacyServicePreservesLiteralAuthentication(t *testing.T) {
 	}
 	if _, e = legacyAuthenticationFromService("OPTIRAY_USER=admin\nOPTIRAY_PASS=$(read-secret)\n"); e == nil {
 		t.Fatal("evaluated shell authentication expression")
+	}
+}
+
+func TestWaitInstalledServiceRetriesAndRejectsWrongVersion(t *testing.T) {
+	dir := t.TempDir()
+	calls := 0
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		calls++
+		if calls < 3 {
+			w.WriteHeader(503)
+			return
+		}
+		jsonReply(w, 200, Object{"runtime": "go", "version": version, "ready": true})
+	}))
+	defer server.Close()
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+	if e := waitInstalledService(ctx, dir, strings.TrimPrefix(server.URL, "http://"), time.Millisecond); e != nil || calls != 3 {
+		t.Fatalf("retry: calls=%d err=%v", calls, e)
+	}
+	wrong := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		jsonReply(w, 200, Object{"runtime": "go", "version": "0.0.1", "ready": true})
+	}))
+	defer wrong.Close()
+	ctx2, cancel2 := context.WithTimeout(context.Background(), 30*time.Millisecond)
+	defer cancel2()
+	if e := waitInstalledService(ctx2, dir, strings.TrimPrefix(wrong.URL, "http://"), time.Millisecond); e == nil {
+		t.Fatal("accepted old service")
 	}
 }

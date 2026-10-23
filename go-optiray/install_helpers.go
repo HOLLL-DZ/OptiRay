@@ -92,7 +92,7 @@ func checkInstalledService(ctx context.Context, dir, address string) error {
 	}
 	transport := &http.Transport{Proxy: nil}
 	defer transport.CloseIdleConnections()
-	response, e := (&http.Client{Transport: transport, Timeout: 2 * time.Second}).Do(req)
+	response, e := (&http.Client{Transport: transport, Timeout: 5 * time.Second}).Do(req)
 	if e != nil {
 		return e
 	}
@@ -108,4 +108,23 @@ func checkInstalledService(ctx context.Context, dir, address string) error {
 		return fmt.Errorf("OptiRay Go ещё не готов: проверьте manager.log и routing/engine.log")
 	}
 	return nil
+}
+
+// Wait for slow cores and routing on constrained routers, with a bounded deadline.
+func waitInstalledService(ctx context.Context, dir, address string, interval time.Duration) error {
+	var last error
+	for {
+		if err := checkInstalledService(ctx, dir, address); err == nil {
+			return nil
+		} else {
+			last = err
+		}
+		timer := time.NewTimer(interval)
+		select {
+		case <-ctx.Done():
+			timer.Stop()
+			return fmt.Errorf("service did not become ready: %w (last check: %v)", ctx.Err(), last)
+		case <-timer.C:
+		}
+	}
 }
