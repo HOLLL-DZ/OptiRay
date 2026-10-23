@@ -1,5 +1,5 @@
 Package: optiray
-Version: 1.0.10-1
+Version: 1.0.11-1
 Architecture: aarch64-3.10
 Maintainer: HOLLL-DZ
 Section: net
@@ -7,15 +7,15 @@ Priority: optional
 Depends: curl, ca-bundle, wget-ssl, iptables, ip-full
 License: GPL-3.0
 Homepage: https://github.com/HOLLL-DZ/OptiRay
-Installed-Size: 24343855
+Installed-Size: 24344562
 Description: Go manager for Xray, Hysteria and OptiRout on Keenetic
-Filename: optiray_1.0.10-1_aarch64-3.10.ipk
-Size: 11359959
-MD5Sum: 44ef7d603729df46a929e88839bc1d2c
-SHA256sum: 32a5c6f3f352d173b5a898fc9f8a242ca8457681ae4e15d63c880dc8379c6300
+Filename: optiray_1.0.11-1_aarch64-3.10.ipk
+Size: 11360252
+MD5Sum: 01511132ec48634dd769e6f79fed43bc
+SHA256sum: 7609e10b2cd16073901201859aaa592e943da59babe740f8af03368f6f3781a9
 
 Package: optiray
-Version: 1.0.10-1
+Version: 1.0.11-1
 Architecture: mipsel-3.4
 Maintainer: HOLLL-DZ
 Section: net
@@ -23,10 +23,10 @@ Priority: optional
 Depends: curl, ca-bundle, wget-ssl, iptables, ip-full
 License: GPL-3.0
 Homepage: https://github.com/HOLLL-DZ/OptiRay
-Installed-Size: 26506606
+Installed-Size: 26507313
 Description: Go manager for Xray, Hysteria and OptiRout on Keenetic
-Filename: optiray_1.0.10-1_mipsel-3.4.ipk
-Size: 11143219
-MD5Sum: caf35bb61c2784f404cbfa34a3a48a8b
-SHA256sum: aa0ae875721a9c8458ca186e5d1662516adeb38023f1e1d1c2a3f073c3bb1bdc
+Filename: optiray_1.0.11-1_mipsel-3.4.ipk
+Size: 11144347
+MD5Sum: fddd5290b86476436b4be5c08ffda5e6
+SHA256sum: d897bfa65848f997bbad11b16f727bd44359c3c76d46f50165af4e79bb509400
 
