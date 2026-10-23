@@ -17,6 +17,7 @@ import (
 )
 
 type App struct {
+	metrics               routerMetricsState
 	uiDir                 string
 	store                 *Store
 	core                  *CoreManager
@@ -59,6 +60,12 @@ func (a *App) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	var err error
 	switch {
+	case r.Method == "POST" && r.URL.Path == "/api/router_reboot":
+		a.routerReboot(w, r)
+		return
+	case r.Method == "GET" && r.URL.Path == "/api/router_metrics":
+		a.routerMetrics(w, r)
+		return
 	case r.Method == "POST" && (r.URL.Path == "/api/xray_action" || r.URL.Path == "/api/hysteria_action"):
 		err = r.ParseForm()
 		if err != nil {

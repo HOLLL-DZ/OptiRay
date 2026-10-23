@@ -646,14 +646,15 @@ async function loadXrayVersions(force) {
         s.innerText = res.installed ? ('Установлено v' + res.version) : 'Не установлено';
         s.className = 'badge-ver ' + (res.installed ? 'installed' : 'missing');
         sel.innerHTML = '';
+        res.available.sort(function(a,b){var av=a.version.split(/[.+-]/).map(Number),bv=b.version.split(/[.+-]/).map(Number);for(var n=0;n<3;n++){var difference=(bv[n]||0)-(av[n]||0);if(difference)return difference;}return Number(a.is_pre)-Number(b.is_pre);});
         res.available.forEach(function(i, idx) {
             var o = document.createElement('option');
             o.value = i.version;
-            o.textContent = 'v' + i.version + (i.is_stable ? ' (Стабильная)' : (i.is_pre ? ' (Pre)' : ' (Rel)')) + (idx === 0 && !i.is_stable && res.versions_source !== 'cache' ? ' [New]' : '');
-            if (i.is_stable) o.dataset.separator = 'true';
+            o.textContent = 'v' + i.version + (i.is_stable ? ' (Стабильная)' : (i.is_pre ? ' (Pre)' : ' (Rel)')) + (idx === 0 && res.versions_source !== 'cache' ? ' [New]' : '');
+            
             sel.appendChild(o);
         });
-        if (previousVersion && Array.from(sel.options).some(function(option){ return option.value === previousVersion; })) sel.value = previousVersion;
+        if (sel.options.length) sel.selectedIndex = 0;
         var notice = document.getElementById('xray_versions_notice');
         if (notice) { notice.textContent = res.versions_error || ''; notice.hidden = !res.versions_error; }
         if (!res.available.length) {
@@ -1009,6 +1010,7 @@ function _mtToggleBackupBtn() {
         ? false
         : !!window.OPTIRAY_OPTIROUT_SAVE_BACKUPS;
     if (btn) {
+        btn.dataset.backupVisible = String(enabled);
         if (enabled) btn.style.removeProperty('display');
         else btn.style.setProperty('display', 'none', 'important');
     }
@@ -1039,6 +1041,7 @@ async function mtSetBackupEnabled(toggle) {
 }
 
 async function openMtModal() {
+    document.querySelectorAll('#mt_modal .mt-io-backup').forEach(function(btn){btn.dataset.backupVisible='false';});
     var m = document.getElementById('mt_modal');
     if (!m) return;
     m.style.display = 'flex';
@@ -5716,7 +5719,7 @@ function syncPowerButtons(){
  document.querySelectorAll('[data-power-target]').forEach(function(button){
   var input=document.getElementById(button.dataset.powerTarget);if(!input)return;
   var name=button.dataset.powerTarget==='optiray_power'?'OptiRay':button.dataset.powerTarget==='mt_enabled'?'OptiRout':'Xray Routing';
-  button.setAttribute('aria-pressed',String(input.checked));button.disabled=input.disabled;
+  button.setAttribute('aria-pressed',String(input.checked));button.disabled=input.disabled;if(button.classList.contains('routing-title-power'))button.title=name+': '+(input.checked?'Включён':'Выключен');
   button.querySelector('span').textContent=button.classList.contains('routing-title-power')?name:name+(input.checked?' вкл.':' выкл.');
   button.setAttribute('aria-label',(input.checked?'Выключить ':'Включить ')+name);
  });
@@ -6214,4 +6217,53 @@ document.addEventListener('DOMContentLoaded',function(){
  window.applyPasteGroupMt=apply;window.applyPasteGroupAny=apply;window.applyPasteGroup=apply;
  var previousClose=window.closePasteGroupModal;
  window.closePasteGroupModal=function(){if(previousClose)previousClose();window.__mt_paste_ctx=null;};
+})();
+
+document.addEventListener('DOMContentLoaded',function(){
+ var status=document.querySelector('.header-right > .active-status-card');if(!status)return;
+ var panel=document.createElement('div');panel.className='router-metrics-card';panel.innerHTML='<div class="router-model">Роутер</div><div class="router-metric"><span>ЦП</span><meter min="0" max="100" value="0"></meter><span class="router-cpu">—</span></div><div class="router-metric"><span>ОЗУ</span><meter min="0" max="100" value="0"></meter><span class="router-memory">—</span></div>';
+ status.before(panel);var timer=null;
+ function unavailable(){panel.querySelector('.router-cpu').textContent='Нет данных';panel.querySelector('.router-memory').textContent='Нет данных';panel.querySelectorAll('meter').forEach(function(m){m.value=0;});}
+ async function update(){if(document.hidden)return;var controller=new AbortController(),timeout=setTimeout(function(){controller.abort();},2500);try{var response=await fetch('/api/router_metrics',{cache:'no-store',signal:controller.signal});if(!response.ok)throw Error();var data=await response.json();if(!data.ok)throw Error();var model=panel.querySelector('.router-model');model.textContent=data.model;var uptime=document.createElement('span');uptime.className='router-uptime';var seconds=Math.floor(data.uptime_seconds||0),days=Math.floor(seconds/86400),hours=Math.floor(seconds%86400/3600),minutes=Math.floor(seconds%3600/60);uptime.textContent=' ('+(days?days+' д. ':'')+hours+' ч. '+minutes+' мин.)';model.appendChild(uptime);var meters=panel.querySelectorAll('meter');meters[0].value=data.cpu_percent||0;meters[1].value=data.memory_percent;panel.querySelector('.router-cpu').textContent=data.cpu_percent==null?'…':Math.round(data.cpu_percent)+'%';var memory=panel.querySelector('.router-memory');memory.textContent=Math.round(data.memory_percent)+'%';var amount=document.createElement('span');amount.className='router-memory-amount';amount.textContent=' ('+data.memory_used_mb+' / '+data.memory_total_mb+' МБ)';memory.appendChild(amount);panel.querySelector('.router-memory').title=data.memory_used_mb+' / '+data.memory_total_mb+' МБ';}catch(e){unavailable();}finally{clearTimeout(timeout);if(!document.hidden)timer=setTimeout(update,3000);}}
+ document.addEventListener('visibilitychange',function(){clearTimeout(timer);if(!document.hidden)update();});update();
+});
+
+/* Router actions are read-only until the explicit reboot confirmation. */
+document.addEventListener('DOMContentLoaded',function(){
+ var model=document.querySelector('.router-model');if(!model)return;
+ model.tabIndex=0;model.setAttribute('role','button');model.setAttribute('aria-haspopup','menu');model.setAttribute('aria-label','Действия с роутером');
+ var menu=document.createElement('div');menu.className='router-actions-popup';menu.hidden=true;menu.setAttribute('role','menu');
+ var link=document.createElement('a');link.textContent='Открыть панель Keenetic';link.target='_blank';link.rel='noopener noreferrer';
+ var host=document.querySelector('input[name="proxy_host"]');try{var address=new URL('http://'+(host&&host.value||location.hostname));if(address.protocol==='http:'&&!address.username&&!address.password)link.href=address.origin;}catch(e){link.href='http://'+location.hostname;}
+ var reboot=document.createElement('button');reboot.type='button';reboot.textContent='Перезагрузить роутер';var externalIcon='<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M14 3h7v7M21 3 10 14M10 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5"/></svg>';var restartIcon='<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M20 7v5h-5M20 12a8 8 0 1 0-2 6"/></svg>';link.insertAdjacentHTML('afterbegin',externalIcon);reboot.insertAdjacentHTML('afterbegin',restartIcon);menu.append(link,reboot);document.body.appendChild(menu);
+ var timer;function close(){menu.hidden=true;model.setAttribute('aria-expanded','false');}function open(){clearTimeout(timer);menu.hidden=false;model.setAttribute('aria-expanded','true');var r=model.getBoundingClientRect();menu.style.left=Math.max(8,Math.min(r.left,innerWidth-menu.offsetWidth-8))+'px';menu.style.top=(r.bottom+6)+'px';}function later(){timer=setTimeout(close,180);}
+ model.addEventListener('click',()=>menu.hidden?open():close());model.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();open();link.focus();}});
+ document.addEventListener('click',e=>{if(!menu.contains(e.target)&&!model.contains(e.target))close();});document.addEventListener('keydown',e=>{if(e.key==='Escape')close();});window.addEventListener('scroll',close,true);
+ link.addEventListener('click',close);
+ reboot.onclick=async function(){close();if(!confirm('Перезагрузить роутер? Интернет временно отключится.'))return;reboot.disabled=true;try{var response=await fetch('/api/router_reboot',{method:'POST',headers:{'X-OptiRay-Action':'reboot'}});var data=await response.json();if(!response.ok||!data.ok)throw Error(data.error||'Не удалось отправить команду');close();alert('Команда перезагрузки отправлена. Дождитесь восстановления связи с роутером.');}catch(e){alert(e.message);}finally{reboot.disabled=false;}};
+});
+
+/* Reopen settings from persisted values; never carry an abandoned edit forward. */
+(function(){
+ var originalOpen=window.openSettingsModal,originalClose=window.closeSettingsModal;
+ var revision=0,baseline=[];
+ function controls(){return Array.from(document.querySelectorAll('#settings_modal input,#settings_modal select,#settings_modal textarea')).filter(function(e){return e.type!=='file'&&e.name;});}
+ function capture(){baseline=controls().map(function(e){return {element:e,value:e.value,checked:e.checked};});}
+ function syncSelect(e){if(e.tagName!=='SELECT'||!e.id)return;var button=Array.from(document.querySelectorAll('#settings_modal .optiray-select-trigger')).find(function(b){return b.dataset.selectId===e.id;});if(button){var label=button.querySelector('span');if(label)label.textContent=e.selectedOptions[0]?e.selectedOptions[0].textContent:'';}}
+ function restore(){baseline.forEach(function(item){var e=item.element;e.value=item.value;e.checked=item.checked;e.setCustomValidity('');syncSelect(e);});}
+ document.addEventListener('DOMContentLoaded',capture);
+ window.openSettingsModal=async function(){
+  var current=++revision;restore();
+  try{
+   var response=await fetch('/',{cache:'no-store'});if(!response.ok)throw Error('HTTP '+response.status);
+   var page=new DOMParser().parseFromString(await response.text(),'text/html');
+   if(current!==revision)return;
+   var saved=Array.from(page.querySelectorAll('#settings_modal input,#settings_modal select,#settings_modal textarea'));
+   if(!saved.length)throw Error('Не удалось получить сохранённые настройки');
+   controls().forEach(function(e){var source=saved.find(function(s){return s.name===e.name&&s.type===e.type&&(e.type!=='radio'||s.value===e.value);});if(!source)return;e.value=source.value;e.checked=source.checked;e.setCustomValidity('');syncSelect(e);});
+   capture();originalOpen();
+   if(window.optiraySettingsTab!=='cores'){loadXrayVersions(true);checkHysteria();}
+  }catch(e){if(current===revision)alert('Не удалось загрузить настройки: '+e.message);}
+ };
+ window.closeSettingsModal=function(){revision++;restore();originalClose();};
 })();

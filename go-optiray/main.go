@@ -18,7 +18,7 @@ import (
 //go:embed assets/*
 var assets embed.FS
 
-const version = "1.0.9"
+const version = "1.0.10"
 
 func main() {
 	dir := flag.String("data-dir", "/opt/etc/optiray-go", "settings directory")
