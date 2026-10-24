@@ -12,7 +12,18 @@ set -eu
 case "${IPKG_INSTROOT:-}" in ''|/) ;; *) exit 0;; esac
 ROOT=/opt/etc/optiray-go
 SERVICE=/opt/etc/init.d/S99optiray-go
-STATE=/tmp/optiray-opkg-state
+STATE=${OPTIRAY_BACKUP_DIR:-/opt/tmp/optiray-opkg-state}
+POINTER=/opt/var/lib/optiray/opkg-backup-path
+case "$STATE" in /*) ;; *) echo 'Backup path must be absolute' >&2; exit 1;; esac
+PARENT=$(dirname "$STATE")
+mkdir -p "$PARENT"
+PARENT=$(cd "$PARENT" && pwd -P)
+STATE="$PARENT/$(basename "$STATE")"
+case "$STATE" in /|/opt|/opt/etc|/opt/etc/optiray-go|/opt/etc/optiray-go/*|*/..|*/.) echo 'Unsafe backup path' >&2; exit 1;; esac
+case "$ROOT/" in "$STATE/"*) echo 'Backup cannot contain the application directory' >&2; exit 1;; esac
+[ ! -L "$STATE" ] || exit 1
+[ ! -e "$POINTER" ] || { echo "Previous opkg operation needs recovery; see $POINTER" >&2; exit 1; }
+[ ! -e /tmp/optiray-opkg-state ] || { echo 'Previous recovery backup exists in /tmp/optiray-opkg-state' >&2; exit 1; }
 [ ! -e "$STATE" ] || { echo "Previous opkg operation needs recovery: $STATE" >&2; exit 1; }
 if [ -e /opt/etc/init.d/S99optiray ]; then
  echo 'Migrate the Python installation using the Go installer before installing this package.' >&2
@@ -25,22 +36,40 @@ fi
 if [ -e "$SERVICE" ]; then grep -q 'OptiRay Go owned service' "$SERVICE" || exit 1; fi
 HOOK=/opt/etc/ndm/netfilter.d/100-optiray-go-routing
 if [ -e "$HOOK" ]; then grep -q 'OptiRay Go owned netfilter hook' "$HOOK" || exit 1; fi
+LIST=$(mktemp "$PARENT/optiray-backup-list.XXXXXX")
+trap 'rm -f "$LIST"' EXIT
+if [ -d "$ROOT" ]; then
+ (cd "$ROOT" && find . \( -name log -o -name logs -o -name cache -o -name tmp -o -name run -o -name '*.log' -o -name '*.log.*' -o -name '*_cache.json' -o -name engine.pid -o -name engine.sock \) -prune -o \( -type f -o -type l \) -print) > "$LIST"
+fi
 NEED=8192
-[ ! -d "$ROOT" ] || NEED=$((NEED + $(du -sk "$ROOT" | awk '{print $1}')))
-FREE=$(df -Pk /tmp | awk 'END {print $4}')
-[ "$FREE" -ge "$NEED" ] || { echo 'Not enough RAM for update backup' >&2; exit 1; }
+while IFS= read -r entry; do
+ SIZE=$(du -k "$ROOT/$entry" | awk 'END {print $1}')
+ NEED=$((NEED + SIZE))
+done < "$LIST"
+FREE=$(df -Pk "$PARENT" | awk 'END {print $4}')
+[ "$FREE" -ge "$NEED" ] || { echo "Not enough space for update backup on $PARENT (need $NEED KiB, free $FREE KiB)" >&2; exit 1; }
 umask 077
 mkdir "$STATE"
-trap 'rm -rf "$STATE"' EXIT
-if [ -d "$ROOT" ]; then cp -pR "$ROOT" "$STATE/root"; fi
+touch "$STATE/.optiray-opkg-backup"
+mkdir -p "$(dirname "$POINTER")"
+printf '%s\n' "$STATE" > "$POINTER"
 if [ -f "$SERVICE" ]; then
  cp -p "$SERVICE" "$STATE/service"
  if "$SERVICE" status >/dev/null 2>&1; then touch "$STATE/running"; fi
  "$SERVICE" stop
 fi
+if [ -d "$ROOT" ]; then
+ mkdir "$STATE/root"
+ while IFS= read -r entry; do
+  mkdir -p "$STATE/root/$(dirname "$entry")"
+  cp -pR "$ROOT/$entry" "$STATE/root/$entry"
+ done < "$LIST"
+ touch "$STATE/complete"
+fi
 if [ -e "$HOOK" ]; then
  cp -p "$HOOK" "$STATE/hook"
 fi
+rm -f "$LIST"
 trap - EXIT
 '''
 
@@ -49,7 +78,12 @@ set -eu
 case "${IPKG_INSTROOT:-}" in ''|/) ;; *) exit 0;; esac
 ROOT=/opt/etc/optiray-go
 SERVICE=/opt/etc/init.d/S99optiray-go
-STATE=/tmp/optiray-opkg-state
+STATE=${OPTIRAY_BACKUP_DIR:-/opt/tmp/optiray-opkg-state}
+POINTER=/opt/var/lib/optiray/opkg-backup-path
+if [ -f "$POINTER" ]; then STATE=$(cat "$POINTER"); fi
+case "$STATE" in /*) ;; *) echo 'Invalid recovery path' >&2; exit 1;; esac
+case "$STATE" in /|/opt|/opt/etc|/opt/etc/optiray-go|/opt/etc/optiray-go/*|*/..|*/.) echo 'Unsafe recovery path' >&2; exit 1;; esac
+[ ! -L "$STATE" ] || exit 1
 EXPECTED='@VERSION@'
 # Validate the delivered files before arming rollback. A repeated configure after
 # rollback must fail without deleting the recovery copy or accepting old code.
@@ -60,8 +94,11 @@ if [ "$DISK_VERSION" != "$EXPECTED" ] || [ "$BINARY_VERSION" != "$EXPECTED" ]; t
  exit 1
 fi
 recover() {
- "$SERVICE" stop >/dev/null 2>&1 || true
- if [ -d "$STATE/root" ]; then
+ if ! "$SERVICE" stop >/dev/null 2>&1; then
+  echo "Service could not stop; backup preserved at $STATE" >&2
+  return
+ fi
+ if [ -f "$STATE/complete" ] && [ -d "$STATE/root" ]; then
   cp -pR "$STATE/root/." "$ROOT/"
   [ ! -f "$STATE/service" ] || cp -p "$STATE/service" "$SERVICE"
   [ ! -f "$STATE/hook" ] || cp -p "$STATE/hook" /opt/etc/ndm/netfilter.d/100-optiray-go-routing
@@ -76,7 +113,10 @@ LAN=$("$ROOT/bin/optiray" --router-address)
 "$SERVICE" start
 "$ROOT/bin/optiray" --data-dir "$ROOT" --check-service
 trap - EXIT
-rm -rf "$STATE"
+if [ -f "$STATE/.optiray-opkg-backup" ]; then
+ rm -rf "$STATE"
+ rm -f "$POINTER"
+fi
 echo "Интерфейс OptiRay доступен по адресу: http://$LAN:3883"
 '''
 

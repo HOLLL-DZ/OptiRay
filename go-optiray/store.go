@@ -103,6 +103,11 @@ func newStore(dir string) (*Store, error) {
 	}
 	// Settings are authoritative; the text file is a one-time legacy fallback.
 	needsHWIDSave := strings.TrimSpace(str(raw["hwid"])) == ""
+	if integer(d["logging_policy_version"]) < 1 {
+		d["enable_logging"] = false
+		d["logging_policy_version"] = 1
+		needsHWIDSave = true
+	}
 	if strings.TrimSpace(str(d["hwid"])) == "" {
 		hwid, readErr := os.ReadFile(filepath.Join(dir, "hwid.txt"))
 		if readErr == nil {
@@ -154,6 +159,7 @@ func newStore(dir string) (*Store, error) {
 	if e = os.Remove(filepath.Join(dir, "hwid.txt")); e != nil && !os.IsNotExist(e) {
 		return nil, fmt.Errorf("remove legacy HWID file: %w", e)
 	}
+	setDiagnosticLogging(dir, boolean(d["enable_logging"]))
 	return &Store{dir: dir, data: d}, nil
 }
 func (s *Store) snapshot() Object { s.mu.Lock(); defer s.mu.Unlock(); return clone(s.data) }
@@ -205,6 +211,7 @@ func (s *Store) persistExtra(d Object, extra map[string][]byte) error {
 	if e = writeSettingsTransaction(s.dir, files); e != nil {
 		return e
 	}
+	setDiagnosticLogging(s.dir, boolean(d["enable_logging"]))
 	if e = trimBackupDirectory(filepath.Join(s.dir, "routing", "backups", "xray"), 10); e != nil {
 		log.Printf("Xray backup retention: %v", e)
 	}

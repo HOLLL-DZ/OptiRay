@@ -242,10 +242,17 @@
                 <div class="setting-field">
                     <label class="setting-label" style="display:flex;align-items:center;gap:8px;width:auto;cursor:pointer;">
                         <input type="checkbox" name="enable_logging" value="1" __LOGGING_CHECKED__ style="cursor:pointer;">
-                        Вести лог запросов (для отладки)
+                        Включить журналы для диагностики
                     </label>
                 </div>
 
+<div class="logging-storage-info" style="font-size:12px;line-height:1.6;color:var(--text-2);margin-top:10px;overflow-wrap:anywhere;">
+Журналы создаются только при включённой диагностике. При выключении запись прекращается, файлы удаляются.<br>
+До 1 МБ на журнал: основной файл 512 КБ и предыдущая копия <code>.1</code> — 512 КБ.<br>
+OptiRay: <code>/opt/etc/optiray-go/log/manager.log</code><br>
+OptiRout: <code>/opt/etc/optiray-go/log/engine.log</code><br>
+Xray / Hysteria: <code>/opt/etc/optiray-go/log/xray-go.log</code>
+</div>
 </section><section id="settings_panel_backups" class="settings-panel" aria-label="Резервное копирование и сброс" hidden>
 
                 <div class="backup-box settings-backup-grid">

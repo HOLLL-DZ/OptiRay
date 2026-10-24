@@ -64,7 +64,7 @@ func (p *RoutingProcess) stopLocked() error {
 	case e := <-p.done:
 		p.cmd = nil
 		if e != nil {
-			return fmt.Errorf("OptiRout shutdown failed; inspect routing/engine.log: %w", e)
+			return fmt.Errorf("OptiRout shutdown failed; inspect log/engine.log: %w", e)
 		}
 		return nil
 	case <-time.After(30 * time.Second):
@@ -99,16 +99,13 @@ func (p *RoutingProcess) Restart(ctx context.Context) error {
 		conn.Close()
 		return fmt.Errorf("another process owns the routing socket")
 	}
-	logfile, e := os.OpenFile(filepath.Join(p.dir, "routing", "engine.log"), os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0600)
-	if e != nil {
-		return e
-	}
+	logfile := newDiagnosticWriter(p.dir, "log/engine.log")
 	cmd := exec.Command(p.bin)
 	cmd.Dir = p.dir
 	cmd.Env = routingEnvironment(p.dir)
 	cmd.Stdout = logfile
 	cmd.Stderr = logfile
-	if e = cmd.Start(); e != nil {
+	if e := cmd.Start(); e != nil {
 		logfile.Close()
 		return e
 	}
@@ -128,7 +125,7 @@ func (p *RoutingProcess) Restart(ctx context.Context) error {
 			return ctx.Err()
 		case <-done:
 			p.cmd = nil
-			return fmt.Errorf("OptiRout exited before readiness; see routing/engine.log")
+			return fmt.Errorf("OptiRout exited before readiness; see log/engine.log")
 		case <-deadline.C:
 			_ = p.stopLocked()
 			return fmt.Errorf("OptiRout socket did not become ready")

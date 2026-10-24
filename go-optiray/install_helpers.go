@@ -105,7 +105,7 @@ func checkInstalledService(ctx context.Context, dir, address string) error {
 		return e
 	}
 	if str(health["runtime"]) != "go" || str(health["version"]) != version || !boolean(health["ready"]) {
-		return fmt.Errorf("OptiRay Go ещё не готов: проверьте manager.log и routing/engine.log")
+		return fmt.Errorf("OptiRay Go ещё не готов: проверьте log/manager.log и log/engine.log")
 	}
 	return nil
 }

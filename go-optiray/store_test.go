@@ -50,7 +50,7 @@ func TestFreshDefaultsAndExistingPreferences(t *testing.T) {
 	}
 	dir := t.TempDir()
 	if err := writeObject(filepath.Join(dir, "subs.json"), Object{
-		"hwid": "existing", "auto_select_source": "all", "enable_logging": true,
+		"hwid": "existing", "auto_select_source": "all", "enable_logging": true, "logging_policy_version": 1,
 		"optirout_save_backups": true, "xray_save_backups": true,
 	}); err != nil {
 		t.Fatal(err)

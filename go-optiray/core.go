@@ -64,15 +64,7 @@ func (c *CoreManager) startLocked(cfg Object, port int) error {
 	if e := writeObject(path, cfg); e != nil {
 		return e
 	}
-	logPath := filepath.Join(c.dir, "xray-go.log")
-	if info, e := os.Stat(logPath); e == nil && info.Size() > 2<<20 {
-		_ = os.Remove(logPath + ".1")
-		_ = os.Rename(logPath, logPath+".1")
-	}
-	logFile, e := os.OpenFile(logPath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0600)
-	if e != nil {
-		return e
-	}
+	logFile := newDiagnosticWriter(c.dir, "log/xray-go.log")
 	bin := c.bin
 	args := []string{"run", "-c", path}
 	if kind == "hysteria2" {
@@ -87,7 +79,7 @@ func (c *CoreManager) startLocked(cfg Object, port int) error {
 	cmd.Stderr = logFile
 	cmd.Dir = c.dir
 	cmd.Env = append(os.Environ(), "XRAY_LOCATION_ASSET="+filepath.Dir(c.bin))
-	if e = cmd.Start(); e != nil {
+	if e := cmd.Start(); e != nil {
 		logFile.Close()
 		return e
 	}
@@ -100,7 +92,7 @@ func (c *CoreManager) startLocked(cfg Object, port int) error {
 		select {
 		case <-done:
 			c.cmd = nil
-			return fmt.Errorf("Xray exited before its SOCKS listener was ready; see xray-go.log")
+			return fmt.Errorf("Xray exited before its SOCKS listener was ready; see log/xray-go.log")
 		default:
 		}
 		conn, e := net.DialTimeout("tcp", fmt.Sprintf("127.0.0.1:%d", port), 100*time.Millisecond)

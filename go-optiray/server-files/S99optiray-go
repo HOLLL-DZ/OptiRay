@@ -22,7 +22,7 @@ start() {
   export SSL_CERT_FILE=/opt/etc/ssl/certs/ca-certificates.crt
  fi
  trap '' HUP
-    "$BIN" --data-dir "$ROOT" --ui-dir "$ROOT/ui" --listen :3883 --enable-core --enable-routing --enable-keenetic >> "$ROOT/manager.log" 2>&1 &
+    "$BIN" --data-dir "$ROOT" --ui-dir "$ROOT/ui" --listen :3883 --enable-core --enable-routing --enable-keenetic > /dev/null 2>&1 &
     SERVICE_NEW_PID=$!
     echo "$SERVICE_NEW_PID" > "$PID"
     sleep 1

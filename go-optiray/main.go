@@ -18,7 +18,7 @@ import (
 //go:embed assets/*
 var assets embed.FS
 
-const version = "1.0.11"
+const version = "1.0.12"
 
 func main() {
 	dir := flag.String("data-dir", "/opt/etc/optiray-go", "settings directory")
@@ -124,6 +124,7 @@ func main() {
 	if e != nil {
 		log.Fatal(e)
 	}
+	log.SetOutput(newDiagnosticWriter(*dir, "log/manager.log"))
 	listener, e := net.Listen("tcp", *addr)
 	if e != nil {
 		log.Fatalf("HTTP listen failed: %v", e)
