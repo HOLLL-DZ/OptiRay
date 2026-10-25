@@ -55,7 +55,7 @@ func applySettings(d Object, form url.Values) error {
 			d[key] = v
 		}
 	}
-	for _, key := range []string{"show_br0", "enable_logging", "show_ping_all", "show_test_button", "show_test_float", "update_force_restart", "optirout_save_backups", "backup_include_xray"} {
+	for _, key := range []string{"show_br0", "enable_logging", "show_ping_all", "show_test_button", "show_test_float", "update_force_restart", "backup_include_optirout", "backup_include_xray"} {
 		d[key] = form.Has(key)
 	}
 	if form.Has("auto_select_source") {

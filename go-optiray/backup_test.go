@@ -5,6 +5,36 @@ import (
 	"testing"
 )
 
+func TestBackupExportPreferenceIndependentOfAutomaticCopies(t *testing.T) {
+	for _, automatic := range []bool{false, true} {
+		for _, include := range []bool{false, true} {
+			s, err := newStore(t.TempDir())
+			if err != nil {
+				t.Fatal(err)
+			}
+			err = s.change(func(d Object) error {
+				d["optirout_save_backups"] = automatic
+				form := url.Values{}
+				if include {
+					form.Set("backup_include_optirout", "1")
+				}
+				return applySettings(d, form)
+			})
+			if err != nil {
+				t.Fatal(err)
+			}
+			again, err := newStore(s.dir)
+			if err != nil {
+				t.Fatal(err)
+			}
+			d := again.snapshot()
+			if boolean(d["optirout_save_backups"]) != automatic || boolean(d["backup_include_optirout"]) != include {
+				t.Fatalf("preferences coupled: automatic=%v include=%v", automatic, include)
+			}
+		}
+	}
+}
+
 func TestRestoreWithoutRoutingPreservesRules(t *testing.T) {
 	s, e := newStore(t.TempDir())
 	if e != nil {

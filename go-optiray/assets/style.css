@@ -14277,6 +14277,12 @@ hr.subscriptions-divider { height:0; border:0; border-top:2px solid var(--line);
  #server_browser_toolbar > .optiray-select-trigger[data-select-id="server_filter"] {
   display:inline-flex !important; align-items:center !important; gap:5px !important;
  }
+ #server_browser_toolbar#server_browser_toolbar #server_results_count {
+  margin-left:-2px !important;
+ }
+ .subs-header-group #subs_collapse_btn #subs_count_badge {
+  margin-left:-2px !important;
+ }
  #servers_container.server-view-cards .server-card {
   --server-card-height:148.4px;
   --server-card-title-gap:2px;
@@ -14594,7 +14600,7 @@ hr.subscriptions-divider { height:0; border:0; border-top:2px solid var(--line);
 
 @layer optiray-interactions {
  .router-metrics-card .router-metric > span:last-child { font-weight:600 !important; }
- .router-metrics-card .router-model .router-uptime { font-size:11px !important;font-weight:400 !important;white-space:nowrap; }
+ .router-metrics-card .router-model .router-uptime { font-size:12px !important;font-weight:400 !important;color:var(--text-2) !important;white-space:nowrap; }
 }
 
 @layer optiray-interactions {
@@ -14602,7 +14608,7 @@ hr.subscriptions-divider { height:0; border:0; border-top:2px solid var(--line);
 }
 
 @layer optiray-interactions {
- .router-metrics-card .router-memory .router-memory-amount { font-size:11px !important; }
+ .router-metrics-card .router-memory .router-memory-amount { font-size:12px !important;color:var(--text-2) !important; }
 }
 
 @layer optiray-interactions {
@@ -14654,4 +14660,27 @@ hr.subscriptions-divider { height:0; border:0; border-top:2px solid var(--line);
 
 @layer optiray-interactions {
  #mt_modal#mt_modal .mt-io-backup:not([data-backup-visible="true"]) { display:none !important; }
+}
+
+/* Caption groups the subscription latency controls. */
+@layer optiray-interactions {
+ #servers_container#servers_container .sub-actions .ping-block {
+  position:relative !important;
+ }
+ #servers_container#servers_container .sub-actions .ping-block::before {
+  content:"PING";
+  position:absolute;
+  top:-11px;
+  left:8px;
+  right:8px;
+  height:12px;
+  font-size:10px;
+  font-weight:400;
+  line-height:12px;
+  text-align:center;
+  color:var(--text-2);
+  background:linear-gradient(currentColor,currentColor) left center / calc(50% - 20px) 1px no-repeat,
+             linear-gradient(currentColor,currentColor) right center / calc(50% - 20px) 1px no-repeat;
+  pointer-events:none;
+ }
 }

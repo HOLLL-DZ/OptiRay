@@ -141,6 +141,10 @@ func newStore(dir string) (*Store, error) {
 		d["optirout_save_backups"] = v
 		delete(d, "mt_save_backups")
 	}
+	if _, ok := raw["backup_include_optirout"]; !ok {
+		d["backup_include_optirout"] = boolean(d["optirout_save_backups"])
+		needsHWIDSave = true
+	}
 	if e = migrateLoadedData(d); e != nil {
 		return nil, e
 	}

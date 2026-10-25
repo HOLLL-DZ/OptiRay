@@ -337,7 +337,7 @@ func (a *App) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	case r.Method == "GET" && r.URL.Path == "/api/backup":
 		settings := a.store.snapshot()
 		q := r.URL.Query()
-		optirout := boolean(settings["optirout_save_backups"])
+		optirout := boolean(settings["backup_include_optirout"])
 		xray := boolean(settings["backup_include_xray"])
 		if q.Has("optirout") {
 			optirout = q.Get("optirout") == "1"
@@ -524,7 +524,7 @@ func (a *App) render(w http.ResponseWriter) {
 		floating = `<a id="test_float_btn" class="btn-test-float" href="` + esc(d["test_button_url"]) + `" target="_blank" rel="noopener noreferrer">` + openIcon + `</a>`
 	}
 	s = strings.ReplaceAll(s, "__TEST_FLOAT_BTN__", floating)
-	checked := map[string]string{"__SHOW_BR0__": "show_br0", "__LOGGING_CHECKED__": "enable_logging", "__SHOW_PING_ALL__": "show_ping_all", "__SHOW_TEST_BUTTON__": "show_test_button", "__SHOW_TEST_FLOAT__": "show_test_float", "__UPDATE_FORCE_RESTART__": "update_force_restart", "__OPTIROUT_SAVE_BACKUPS__": "optirout_save_backups", "__BACKUP_INCLUDE_XRAY__": "backup_include_xray"}
+	checked := map[string]string{"__SHOW_BR0__": "show_br0", "__LOGGING_CHECKED__": "enable_logging", "__SHOW_PING_ALL__": "show_ping_all", "__SHOW_TEST_BUTTON__": "show_test_button", "__SHOW_TEST_FLOAT__": "show_test_float", "__UPDATE_FORCE_RESTART__": "update_force_restart", "__OPTIROUT_SAVE_BACKUPS__": "optirout_save_backups", "__BACKUP_INCLUDE_OPTIROUT__": "backup_include_optirout", "__BACKUP_INCLUDE_XRAY__": "backup_include_xray"}
 	for token, key := range checked {
 		v := ""
 		if boolean(d[key]) {

@@ -34,6 +34,7 @@
   "routing_engine": "optirout",
   "optirout_save_backups": false,
   "xray_save_backups": false,
+  "backup_include_optirout": false,
   "backup_include_xray": true,
   "routing": {
     "enabled": false,

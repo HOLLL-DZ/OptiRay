@@ -798,7 +798,7 @@ async function autoSelectSub(subId, btn) {
 }
 
 function openSettingsModal() {
-    selectSettingsTab(window.optiraySettingsTab || "connection");
+    selectSettingsTab("connection");
     document.getElementById('settings_modal').style.display = 'flex';
     window.optiraySettingsReturnFocus = document.activeElement;
     var selected = document.querySelector("#settings_modal [aria-current=page]");
@@ -818,7 +818,7 @@ function backupDownloadFilename(response, fallback) {
 }
 
 function downloadBackup() {
-    var optirout = document.querySelector('input[name="optirout_save_backups"]');
+    var optirout = document.querySelector('input[name="backup_include_optirout"]');
     var xray = document.querySelector('input[name="backup_include_xray"]');
     window.location.href = '/api/backup?optirout=' + (optirout && optirout.checked ? '1' : '0') +
         '&xray=' + (xray && xray.checked ? '1' : '0');
@@ -1029,8 +1029,6 @@ async function mtSetBackupEnabled(toggle) {
         var result = await response.json();
         if (!response.ok || !result.ok) throw new Error(result.error || 'Не удалось сохранить настройку');
         window.OPTIRAY_OPTIROUT_SAVE_BACKUPS = result.enabled;
-        var settingsToggle = document.querySelector('input[name="optirout_save_backups"]');
-        if (settingsToggle) settingsToggle.checked = result.enabled;
         _mtToggleBackupBtn();
     } catch (error) {
         toggle.checked = previous;
@@ -1057,8 +1055,6 @@ async function openMtModal() {
         }
         MT_STATE.config = d1.config;
         window.OPTIRAY_OPTIROUT_SAVE_BACKUPS = d1.save_backups === true;
-        var settingsBackup = document.querySelector('input[name="optirout_save_backups"]');
-        if (settingsBackup) settingsBackup.checked = window.OPTIRAY_OPTIROUT_SAVE_BACKUPS;
         _mtToggleBackupBtn();
  var power=document.getElementById("mt_enabled");if(power)power.checked=MT_STATE.config.enabled!==false;
         var r2 = await fetch('/api/optirout_interfaces');
@@ -1619,8 +1615,6 @@ window.mtReloadConfig = async function(btn) {
         }
         MT_STATE.config = d1.config;
         window.OPTIRAY_OPTIROUT_SAVE_BACKUPS = d1.save_backups === true;
-        var settingsBackup = document.querySelector('input[name="optirout_save_backups"]');
-        if (settingsBackup) settingsBackup.checked = window.OPTIRAY_OPTIROUT_SAVE_BACKUPS;
         _mtToggleBackupBtn();
  var power=document.getElementById("mt_enabled");if(power)power.checked=MT_STATE.config.enabled!==false;
 
@@ -1688,8 +1682,6 @@ window.mtResetRules = async function(btn) {
             if (d1 && d1.ok) {
                 MT_STATE.config = d1.config;
         window.OPTIRAY_OPTIROUT_SAVE_BACKUPS = d1.save_backups === true;
-        var settingsBackup = document.querySelector('input[name="optirout_save_backups"]');
-        if (settingsBackup) settingsBackup.checked = window.OPTIRAY_OPTIROUT_SAVE_BACKUPS;
         _mtToggleBackupBtn();
  var power=document.getElementById("mt_enabled");if(power)power.checked=MT_STATE.config.enabled!==false;
                 MT_UI.collapsed = {};

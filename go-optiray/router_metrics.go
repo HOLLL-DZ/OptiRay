@@ -109,13 +109,7 @@ func (a *App) routerMetrics(w http.ResponseWriter, r *http.Request) {
 		jsonReply(w, 503, Object{"ok": false})
 		return
 	}
-	model := "Роутер"
-	for _, path := range []string{"/proc/device-tree/model", "/sys/firmware/devicetree/base/model"} {
-		if b, e := os.ReadFile(path); e == nil && len(b) > 0 {
-			model = strings.TrimSpace(strings.Trim(string(b), "\x00"))
-			break
-		}
-	}
+	model := routerModelName()
 	if system := readKeeneticMetrics(); system != nil {
 		system["uptime_seconds"] = routerUptimeSeconds()
 		system["model"] = model
@@ -221,4 +215,61 @@ func (a *App) routerReboot(w http.ResponseWriter, r *http.Request) {
 		defer cancel()
 		_ = exec.CommandContext(ctx, path, "-c", "system reboot").Run()
 	}()
+}
+
+var routerModelCache struct {
+	sync.Mutex
+	name    string
+	checked time.Time
+}
+
+func parseKeeneticModel(text string) string {
+	fields := map[string]string{}
+	for _, line := range strings.Split(text, "\n") {
+		parts := strings.SplitN(line, ":", 2)
+		if len(parts) == 2 {
+			fields[strings.TrimSpace(parts[0])] = strings.TrimSpace(parts[1])
+		}
+	}
+	if model := fields["model"]; model != "" {
+		return model
+	}
+	device, id := fields["device"], fields["hw_id"]
+	if device != "" && id != "" {
+		return device + " (" + id + ")"
+	}
+	return first(device, id)
+}
+func routerModelName() string {
+	routerModelCache.Lock()
+	defer routerModelCache.Unlock()
+	if routerModelCache.name != "" {
+		return routerModelCache.name
+	}
+	if !routerModelCache.checked.IsZero() && time.Since(routerModelCache.checked) < time.Minute {
+		return "Роутер"
+	}
+	routerModelCache.checked = time.Now()
+	for _, path := range []string{"/proc/device-tree/model", "/sys/firmware/devicetree/base/model"} {
+		if data, e := os.ReadFile(path); e == nil {
+			model := strings.TrimSpace(strings.Trim(string(data), "\x00"))
+			if model != "" {
+				routerModelCache.name = model
+				return model
+			}
+		}
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+	path, e := exec.LookPath("ndmc")
+	if e != nil {
+		path = "/bin/ndmc"
+	}
+	if data, e := exec.CommandContext(ctx, path, "-c", "show version").Output(); e == nil {
+		if model := parseKeeneticModel(string(data)); model != "" {
+			routerModelCache.name = model
+			return model
+		}
+	}
+	return "Роутер"
 }
