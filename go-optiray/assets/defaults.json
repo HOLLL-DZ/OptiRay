@@ -36,6 +36,8 @@
   "xray_save_backups": false,
   "backup_include_optirout": false,
   "backup_include_xray": true,
+  "xray_auto_check": false,
+  "hysteria_auto_check": false,
   "routing": {
     "enabled": false,
     "block_rules": "",

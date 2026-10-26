@@ -17,6 +17,8 @@ import (
 )
 
 type App struct {
+	coreIndicators        coreIndicatorState
+	geoCatalog            geoCatalogState
 	metrics               routerMetricsState
 	uiDir                 string
 	store                 *Store
@@ -60,6 +62,15 @@ func (a *App) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	var err error
 	switch {
+	case r.Method == "GET" && r.URL.Path == "/api/core_update_status":
+		jsonReply(w, 200, a.coreUpdateStatus(r.Context()))
+		return
+	case r.Method == "GET" && r.URL.Path == "/api/geo_categories":
+		a.geoCategories(w, r)
+		return
+	case r.URL.Path == "/api/geo_data":
+		a.geoAPI(w, r)
+		return
 	case r.Method == "POST" && r.URL.Path == "/api/router_reboot":
 		a.routerReboot(w, r)
 		return
@@ -99,7 +110,9 @@ func (a *App) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		installed := installedCoreVersion(r.Context(), path)
 		info := Object{"installed": installed != "", "version": installed}
 		if hysteria {
-			info["available"] = []any{Object{"version": "2.6.2"}}
+			for k, v := range a.store.hysteriaReleases(r.Context(), r.URL.Query().Get("refresh") == "1") {
+				info[k] = v
+			}
 		} else {
 			for k, v := range a.store.xrayReleases(r.Context(), r.URL.Query().Get("refresh") == "1") {
 				info[k] = v
@@ -524,7 +537,7 @@ func (a *App) render(w http.ResponseWriter) {
 		floating = `<a id="test_float_btn" class="btn-test-float" href="` + esc(d["test_button_url"]) + `" target="_blank" rel="noopener noreferrer">` + openIcon + `</a>`
 	}
 	s = strings.ReplaceAll(s, "__TEST_FLOAT_BTN__", floating)
-	checked := map[string]string{"__SHOW_BR0__": "show_br0", "__LOGGING_CHECKED__": "enable_logging", "__SHOW_PING_ALL__": "show_ping_all", "__SHOW_TEST_BUTTON__": "show_test_button", "__SHOW_TEST_FLOAT__": "show_test_float", "__UPDATE_FORCE_RESTART__": "update_force_restart", "__OPTIROUT_SAVE_BACKUPS__": "optirout_save_backups", "__BACKUP_INCLUDE_OPTIROUT__": "backup_include_optirout", "__BACKUP_INCLUDE_XRAY__": "backup_include_xray"}
+	checked := map[string]string{"__SHOW_BR0__": "show_br0", "__LOGGING_CHECKED__": "enable_logging", "__SHOW_PING_ALL__": "show_ping_all", "__SHOW_TEST_BUTTON__": "show_test_button", "__SHOW_TEST_FLOAT__": "show_test_float", "__UPDATE_FORCE_RESTART__": "update_force_restart", "__OPTIROUT_SAVE_BACKUPS__": "optirout_save_backups", "__BACKUP_INCLUDE_OPTIROUT__": "backup_include_optirout", "__BACKUP_INCLUDE_XRAY__": "backup_include_xray", "__XRAY_AUTO_CHECK__": "xray_auto_check", "__HYSTERIA_AUTO_CHECK__": "hysteria_auto_check"}
 	for token, key := range checked {
 		v := ""
 		if boolean(d[key]) {

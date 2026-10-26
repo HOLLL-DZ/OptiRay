@@ -50,7 +50,7 @@
             <div class="subs-header-actions"><input type="checkbox" id="optiray_power" __OPTIRAY_ENABLED__ style="display:none!important" aria-hidden="true">
                 <button type="button" class="btn-settings-icon btn-refresh-icon" onclick="refreshSubsIcon(this)" title="Обновить подписки" aria-label="Обновить подписки"><svg class="action-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11a8 8 0 0 0-14-5L3 9m0-5v5h5M4 13a8 8 0 0 0 14 5l3-3m0 5v-5h-5"/></svg></button>
                 <a href="__ROUTING_URL__" target="_blank" rel="noopener noreferrer" onclick="handleRoutingClick(this); return false;" data-routing-engine="__ROUTING_ENGINE__" data-routing-external="__ROUTING_USE_EXTERNAL_VAL__" data-routing-url="__ROUTING_URL__" class="btn-settings-icon" title="Маршрутизация" aria-label="Маршрутизация"><svg class="action-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="5" height="5" rx="1"/><rect x="16" y="3" width="5" height="5" rx="1"/><rect x="9.5" y="16" width="5" height="5" rx="1"/><path d="M5.5 8v3.5h13V8M12 11.5V16"/></svg></a>
-                <button type="button" class="btn-settings-icon" onclick="openSettingsModal()" title="Настройки" aria-label="Настройки"><svg class="action-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.6 3h4.8l.6 2.4 1.7 1 2.4-.7 2.4 4.2-1.8 1.7v2l1.8 1.7-2.4 4.2-2.4-.7-1.7 1L14.4 22H9.6L9 19.6l-1.7-1-2.4.7-2.4-4.2 1.8-1.7v-2L2.5 9.7l2.4-4.2 2.4.7 1.7-1Z" transform="translate(0 -.5)"/><circle cx="12" cy="12" r="3"/></svg></button>
+                <button type="button" id="settings_open_button" class="btn-settings-icon" onclick="openSettingsModal()" title="Настройки" aria-label="Настройки"><svg class="action-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.6 3h4.8l.6 2.4 1.7 1 2.4-.7 2.4 4.2-1.8 1.7v2l1.8 1.7-2.4 4.2-2.4-.7-1.7 1L14.4 22H9.6L9 19.6l-1.7-1-2.4.7-2.4-4.2 1.8-1.7v-2L2.5 9.7l2.4-4.2 2.4.7 1.7-1Z" transform="translate(0 -.5)"/><circle cx="12" cy="12" r="3"/></svg></button>
             </div>
         </div>
         <div id="subs_names_container" class="subs-names" style="display:none;">__SUB_NAMES__</div>
@@ -109,36 +109,54 @@
                     </div>
                 </div>
 
-                </section><section id="settings_panel_cores" class="settings-panel" aria-label="Ядра" hidden><div class="modal-section-title">Xray-core</div>
+                </section><section id="settings_panel_cores" class="settings-panel" aria-label="Ядра" hidden><div class="modal-section-title settings-core-heading" data-core-kind="xray"><span>Xray-core</span></div>
                 <div class="xray-manager-box">
                     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
                         <span style="font-size:var(--text-size);font-weight:var(--text-weight);color: var(--text-2) !important;">Статус:</span>
                         <span id="xray_installed_badge" class="badge-ver missing">Загрузка...</span>
                     </div>
                     <div class="core-controls">
-                        <select id="xray_version_select" class="core-select"><option value="">Поиск версий...</option></select>
+                        <div class="core-version-field"><div class="core-version-picker"><button type="button" class="core-refresh-button" title="Проверить версии Xray на GitHub" aria-label="Проверить версии Xray на GitHub" onclick="refreshCoreVersions('xray',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 7v5h-5M4 17v-5h5"/><path d="M6.1 7a7 7 0 0 1 11.6-1L20 9M4 15l2.3 3A7 7 0 0 0 17.9 17"/></svg></button><select id="xray_version_select" class="core-select"><option value="">Поиск версий...</option></select></div><div class="core-github-link"><a href="https://github.com/XTLS/Xray-core" target="_blank" rel="noopener noreferrer">Xray-core на GitHub ↗</a><label class="core-autocheck-label" title="Автопроверка версий в 05:00 и 14:00 МСК"><input type="checkbox" name="xray_auto_check" value="1" __XRAY_AUTO_CHECK__>Автопроверка новых версий</label><div id="xray_versions_notice" class="core-versions-notice" role="status" hidden></div></div></div>
                         <div class="core-buttons">
                             <button type="button" onclick="installXrayVersion(this)" class="btn core-btn core-btn-install">Установить</button>
                             <button type="button" onclick="uninstallXray(this)" class="btn core-btn core-btn-remove">Удалить ядро</button>
                         </div>
                     </div>
-                    <div id="xray_versions_notice" class="core-versions-notice" role="status" hidden></div>
+                    
                 </div>
 
-                <div class="core-github-link"><a href="https://github.com/XTLS/Xray-core" target="_blank" rel="noopener noreferrer">Xray-core на GitHub ↗</a></div>
-<div class="modal-section-title">Hysteria (для hysteria/hysteria2)</div>
+                
+<div class="modal-section-title settings-core-heading" data-core-kind="hysteria"><span>Hysteria (для hysteria/hysteria2)</span></div>
                 <div class="xray-manager-box">
                     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
                         <span style="font-size:var(--text-size);font-weight:var(--text-weight);color: var(--text-2) !important;">Статус:</span>
                         <span id="hysteria_installed_badge" class="badge-ver missing">Загрузка...</span>
                     </div>
-                    <div class="core-buttons">
+                    <div class="core-controls"><div class="core-version-field"><div class="core-version-picker"><button type="button" class="core-refresh-button" title="Проверить версии Hysteria на GitHub" aria-label="Проверить версии Hysteria на GitHub" onclick="refreshCoreVersions('hysteria',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 7v5h-5M4 17v-5h5"/><path d="M6.1 7a7 7 0 0 1 11.6-1L20 9M4 15l2.3 3A7 7 0 0 0 17.9 17"/></svg></button><select id="hysteria_version_select" class="core-select"><option value="">Поиск версий...</option></select></div><div class="core-github-link"><a href="https://github.com/apernet/hysteria" target="_blank" rel="noopener noreferrer">Hysteria на GitHub ↗</a><label class="core-autocheck-label" title="Автопроверка версий в 05:00 и 14:00 МСК"><input type="checkbox" name="hysteria_auto_check" value="1" __HYSTERIA_AUTO_CHECK__>Автопроверка новых версий</label><div id="hysteria_versions_notice" class="core-versions-notice" role="status" hidden></div></div></div><div class="core-buttons">
                         <button type="button" onclick="installHysteria(this)" class="btn core-btn core-btn-install">Установить</button>
                         <button type="button" onclick="uninstallHysteria(this)" class="btn core-btn core-btn-remove">Удалить ядро</button>
-                    </div>
+                    </div></div>
                 </div>
 
-                <div class="core-github-link"><a href="https://github.com/apernet/hysteria" target="_blank" rel="noopener noreferrer">Hysteria на GitHub ↗</a></div>
+                
+<div class="modal-section-title">GeoIP и GeoSite</div>
+<div class="geo-data-settings">
+ <div class="setting-field geo-source-field"><label class="setting-label" for="geo_data_source">Источник:</label><div class="geo-source-controls"><select id="geo_data_source" class="core-select" onchange="syncGeoSource()"><option value="standard">Стандартные — Xray-core</option><option value="github">Свой адрес</option></select><button type="button" id="geo_data_update" class="btn core-btn core-btn-install" onclick="updateGeoData(this)">Обновить</button></div></div>
+ <p class="geo-data-help">Укажите прямую ссылку на каждый DAT-файл. Обе базы обновляются общей кнопкой. Адреса сохраняются после успешного скачивания. Обновление базы кратковременно перезапускает активное соединение Xray.</p>
+ <div class="geo-data-file" data-geo-name="geoip.dat">
+  <div class="geo-data-file-heading"><label for="geo_geoip_url">GeoIP</label></div>
+  <input id="geo_geoip_url" class="setting-input geo-file-url" type="url" placeholder="https://…/geoip.dat" autocomplete="off" spellcheck="false" aria-label="Адрес GeoIP">
+  <div class="geo-data-file-info" aria-live="polite">Загрузка информации о файле…</div>
+  <div class="geo-data-path"></div>
+ </div>
+ <div class="geo-data-file" data-geo-name="geosite.dat">
+  <div class="geo-data-file-heading"><label for="geo_geosite_url">GeoSite</label></div>
+  <input id="geo_geosite_url" class="setting-input geo-file-url" type="url" placeholder="https://…/geosite.dat" autocomplete="off" spellcheck="false" aria-label="Адрес GeoSite">
+  <div class="geo-data-file-info" aria-live="polite">Загрузка информации о файле…</div>
+  <div class="geo-data-path"></div>
+ </div>
+ <div id="geo_data_status" class="geo-data-help" role="status"></div>
+</div>
 </section><section id="settings_panel_testing" class="settings-panel" aria-label="Проверка серверов" hidden><div class="modal-section-title">Замеры задержки</div>
                 <div class="xray-manager-box">
                     <div class="setting-field"><label class="setting-label">Тестовый URL:</label><input type="text" name="test_url" value="__TEST_URL__" class="setting-input"></div>

@@ -190,6 +190,9 @@ func (a *App) coreAction(ctx context.Context, kind, action, requestedVersion str
 			if f.Name != name && f.Name != "geoip.dat" && f.Name != "geosite.dat" {
 				continue
 			}
+			if f.Name != name && str(geoFileConfig(a.store.snapshot(), f.Name)["source"]) == "github" {
+				continue // Preserve the explicitly selected external databases.
+			}
 			if f.UncompressedSize64 > 128<<20 {
 				return fmt.Errorf("unpacked core too large")
 			}

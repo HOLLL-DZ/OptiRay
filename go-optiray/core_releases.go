@@ -35,9 +35,12 @@ func installedCoreVersion(ctx context.Context, path string) string {
 	return first(v, "Установлено")
 }
 func fetchGitHubJSON(ctx context.Context, endpoint string) (any, error) {
+	return fetchCoreGitHubJSON(ctx, "XTLS/Xray-core", endpoint)
+}
+func fetchCoreGitHubJSON(ctx context.Context, repository, endpoint string) (any, error) {
 	ctx, cancel := context.WithTimeout(ctx, 12*time.Second)
 	defer cancel()
-	req, e := http.NewRequestWithContext(ctx, "GET", "https://api.github.com/repos/XTLS/Xray-core/"+endpoint, nil)
+	req, e := http.NewRequestWithContext(ctx, "GET", "https://api.github.com/repos/"+repository+"/"+endpoint, nil)
 	if e != nil {
 		return nil, e
 	}
@@ -62,38 +65,55 @@ func fetchGitHubJSON(ctx context.Context, endpoint string) (any, error) {
 	e = json.Unmarshal(b, &value)
 	return value, e
 }
-func releaseItem(v any) Object {
+func releaseItem(v any) Object { return coreReleaseItem(v, "v") }
+func coreReleaseItem(v any, prefix string) Object {
 	r := obj(v)
-	tag := strings.TrimPrefix(str(r["tag_name"]), "v")
+	raw := str(r["tag_name"])
+	if !strings.HasPrefix(raw, prefix) {
+		return nil
+	}
+	tag := strings.TrimPrefix(raw, prefix)
 	if boolean(r["draft"]) || !coreVersionPattern.MatchString(tag) {
 		return nil
 	}
 	return Object{"version": tag, "is_pre": boolean(r["prerelease"])}
 }
 func (s *Store) xrayReleases(ctx context.Context, force bool) Object {
+	return s.coreReleases(ctx, force, "XTLS/Xray-core", "xray", "v")
+}
+func (s *Store) hysteriaReleases(ctx context.Context, force bool) Object {
+	return s.coreReleases(ctx, force, "apernet/hysteria", "hysteria", "app/v")
+}
+func (s *Store) coreReleases(ctx context.Context, force bool, repository, kind, prefix string) Object {
 	s.releaseMu.Lock()
 	defer s.releaseMu.Unlock()
-	path := filepath.Join(s.dir, "xray_releases_cache.json")
+	path := filepath.Join(s.dir, kind+"_releases_cache.json")
 	cache, _ := readObject(path)
 	valid := len(list(cache["recent"])) > 0 && str(obj(cache["stable"])["version"]) != ""
-	source, message := "github", ""
-	age := time.Now().Unix() - int64(integer(cache["fetched_at"]))
-	if force || !valid || age < 0 || age >= 300 {
-		recent, e := fetchGitHubJSON(ctx, "releases?per_page=30")
+	source, message := "cache", ""
+	if !valid {
+		source = "unavailable"
+
+	}
+	// Opening settings reads the cache; only scheduled or manual checks reach GitHub.
+	if force {
+		source = "github"
+		message = ""
+		recent, e := fetchCoreGitHubJSON(ctx, repository, "releases?per_page=30")
 		var stable any
 		if e == nil {
-			stable, e = fetchGitHubJSON(ctx, "releases/latest")
+			stable, e = fetchCoreGitHubJSON(ctx, repository, "releases/latest")
 		}
 		items := []any{}
 		seen := map[string]bool{}
 		for _, v := range list(recent) {
-			item := releaseItem(v)
+			item := coreReleaseItem(v, prefix)
 			if item != nil && !seen[str(item["version"])] {
 				items = append(items, item)
 				seen[str(item["version"])] = true
 			}
 		}
-		stableItem := releaseItem(stable)
+		stableItem := coreReleaseItem(stable, prefix)
 		if e == nil && len(items) > 0 && stableItem != nil && !boolean(stableItem["is_pre"]) {
 			cache = Object{"recent": items, "stable": stableItem, "fetched_at": time.Now().Unix()}
 			_ = writeObject(path, cache)
@@ -106,7 +126,7 @@ func (s *Store) xrayReleases(ctx context.Context, force bool) Object {
 			}
 			if valid {
 				source = "cache"
-				message = "GitHub недоступен. Показан сохранённый список"
+				message += ". Показан сохранённый список"
 			}
 		}
 	}

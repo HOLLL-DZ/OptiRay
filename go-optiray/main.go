@@ -18,7 +18,7 @@ import (
 //go:embed assets/*
 var assets embed.FS
 
-const version = "1.0.13"
+const version = "1.0.14"
 
 func main() {
 	dir := flag.String("data-dir", "/opt/etc/optiray-go", "settings directory")
@@ -171,6 +171,7 @@ func main() {
 	runtimeCtx, runtimeCancel := context.WithCancel(context.Background())
 	defer runtimeCancel()
 	go app.supervise(runtimeCtx)
+	go store.superviseCoreReleaseSchedule(runtimeCtx)
 	srv := &http.Server{Addr: *addr, Handler: app, ReadHeaderTimeout: 10 * time.Second, IdleTimeout: 60 * time.Second, MaxHeaderBytes: 32768}
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)

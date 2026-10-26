@@ -154,6 +154,11 @@ func (a *App) routingMode(ctx context.Context, engine string, routing Object) er
 		for k, v := range routing {
 			obj(next["routing"])[k] = v
 		}
+		if engine == "xray" {
+			if err := prepareXrayRuleText(obj(next["routing"])); err != nil {
+				return err
+			}
+		}
 	}
 	return a.commitState(ctx, before, next, nil)
 }

@@ -573,6 +573,7 @@ function genNewHwid() {
     el.value = ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, function(c) {
         return (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16);
     });
+    el.dispatchEvent(new Event('input',{bubbles:true}));
 }
 
 var subColorSaving = false;
@@ -636,6 +637,7 @@ async function loadXrayVersions(force) {
     var sel = document.getElementById('xray_version_select');
     if (!s || !sel) return;
     xrayVersionsLoading = true;
+    var infoRevision=window.optiraySettingsInfoRevision||0;
     var previousVersion = sel.value;
     s.innerText = 'Опрос...';
     try {
@@ -656,15 +658,15 @@ async function loadXrayVersions(force) {
         });
         if (sel.options.length) sel.selectedIndex = 0;
         var notice = document.getElementById('xray_versions_notice');
-        if (notice) { notice.textContent = res.versions_error || ''; notice.hidden = !res.versions_error; }
+        if (notice) setSettingsInfo(notice,res.versions_error || '',infoRevision);
         if (!res.available.length) {
             var empty = document.createElement('option'); empty.value = ''; empty.textContent = 'Версии недоступны'; empty.disabled = true; sel.appendChild(empty);
         }
     } catch(e) {
         s.innerText = 'Статус недоступен';
         var notice = document.getElementById('xray_versions_notice');
-        if (notice) { notice.textContent = 'Не удалось загрузить список версий. Повторите позже.'; notice.hidden = false; }
-    } finally { xrayVersionsLoading = false; }
+        if (notice) setSettingsInfo(notice,'Не удалось загрузить список версий. Повторите позже.',infoRevision);
+    } finally { xrayVersionsLoading = false;if(window.refreshCoreUpdateBadges)window.refreshCoreUpdateBadges(); }
 }
 
 async function installXrayVersion(btn) {
@@ -703,22 +705,52 @@ async function uninstallXray(btn) {
     finally { btn.innerText = orig; btn.disabled = false; }
 }
 
-async function checkHysteria() {
-    var b = document.getElementById('hysteria_installed_badge');
-    if (!b) return;
-    b.innerText = 'Опрос...';
+var hysteriaVersionsLoading=false;
+async function checkHysteria(force) {
+    if (hysteriaVersionsLoading) return;
+    var s = document.getElementById('hysteria_installed_badge');
+    var sel = document.getElementById('hysteria_version_select');
+    if (!s || !sel) return;
+    hysteriaVersionsLoading = true;
+    var infoRevision=window.optiraySettingsInfoRevision||0;
+    var previousVersion = sel.value;
+    s.innerText = 'Опрос...';
     try {
-        var res = await (await fetch('/api/hysteria_info', {cache:'no-store'})).json();
-        b.innerText = res.installed ? ('Установлено v' + res.version) : 'Не установлено';
-        b.className = 'badge-ver ' + (res.installed ? 'installed' : 'missing');
-    } catch(e) { b.innerText = 'Ошибка'; }
+        var response = await fetch('/api/hysteria_info' + (force ? '?refresh=1' : ''), {cache:'no-store'});
+        if (!response.ok) throw new Error('HTTP ' + response.status);
+        var res = await response.json();
+        s.innerText = res.installed ? ('Установлено v' + res.version) : 'Не установлено';
+        s.className = 'badge-ver ' + (res.installed ? 'installed' : 'missing');
+        sel.innerHTML = '';
+        res.available.sort(function(a,b){var av=a.version.split(/[.+-]/).map(Number),bv=b.version.split(/[.+-]/).map(Number);for(var n=0;n<3;n++){var difference=(bv[n]||0)-(av[n]||0);if(difference)return difference;}return Number(a.is_pre)-Number(b.is_pre);});
+        res.available.forEach(function(i, idx) {
+            var o = document.createElement('option');
+            o.value = i.version;
+            o.textContent = 'v' + i.version + (i.is_stable ? ' (Стабильная)' : (i.is_pre ? ' (Pre)' : ' (Rel)')) + (idx === 0 && res.versions_source !== 'cache' ? ' [New]' : '');
+            
+            sel.appendChild(o);
+        });
+        if (sel.options.length) sel.selectedIndex = 0;
+        var notice = document.getElementById('hysteria_versions_notice');
+        if (notice) setSettingsInfo(notice,res.versions_error || '',infoRevision);
+        if (!res.available.length) {
+            var empty = document.createElement('option'); empty.value = ''; empty.textContent = 'Версии недоступны'; empty.disabled = true; sel.appendChild(empty);
+        }
+    } catch(e) {
+        s.innerText = 'Статус недоступен';
+        var notice = document.getElementById('hysteria_versions_notice');
+        if (notice) setSettingsInfo(notice,'Не удалось загрузить список версий. Повторите позже.',infoRevision);
+    } finally { hysteriaVersionsLoading = false;if(window.refreshCoreUpdateBadges)window.refreshCoreUpdateBadges(); }
 }
+
 async function installHysteria(btn) {
+    var selected=document.getElementById('hysteria_version_select');
+    var version=selected?selected.value:'';if(!version)return;
     var orig = btn.innerText; btn.innerText = 'Установка...'; btn.disabled = true;
     try {
         var res = await (await fetch('/api/hysteria_action', {method:'POST',
             headers:{'Content-Type':'application/x-www-form-urlencoded'},
-            body:'action=install'})).json();
+            body:'action=install&version='+encodeURIComponent(version)})).json();
         alert(res.message); await checkHysteria();
     } catch(e) { alert('Ошибка: ' + e.message); }
     finally { btn.innerText = orig; btn.disabled = false; }
@@ -803,7 +835,6 @@ function openSettingsModal() {
     window.optiraySettingsReturnFocus = document.activeElement;
     var selected = document.querySelector("#settings_modal [aria-current=page]");
     if (selected) selected.focus();
-    if (window.optiraySettingsTab !== 'cores') { loadXrayVersions(); checkHysteria(); }
 }
 
 function closeSettingsModal() { document.getElementById('settings_modal').style.display = 'none'; if (window.optiraySettingsReturnFocus) window.optiraySettingsReturnFocus.focus(); }
@@ -921,8 +952,13 @@ var MT_STATE = { config: null, interfaces: [], _dirty: false };
 Object.defineProperty(MT_STATE, 'dirty', {
     get: function() { return this._dirty; },
     set: function(v) {
-        this._dirty = !!v;
-        if (typeof _mtSetSaveDirty === 'function') _mtSetSaveDirty(!!v);
+        if(this.config){
+            try{_mtCollectFromUi(true);}catch(error){}
+            var current=routingConfigSignature('optirout',this.config);
+            if(!v)this._savedSignature=current;
+            this._dirty=this._savedSignature==null?!!v:current!==this._savedSignature;
+        }else{this._savedSignature=null;this._dirty=false;}
+        if (typeof _mtSetSaveDirty === 'function') _mtSetSaveDirty(this._dirty);
     }
 });
 
@@ -932,10 +968,12 @@ var MT_UI = { collapsed: {} };
    isDirty=false → приглушённая (нечего сохранять)
    isDirty=true  → активная (есть изменения) */
 function _mtSetSaveDirty(isDirty) {
+    var modal=document.getElementById('mt_modal');if(modal&&modal.dataset.ruleEngine==='xray')return;
     var notice = document.getElementById('mt_dirty_notice');
     if (notice) notice.textContent = isDirty ? 'Есть несохранённые изменения' : '';
     var btn = document.getElementById('mt_save_btn');
     if (!btn) return;
+    btn.disabled=!isDirty;btn.setAttribute('aria-disabled',String(!isDirty));
     if (isDirty) {
         btn.classList.remove('mt-save-idle');
     } else {
@@ -1439,6 +1477,7 @@ window.mtImportFile = function(inp) {
 };
 
 window.saveMtConfig = function() {
+    if(!MT_STATE.dirty)return;
     if (!_mtCollectFromUi(false)) {
         // _mtCollectFromUi вернул false — есть расхождение, показали ошибку, не сохраняем
         return;
@@ -1931,10 +1970,13 @@ document.addEventListener('click', function(e) {
         }
         if (!g) return;
         g.rules = g.rules || [];
-        g.rules.push({ id: _mtNewId(), name: '', type: 'namespace', rule: '', enable: true });
+        g.rules.unshift({ id: _mtNewId(), name: '', type: 'namespace', rule: '', enable: true });
         g.collapsed = false; if (typeof MT_UI !== "undefined" && MT_UI.collapsed) MT_UI.collapsed[g.id] = false;
         mtRenderGroups();
         MT_STATE.dirty = true;
+        var addedCard = document.querySelector('.mt-group-card[data-gid="' + gid + '"]');
+        var addedInput = addedCard && addedCard.querySelector('.mt-rule-input');
+        if (addedInput) addedInput.focus();
         return;
     }
 
@@ -2648,6 +2690,8 @@ window.applyPasteGroupMt = function() {
             box.innerHTML = html;
         }
         updateCatCounts();
+        if(window.syncXraySplitFields)window.syncXraySplitFields();
+        if(window.validateXrayGeoReferences)window.validateXrayGeoReferences();
         if(window.filterXrayGroups)window.filterXrayGroups();
     }
 
@@ -2710,7 +2754,7 @@ window.applyPasteGroupMt = function() {
         var g = findGroup(cat, gid);
         if (!g) return;
         g.rules = g.rules || [];
-        g.rules.push({value:'', enabled:true});
+        g.rules.unshift({value:'', enabled:true});
         g.collapsed = false;
         renderAll();
         var box = document.getElementById('rt_groups_' + cat);
@@ -2718,7 +2762,7 @@ window.applyPasteGroupMt = function() {
             var card = box.querySelector('.rt-group-card[data-gid="' + gid + '"]');
             if (card) {
                 var inputs = card.querySelectorAll('.rt-rule-input');
-                if (inputs.length) inputs[inputs.length - 1].focus();
+                if (inputs.length) inputs[0].focus();
             }
         }
     }
@@ -3823,15 +3867,16 @@ window.applyPasteGroup = function () {
             var mo = new MutationObserver(function(muts) {
                 for (var i = 0; i < muts.length; i++) {
                     var m = muts[i];
-                    var added = m.addedNodes || [];
-                    for (var a = 0; a < added.length; a++) {
-                        var n = added[a];
+                    var changed = Array.from(m.addedNodes || []).concat(Array.from(m.removedNodes || []));
+                    for (var a = 0; a < changed.length; a++) {
+                        var n = changed[a];
                         if (n.nodeType !== 1) continue;
                         if (n.classList && (
                             n.classList.contains('rt-group-card') ||
                             n.classList.contains('rt-rule') ||
                             n.classList.contains('rt-rule-input') ||
-                            n.classList.contains('rt-groups'))) {
+                            n.classList.contains('rt-groups')) ||
+                            n.querySelector('.rt-group-card,.rt-rule,.rt-rule-input,.rt-groups')) {
                             schedule(); return;
                         }
                     }
@@ -4899,7 +4944,7 @@ function selectSettingsTab(key) {
         else button.removeAttribute('aria-current');
     });
     modal.querySelector('.settings-scroll').scrollTop = 0;
-    if (key === 'cores') { loadXrayVersions(true); checkHysteria(); }
+    if (key === 'cores') { loadXrayVersions(); checkHysteria(); loadGeoData(); }
 }
 document.addEventListener('keydown', function(event) {
     var modal = document.getElementById('settings_modal');
@@ -5250,7 +5295,7 @@ document.addEventListener('DOMContentLoaded',function(){
    button.addEventListener('keydown',function(e){if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();open(button,select);}});
  };
  document.addEventListener('DOMContentLoaded',function(){
-  ['server_filter','server_sort','mt_group_filter','xray_version_select','subscription_client_profile'].forEach(function(id){window.optirayEnhanceSelect(document.getElementById(id));});
+  ['server_filter','server_sort','mt_group_filter','xray_version_select','hysteria_version_select','subscription_client_profile'].forEach(function(id){window.optirayEnhanceSelect(document.getElementById(id));});
   function enhanceRuleTypes(root){
    if(root.nodeType!==1 && root.nodeType!==9)return;
    if(root.matches && root.matches('select.mt-rule-type'))window.optirayEnhanceSelect(root);
@@ -5331,10 +5376,17 @@ document.addEventListener('change',function(event){
 });
 
 (function(){
- var mode='optirout',xrayDirty=false,busy=false;
+ var mode='optirout',xrayDirty=false,busy=false,xrayBaseline=null;
+ function xraySignature(){
+  var editor=document.getElementById('routing_modal'),routing={groups_ui:window.__rt_get_data?window.__rt_get_data():{}};
+  var order=editor.querySelector('[name="routing_mode"]:checked');routing.direct_default=!!(order&&order.value==='direct_default');
+  ['block','direct','proxy'].forEach(function(cat){routing[cat+'_rules']=editor.querySelector('[name="routing_'+cat+'_rules"]').value;});
+  return routingConfigSignature('xray',routing);
+ }
  var originalOpenMt=openMtModal,originalCloseMt=closeMtModal;
  function refresh(){
   var modal=document.getElementById('mt_modal');if(!modal)return;
+  if(mode==='xray'&&xrayBaseline!==null)xrayDirty=xraySignature()!==xrayBaseline;
   modal.dataset.ruleEngine=mode; syncRoutingHeaderActions(mode);
   var heading=document.getElementById('mt_dialog_title');
   if(heading && heading.tagName!=='BUTTON') {
@@ -5351,7 +5403,7 @@ document.addEventListener('change',function(event){
   var reload=document.getElementById('xr_reload_btn');if(reload)reload.disabled=busy;
   modal.querySelectorAll('[data-rule-mode]').forEach(function(b){b.setAttribute('aria-pressed',String(b.dataset.ruleMode===mode));b.disabled=busy;});
   var save=document.getElementById('mt_save_btn');
-  if(save&&mode==='xray'){save.disabled=busy;save.removeAttribute('aria-disabled');save.classList.toggle('mt-save-idle',!xrayDirty);save.classList.remove('mt-blocked','mt-has-dups');save.style.opacity='';}
+  if(save&&mode==='xray'){save.disabled=busy||!xrayDirty;save.setAttribute('aria-disabled',String(save.disabled));save.classList.toggle('mt-save-idle',!xrayDirty);save.classList.remove('mt-blocked','mt-has-dups');save.style.opacity='';}
   if(save&&mode==='optirout'){_mtSetSaveDirty(MT_STATE.dirty);if(window.__mtRefreshSaveBtn)window.__mtRefreshSaveBtn();}
   if(mode==='xray'){var notice=document.getElementById('mt_dirty_notice');if(notice)notice.textContent=xrayDirty?'Есть несохранённые изменения':'';_mtSetStatus(xrayDirty?'Есть несохранённые изменения':'Правила Xray','ok');}
   else if(MT_STATE.config)_mtSetStatus('Конфиг загружен. '+ruCount((MT_STATE.config.groups||[]).length,'группа','группы','групп'),'ok');
@@ -5374,7 +5426,8 @@ document.addEventListener('change',function(event){
   editor.querySelector('[name="routing_enabled"]').checked=!!routing.enabled;syncPowerButtons();
   editor.querySelectorAll('[name="routing_mode"]').forEach(function(input){input.checked=input.value===(routing.direct_default?'direct_default':'proxy_default');});
   ['block','direct','proxy'].forEach(function(cat){editor.querySelector('[name="routing_'+cat+'_rules"]').value=routing[cat+'_rules']||'';});
-  window.__rt_set_data(groups,{clean:true});syncXrayOutboundOrder();xrayDirty=false;
+  window.__rt_set_data(groups,{clean:true});syncXrayOutboundOrder();xrayBaseline=xraySignature();xrayDirty=false;
+  if(window.refreshXrayGeoCategories)window.refreshXrayGeoCategories();
   if(window.filterXrayGroups)window.filterXrayGroups();
   if(window._optirayRoutingKick)window._optirayRoutingKick();
  }
@@ -5448,18 +5501,23 @@ document.addEventListener('change',function(event){
   finally{busy=false;refresh();}
  };
  window.saveUnifiedRouting=async function(){
-  if(mode==='optirout'){await saveMtConfig();return;}
-  if(busy)return;
+  if(mode==='optirout'){if(MT_STATE.dirty)await saveMtConfig();return;}
+  if(busy||!xrayDirty)return;
   var editor=document.getElementById('routing_modal');
   function value(name){var input=editor.querySelector('[name="'+name+'"]');return input?input.value:'';}
   var checked=editor.querySelector('[name="routing_mode"]:checked');
   var routing={enabled:editor.querySelector('[name="routing_enabled"]').checked,direct_default:checked&&checked.value==='direct_default',groups_ui:window.__rt_get_data?window.__rt_get_data():{}};
   ['routing_block_rules','routing_direct_rules','routing_proxy_rules'].forEach(function(name){routing[name.replace('routing_','')]=value(name);});
+  if(window.xrayDuplicateEntries&&window.xrayDuplicateEntries().length){window.validateXrayGeoReferences();alert('В правилах есть дубли или совпадения между разделами. Уберите подсвеченные повторы перед сохранением.');return;}
+  ['block','direct','proxy'].forEach(function(cat){if(window.xrayGeoRulesFirst)routing[cat+'_rules']=window.xrayGeoRulesFirst(routing[cat+'_rules']);});
   busy=true;refresh();_mtSetStatus('Сохранение правил Xray...','');
   try{
    var response=await fetch('/api/routing_rules_mode',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({engine:'xray',routing:routing})});
    var result=await response.json();if(!response.ok)throw new Error(result.error||'Не удалось сохранить правила');
-   xrayDirty=false;
+   ['block','direct','proxy'].forEach(function(cat){editor.querySelector('[name="routing_'+cat+'_rules"]').value=routing[cat+'_rules'];});
+   if(window.syncXraySplitFields)window.syncXraySplitFields();
+   if(window.validateXrayGeoReferences)window.validateXrayGeoReferences();
+   xrayBaseline=xraySignature();xrayDirty=false;
   }catch(error){alert(error.message);}
   finally{busy=false;refresh();}
  };
@@ -6240,10 +6298,13 @@ document.addEventListener('DOMContentLoaded',function(){
  var originalOpen=window.openSettingsModal,originalClose=window.closeSettingsModal;
  var revision=0,baseline=[];
  function controls(){return Array.from(document.querySelectorAll('#settings_modal input,#settings_modal select,#settings_modal textarea')).filter(function(e){return e.type!=='file'&&e.name;});}
- function capture(){baseline=controls().map(function(e){return {element:e,value:e.value,checked:e.checked};});}
+ function changed(){return baseline.some(function(item){var e=item.element;return e.isConnected&&((e.type==='checkbox'||e.type==='radio')?e.checked!==item.checked:e.value!==item.value);});}
+ function updateSaveState(){var button=document.querySelector('#settings_modal button[name="action"][value="save_settings"]');if(!button)return;var dirty=changed();button.disabled=!dirty;button.setAttribute('aria-disabled',String(!dirty));button.classList.toggle('settings-has-changes',dirty);button.classList.toggle('settings-no-changes',!dirty);button.title=dirty?'Сохранить изменения':'Нет несохранённых изменений';}
+ function capture(){baseline=controls().map(function(e){return {element:e,value:e.value,checked:e.checked};});updateSaveState();}
  function syncSelect(e){if(e.tagName!=='SELECT'||!e.id)return;var button=Array.from(document.querySelectorAll('#settings_modal .optiray-select-trigger')).find(function(b){return b.dataset.selectId===e.id;});if(button){var label=button.querySelector('span');if(label)label.textContent=e.selectedOptions[0]?e.selectedOptions[0].textContent:'';}}
- function restore(){baseline.forEach(function(item){var e=item.element;e.value=item.value;e.checked=item.checked;e.setCustomValidity('');syncSelect(e);});}
+ function restore(){baseline.forEach(function(item){var e=item.element;e.value=item.value;e.checked=item.checked;e.setCustomValidity('');syncSelect(e);});updateSaveState();}
  document.addEventListener('DOMContentLoaded',capture);
+ ['input','change'].forEach(function(name){document.addEventListener(name,function(event){if(event.target.closest&&event.target.closest('#settings_modal'))updateSaveState();});});
  window.openSettingsModal=async function(){
   var current=++revision;restore();
   try{
@@ -6254,8 +6315,279 @@ document.addEventListener('DOMContentLoaded',function(){
    if(!saved.length)throw Error('Не удалось получить сохранённые настройки');
    controls().forEach(function(e){var source=saved.find(function(s){return s.name===e.name&&s.type===e.type&&(e.type!=='radio'||s.value===e.value);});if(!source)return;e.value=source.value;e.checked=source.checked;e.setCustomValidity('');syncSelect(e);});
    capture();originalOpen();
-   if(window.optiraySettingsTab!=='cores'){loadXrayVersions(true);checkHysteria();}
   }catch(e){if(current===revision)alert('Не удалось загрузить настройки: '+e.message);}
  };
- window.closeSettingsModal=function(){revision++;restore();originalClose();};
+ window.closeSettingsModal=function(){
+  var modal=document.getElementById('settings_modal');
+  if(modal&&modal.style.display==='flex'&&changed()&&!confirm('Есть несохранённые изменения. Закрыть настройки без сохранения?'))return false;
+  revision++;restore();
+  window.optiraySettingsInfoRevision=(window.optiraySettingsInfoRevision||0)+1;
+  document.querySelectorAll('#settings_modal .core-versions-notice,#geo_data_status').forEach(function(el){el.textContent='';el.hidden=true;});
+  originalClose();return true;
+ };
+})();
+
+function syncGeoSource(){
+ var standard=document.getElementById('geo_data_source').value==='standard';
+ document.querySelectorAll('.geo-file-url').forEach(function(input){input.disabled=standard||!!window.optirayGeoBusy;});
+}
+function geoFieldError(input,message){input.setCustomValidity(message);if(message)input.reportValidity();return !message;}
+function validateGeoURLs(name){
+ var inputs=Array.from(document.querySelectorAll('.geo-file-url'));
+ inputs.forEach(function(input){input.setCustomValidity('');});
+ var input=document.querySelector('[data-geo-name="'+name+'"] .geo-file-url'),url;
+ if(!input.value.trim())return geoFieldError(input,'Укажите прямую HTTPS-ссылку на '+name);
+ try{url=new URL(input.value.trim());}catch(error){return geoFieldError(input,'Некорректная ссылка');}
+ if(url.protocol!=='https:'||url.username||url.password||url.hash)return geoFieldError(input,'Нужна прямая HTTPS-ссылка на DAT-файл');
+ var filename=decodeURIComponent(url.pathname.split('/').pop()).toLowerCase();
+ if((filename==='geoip.dat'||filename==='geosite.dat')&&filename!==name)return geoFieldError(input,'Это ссылка на '+filename+'. Здесь нужен '+name);
+ var other=inputs.find(function(field){return field!==input;});
+ if(other&&other.value.trim()===input.value.trim())return geoFieldError(input,'Для GeoIP и GeoSite нужны разные ссылки');
+ return true;
+}
+function renderGeoData(data,restoreFields){
+ var source=document.getElementById('geo_data_source');
+ if(restoreFields){source.value=data.source||'standard';source.dispatchEvent(new Event('change'));}
+ (data.files||[]).forEach(function(file){
+  var card=document.querySelector('[data-geo-name="'+file.name+'"]');if(!card)return;
+  if(restoreFields){card.querySelector('.geo-file-url').value=file.url||'';card.querySelector('.geo-file-url').setCustomValidity('');}
+  var size=file.size>=1048576?(file.size/1048576).toFixed(2)+' МБ':Math.ceil(file.size/1024)+' КБ';
+  card.querySelector('.geo-data-file-info').textContent=file.exists?'Последнее обновление: '+new Date(file.updated_at).toLocaleString('ru-RU')+' · '+size:'Файл не установлен';
+  card.querySelector('.geo-data-path').textContent=file.path;
+ });syncGeoSource();
+}
+async function loadGeoData(){
+ var infoRevision=window.optiraySettingsInfoRevision||0;
+ if(window.optirayGeoBusy)return;
+ var revision=window.optirayGeoRevision=(window.optirayGeoRevision||0)+1;
+ document.getElementById('geo_data_status').textContent='';
+ try{var response=await fetch('/api/geo_data',{cache:'no-store'});var data=await response.json();if(!response.ok||!data.ok)throw Error(data.error||'Не удалось прочитать информацию о базах');if(revision===window.optirayGeoRevision)renderGeoData(data,true);}
+ catch(error){setSettingsInfo(document.getElementById('geo_data_status'),error.message,infoRevision);}
+}
+async function updateGeoData(button){
+ var infoRevision=window.optiraySettingsInfoRevision||0;
+ if(window.optirayGeoBusy)return;
+ var source=document.getElementById('geo_data_source'),ip=document.getElementById('geo_geoip_url'),site=document.getElementById('geo_geosite_url'),status=document.getElementById('geo_data_status');
+ if(source.value!=='standard'&&(!validateGeoURLs('geoip.dat')||!validateGeoURLs('geosite.dat')))return;
+ window.optirayGeoBusy=true;window.optirayGeoRevision=(window.optirayGeoRevision||0)+1;
+ button.disabled=source.disabled=true;document.querySelectorAll('.geo-file-url').forEach(function(field){field.disabled=true;});
+ var trigger=document.querySelector('[data-select-id="geo_data_source"]');if(trigger)trigger.disabled=true;
+ setSettingsInfo(status,'Скачивание и применение GeoIP и GeoSite…',infoRevision);
+ try{var response=await fetch('/api/geo_data',{method:'POST',body:new URLSearchParams({source:source.value,geoip_url:ip.value.trim(),geosite_url:site.value.trim()})});var data=await response.json();if(!response.ok||!data.ok)throw Error(data.error||'Не удалось обновить базы');renderGeoData(data,false);setSettingsInfo(status,'GeoIP и GeoSite обновлены',infoRevision);if(window.refreshXrayGeoCategories)window.refreshXrayGeoCategories();}
+ catch(error){setSettingsInfo(status,error.message,infoRevision);}
+ finally{window.optirayGeoBusy=false;button.disabled=source.disabled=false;if(trigger)trigger.disabled=false;syncGeoSource();}
+}
+document.addEventListener('DOMContentLoaded',function(){
+ if(window.optirayEnhanceSelect)window.optirayEnhanceSelect(document.getElementById('geo_data_source'));
+ document.querySelectorAll('.geo-file-url').forEach(function(input){input.addEventListener('input',function(){document.querySelectorAll('.geo-file-url').forEach(function(field){field.setCustomValidity('');});});});
+});
+
+async function refreshCoreVersions(kind,button){
+ if((kind==='xray'&&xrayVersionsLoading)||(kind==='hysteria'&&hysteriaVersionsLoading))return;
+ button.disabled=true;button.classList.add('is-loading');
+ try{if(kind==='xray')await loadXrayVersions(true);else await checkHysteria(true);}
+ finally{button.disabled=false;button.classList.remove('is-loading');}
+}
+
+function setSettingsInfo(element,message,revision){
+ if(!element)return;
+ var modal=document.getElementById('settings_modal');
+ if(!modal||modal.style.display!=='flex'||revision!==(window.optiraySettingsInfoRevision||0))return;
+ element.textContent=message;element.hidden=!message;
+}
+
+/* Xray geo categories and separate address/IP editors share the existing rule format. */
+(function(){
+ 'use strict';
+ var cats=['block','direct','proxy'],catalog=null,catalogRevision=0,picker=null,pickerState=null;
+ function canonical(cat){return document.querySelector('#routing_modal [name="routing_'+cat+'_rules"]');}
+ function isIPRule(value){
+  var s=value.trim();if(/^(?:geoip|ip|ext-ip):/i.test(s))return true;
+  var v4='(?:\\d{1,3}\\.){3}\\d{1,3}';
+  if(new RegExp('^'+v4+'(?:/\\d{1,2}|\\s*-\\s*'+v4+')?$').test(s))return true;
+  return s.indexOf(':')>=0&&/^[0-9a-f:.]+(?:\/\d{1,3})?$/i.test(s);
+ }
+ function splitRules(value){var result={addresses:[],ips:[]};String(value||'').split(/\r?\n/).forEach(function(line){(isIPRule(line)?result.ips:result.addresses).push(line);});return result;}
+ function splitBox(cat){return document.querySelector('.xr-split-fields[data-cat="'+cat+'"]');}
+ window.syncXraySplitFields=function(){
+  cats.forEach(function(cat){var original=canonical(cat),box=splitBox(cat);if(!original||!box||box.dataset.serialized===original.value)return;
+   var parts=splitRules(original.value);box.querySelector('[data-rule-side="addresses"]').value=parts.addresses.join('\n');box.querySelector('[data-rule-side="ips"]').value=parts.ips.join('\n');box.dataset.serialized=original.value;
+  });
+ };
+ function combine(cat){
+  var box=splitBox(cat),original=canonical(cat);if(!box||!original)return;
+  var left=box.querySelector('[data-rule-side="addresses"]').value,right=box.querySelector('[data-rule-side="ips"]').value;
+  original.value=[left,right].filter(function(v){return v.trim();}).join('\n');box.dataset.serialized=original.value;
+  original.dispatchEvent(new Event('input',{bubbles:true}));
+ }
+ function geoReference(value){var match=String(value||'').trim().match(/^(geosite|geoip):(!?)([^\s@]+)((?:@[^\s@]+)*)$/i);return match?{kind:match[1].toLowerCase(),code:match[3].toLowerCase(),attrs:match[4].split('@').filter(Boolean).map(function(v){return v.toLowerCase();})}:null;}
+ function missingReference(ref){
+  if(!catalog||!ref)return '';
+  var file=catalog[ref.kind];if(!file||!file.exists)return 'Не установлен '+ref.kind+'.dat';
+  if(file.error)return file.error;
+  var category=(file.categories||[]).find(function(item){return item.code===ref.code;});
+  if(!category)return 'В '+ref.kind+'.dat нет категории '+ref.code;
+  if(ref.attrs.some(function(attr){return (category.attributes||[]).indexOf(attr)<0;}))return 'В категории '+ref.code+' отсутствует выбранный атрибут';
+  return '';
+ }
+ window.validateXrayGeoReferences=function(){
+  document.querySelectorAll('#routing_modal .rt-rule-input').forEach(function(input){
+   var row=input.closest('.rt-rule'),ref=geoReference(input.value),badge=row.querySelector('.xr-geo-badge'),warning=missingReference(ref);
+   if(ref){if(!badge){badge=document.createElement('span');badge.className='xr-geo-badge';input.after(badge);}var text=ref.kind==='geoip'?'GeoIP':'GeoSite';if(badge.textContent!==text)badge.textContent=text;badge.title=warning||ref.kind+':'+ref.code;}
+   else if(badge)badge.remove();
+   row.classList.toggle('xr-geo-missing',!!warning);if(warning)input.title=warning;else if(input.dataset.geoWarning)input.removeAttribute('title');input.dataset.geoWarning=warning;
+  });
+  document.querySelectorAll('#routing_modal .rt-group-card').forEach(function(card){
+   var missing=card.querySelector('.xr-geo-missing'),heading=card.querySelector('.rt-group-head');card.classList.toggle('xr-geo-group-missing',!!missing);
+   if(heading){if(missing){heading.title='В группе есть отсутствующие категории геобазы';heading.dataset.geoWarning='true';}else if(heading.dataset.geoWarning){heading.removeAttribute('title');delete heading.dataset.geoWarning;}}
+  });
+  var duplicates=window.xrayDuplicateEntries?window.xrayDuplicateEntries():[];
+  document.querySelectorAll('.xr-split-fields textarea').forEach(function(input){
+   var warnings=[];input.value.split(/\r?\n/).forEach(function(line){var warning=missingReference(geoReference(line));if(warning&&warnings.indexOf(warning)<0)warnings.push(warning);});
+   var duplicateNames=duplicates.filter(function(entry){return entry.input===input;}).map(function(entry){return entry.value;});if(duplicateNames.length)warnings.unshift('Повторяющиеся правила: '+Array.from(new Set(duplicateNames)).slice(0,3).join(', '));
+   var message=input.parentNode.querySelector('.xr-geo-list-warning');message.textContent=warnings.slice(0,3).join('; ')+(warnings.length>3?'…':'');message.hidden=!warnings.length;input.classList.toggle('xr-geo-missing',!!warnings.length);
+  });
+  document.querySelectorAll('#routing_modal .rt-rule-input').forEach(function(input){var repeated=duplicates.some(function(entry){return entry.input===input;});input.classList.toggle('xr-rule-duplicate',repeated);if(repeated)input.title='Повторяющееся правило';else if(input.dataset.duplicateWarning&&!input.dataset.geoWarning)input.removeAttribute('title');input.dataset.duplicateWarning=repeated?'true':'';});
+ };
+ window.refreshXrayGeoCategories=async function(){
+  var revision=++catalogRevision;
+  try{var response=await fetch('/api/geo_categories',{cache:'no-store'}),data=await response.json();if(!response.ok||!data.ok)throw Error('Не удалось прочитать геобазы');if(revision!==catalogRevision)return;catalog=data;window.validateXrayGeoReferences();return true;}
+  catch(error){if(pickerState){picker.querySelector('.geo-picker-message').textContent=error.message;}return false;}
+ };
+ function existingRules(cat){
+  var values=new Set(),data=window.__rt_get_data?window.__rt_get_data():{};
+  cats.forEach(function(category){
+   (canonical(category).value||'').split(/\r?\n/).forEach(function(v){var key=xrayRuleKey(v);if(key)values.add(key);});
+   (data[category]||[]).forEach(function(group){(group.rules||[]).forEach(function(rule){var key=xrayRuleKey(typeof rule==='string'?rule:rule.value);if(key)values.add(key);});});
+  });return values;
+ }
+ function closePicker(){if(!pickerState)return;var target=pickerState.returnFocus;pickerState=null;picker.hidden=true;if(target&&target.isConnected)target.focus();}
+ function drawPicker(){
+  if(!pickerState)return;
+  var state=pickerState,kind=state.kind,file=catalog&&catalog[kind],list=picker.querySelector('.geo-picker-list'),message=picker.querySelector('.geo-picker-message'),query=picker.querySelector('input[type="search"]').value.trim().toLowerCase();list.replaceChildren();message.textContent='';
+  picker.querySelectorAll('[data-geo-kind]').forEach(function(button){button.setAttribute('aria-pressed',String(button.dataset.geoKind===kind));});
+  if(!file||!file.exists)message.textContent='Файл '+kind+'.dat не установлен. Добавьте его в Настройки → Ядра.';
+  else if(file.error)message.textContent=file.error;
+  else {
+   var entries=[];(file.categories||[]).forEach(function(item){entries.push({code:item.code,count:item.count});(item.attributes||[]).forEach(function(attr){entries.push({code:item.code+'@'+attr,count:null});});});
+   var visible=entries.filter(function(item){return item.code.indexOf(query)>=0;});
+   if(!visible.length)message.textContent='Категории не найдены';
+   var fragment=document.createDocumentFragment();visible.forEach(function(item){
+    var rule=kind+':'+item.code,label=document.createElement('label'),check=document.createElement('input'),text=document.createElement('span'),detail=document.createElement('small');label.className='geo-picker-item';check.type='checkbox';check.checked=state.selected.has(rule)||state.existing.has(xrayRuleKey(rule));check.disabled=state.existing.has(xrayRuleKey(rule));text.textContent=item.code;detail.textContent=check.disabled?'Уже добавлено':item.count===null?'Атрибут':item.count+' записей';
+    check.addEventListener('change',function(){if(check.checked)state.selected.add(rule);else state.selected.delete(rule);updatePickerButton();});var mark=document.createElement('span');mark.className='geo-picker-check';mark.setAttribute('aria-hidden','true');mark.innerHTML='<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 8 3 3 7-7"/></svg>';label.append(check,mark,text,detail);fragment.append(label);
+   });list.append(fragment);
+  }
+  updatePickerButton();
+ }
+ function updatePickerButton(){var button=picker.querySelector('.geo-picker-add');button.disabled=!pickerState||!pickerState.selected.size;button.textContent=pickerState&&pickerState.selected.size?'Добавить ('+pickerState.selected.size+')':'Добавить выбранные';}
+ function ensurePicker(){
+  if(picker)return;
+  picker=document.createElement('div');picker.className='geo-picker-modal';picker.hidden=true;picker.setAttribute('role','dialog');picker.setAttribute('aria-modal','true');picker.setAttribute('aria-labelledby','geo_picker_title');
+  picker.innerHTML='<div class="geo-picker-card"><div class="geo-picker-header modal-header"><span class="modal-title" id="geo_picker_title">Из геобазы</span><button type="button" class="geo-picker-close modal-close" aria-label="Закрыть"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div><div class="geo-picker-content"><div class="geo-picker-tabs" role="group" aria-label="Тип базы"><button type="button" data-geo-kind="geosite">GeoSite</button><button type="button" data-geo-kind="geoip">GeoIP</button></div><input type="search" placeholder="Поиск категории" aria-label="Поиск категории"><div class="geo-picker-message" role="status"></div><div class="geo-picker-list"></div></div><div class="geo-picker-footer"><button type="button" class="geo-picker-settings">Настройки баз</button><button type="button" class="geo-picker-cancel">Отмена</button><button type="button" class="geo-picker-add core-btn-install">Добавить выбранные</button></div></div>';
+  document.body.append(picker);
+  picker.querySelector('.geo-picker-close').onclick=closePicker;picker.querySelector('.geo-picker-cancel').onclick=closePicker;picker.addEventListener('click',function(event){if(event.target===picker)closePicker();});
+  picker.querySelectorAll('[data-geo-kind]').forEach(function(button){button.onclick=function(){pickerState.kind=button.dataset.geoKind;drawPicker();};});picker.querySelector('input[type="search"]').oninput=drawPicker;
+  picker.querySelector('.geo-picker-add').onclick=function(){
+   if(!pickerState)return;var cat=pickerState.cat,existing=existingRules(cat),selected=Array.from(pickerState.selected).filter(function(rule){return !existing.has(xrayRuleKey(rule));});
+   if(selected.length){var original=canonical(cat);original.value=selected.join('\n')+(original.value?'\n'+original.value:'');var box=splitBox(cat);if(box)delete box.dataset.serialized;window.syncXraySplitFields();original.dispatchEvent(new Event('input',{bubbles:true}));}
+   closePicker();window.validateXrayGeoReferences();
+  };
+  picker.querySelector('.geo-picker-settings').onclick=async function(){
+   closePicker();var routing=document.getElementById('mt_modal');routing.style.display='none';window.optirayGeoReturnRouting=true;
+   await window.openSettingsModal();var settings=document.getElementById('settings_modal');
+   if(settings.style.display==='flex')window.selectSettingsTab('cores');else{routing.style.display='flex';window.optirayGeoReturnRouting=false;}
+  };
+  window.addEventListener('keydown',function(event){
+   if(!pickerState)return;
+   if(event.key==='Escape'){event.preventDefault();event.stopImmediatePropagation();closePicker();}
+   if(event.key==='Tab'){var fields=Array.from(picker.querySelectorAll('button,input')).filter(function(el){return !el.disabled&&el.getClientRects().length;});var first=fields[0],last=fields[fields.length-1];if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus();}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}event.stopImmediatePropagation();}
+  },true);
+ }
+ async function openPicker(cat,button){
+  ensurePicker();pickerState={cat:cat,kind:'geosite',selected:new Set(),existing:existingRules(cat),returnFocus:button};picker.hidden=false;picker.querySelector('#geo_picker_title').textContent='Из геобазы — '+({block:'Блокировать',direct:'Напрямую',proxy:'Через прокси'}[cat]);picker.querySelector('input[type="search"]').value='';picker.querySelector('input[type="search"]').focus();picker.querySelector('.geo-picker-message').textContent='Чтение категорий…';
+  var state=pickerState;picker.querySelector('.geo-picker-list').replaceChildren();var loaded=await window.refreshXrayGeoCategories();if(pickerState===state&&loaded)drawPicker();
+ }
+ document.addEventListener('DOMContentLoaded',function(){
+  cats.forEach(function(cat){var original=canonical(cat);if(!original)return;original.classList.add('xr-combined-rules');
+   var box=document.createElement('div');box.className='xr-split-fields';box.dataset.cat=cat;
+   ['addresses','ips'].forEach(function(side){var field=document.createElement('div'),label=document.createElement('label'),input=document.createElement('textarea'),warning=document.createElement('div');field.className='xr-split-field';label.textContent=side==='ips'?'IP':'Адреса';input.id='xr_'+cat+'_'+side;label.htmlFor=input.id;input.dataset.ruleSide=side;input.className='setting-input';input.rows=4;input.spellcheck=false;input.placeholder=side==='ips'?'IP, подсети, geoip:…':'Домены, geosite:…';warning.className='xr-geo-list-warning';warning.hidden=true;input.addEventListener('input',function(){combine(cat);window.validateXrayGeoReferences();});field.append(label,input,warning);box.append(field);});original.after(box);
+   var row=document.getElementById('rt_groups_'+cat).parentNode.querySelector('.rt-add-group-row'),button=document.createElement('button');button.type='button';button.className='xr-add-geo';button.textContent='Из геобазы';button.addEventListener('click',function(){openPicker(cat,button);});var tools=document.createElement('div');tools.className='xr-rule-tools';row.before(tools);tools.append(row,button);
+  });
+  window.syncXraySplitFields();
+  var editor=document.getElementById('routing_modal');['input','change'].forEach(function(name){editor.addEventListener(name,function(){window.validateXrayGeoReferences();});});
+  var close=window.closeSettingsModal;window.closeSettingsModal=function(){var result=close.apply(this,arguments);if(result===false)return false;if(window.optirayGeoReturnRouting){window.optirayGeoReturnRouting=false;document.getElementById('mt_modal').style.display='flex';if(window.optiraySettingsReturnFocus)window.optiraySettingsReturnFocus.focus();}};
+ });
+})();
+
+function xrayRuleKey(value){
+ var text=String(value||'').trim();if(!text||text[0]==='#')return '';
+ var lower=text.toLowerCase();if(lower.indexOf('regexp:')===0)return 'regexp:'+text.slice(7);
+ if(lower.indexOf('ip:')===0)lower=lower.slice(3).trim();
+ if(/^[0-9a-f:.]+$/i.test(lower)&&lower.indexOf(':')>=0){try{return 'ip:'+new URL('http://['+lower+']/').hostname.slice(1,-1);}catch(error){}}
+ if(/^(?:\d{1,3}\.){3}\d{1,3}$/.test(lower))return 'ip:'+lower;
+ if(lower.indexOf('domain:')===0)lower=lower.slice(7).trim();
+ if(lower.indexOf(':')<0)lower=lower.replace(/^\*\./,'').replace(/\.+$/,'');return lower;
+}
+window.xrayGeoRulesFirst=function(value){var geo=[],other=[];String(value||'').split(/\r?\n/).forEach(function(line){(/^(?:geosite|geoip):/i.test(line.trim())?geo:other).push(line);});return geo.concat(other).join('\n');};
+window.xrayDuplicateEntries=function(){
+ var entries=[],map=new Map();
+ function add(value,cat,input){var key=xrayRuleKey(value);if(!key)return;var entry={value:value.trim(),cat:cat,input:input};if(!map.has(key))map.set(key,[]);map.get(key).push(entry);}
+ ['block','direct','proxy'].forEach(function(cat){
+  document.querySelectorAll('.xr-split-fields[data-cat="'+cat+'"] textarea').forEach(function(input){input.value.split(/\r?\n/).forEach(function(line){add(line,cat,input);});});
+  document.querySelectorAll('#rt_groups_'+cat+' .rt-rule-input').forEach(function(input){var row=input.closest('.rt-rule'),group=input.closest('.rt-group-card');if(row.classList.contains('rt-rule-off')||group.classList.contains('rt-group-off'))return;add(input.value,cat,input);});
+ });
+ map.forEach(function(values){if(values.length>1)entries.push.apply(entries,values);});return entries;
+};
+
+// Compare persisted routing values; UI expansion, generated IDs and empty rows do not count.
+function routingConfigSignature(kind,value){
+ var data=JSON.parse(JSON.stringify(value||{}));
+ function cleanGroup(group){
+  delete group.id;delete group.collapsed;delete group._collapsed;
+  if(kind==='optirout')group.enable=group.enable!==false;else group.enabled=group.enabled!==false;
+  group.rules=(group.rules||[]).map(function(rule){
+   if(typeof rule==='string')return {value:rule.trim(),enabled:true};
+   delete rule.id;delete rule.collapsed;
+   if(kind==='optirout'){rule.rule=String(rule.rule||'').trim();rule.enable=rule.enable!==false;}
+   else{rule.value=String(rule.value||'').trim();rule.enabled=rule.enabled!==false;}
+   return rule;
+  }).filter(function(rule){return !!(kind==='optirout'?rule.rule:rule.value);});return group;
+ }
+ // Engine power is applied immediately, outside the Save transaction.
+ delete data.enabled;
+ if(kind==='optirout')data.groups=(data.groups||[]).map(cleanGroup);
+ else{
+  ['block','direct','proxy'].forEach(function(cat){
+   if(data.groups_ui&&data.groups_ui[cat])data.groups_ui[cat]=data.groups_ui[cat].map(cleanGroup);
+   data[cat+'_rules']=String(data[cat+'_rules']||'').split(/\r?\n/).map(function(line){return line.trim();}).filter(Boolean).join('\n');
+  });
+ }
+ function stable(item){if(Array.isArray(item))return item.map(stable);if(item&&typeof item==='object'){var result={};Object.keys(item).sort().forEach(function(key){result[key]=stable(item[key]);});return result;}return item;}
+ return JSON.stringify(stable(data));
+}
+
+(function(){
+ var loading=false,timer=null;
+ function badge(parent,visible,title,corner){
+  if(!parent)return;var item=parent.querySelector(':scope > .core-update-badge');
+  if(!item){item=document.createElement('span');item.className='core-update-badge'+(corner?' core-update-corner':'');item.setAttribute('role','img');item.innerHTML='<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 12V4m-4 4 4-4 4 4"/></svg>';parent.append(item);}
+  item.hidden=!visible;item.title=title;item.setAttribute('aria-label',title);
+ }
+ function render(data){
+  var any=false,titles=[];
+  ['xray','hysteria'].forEach(function(kind){var core=data[kind]||{},visible=!!core.update_available;
+   var title='Доступна новая версия '+(kind==='xray'?'Xray':'Hysteria')+': v'+(core.latest||'');
+   var heading=document.querySelector('.settings-core-heading[data-core-kind="'+kind+'"]');
+   if(heading){var oldBadge=heading.querySelector(':scope > .core-update-badge');if(oldBadge)oldBadge.remove();var notice=heading.querySelector('.core-update-label');if(!notice){notice=document.createElement('span');notice.className='core-update-label';notice.textContent='Доступно обновление';heading.append(notice);}notice.hidden=!visible;notice.title=title;}
+   if(visible){any=true;titles.push(title);}
+  });
+  var title=titles.join('; ');badge(document.getElementById('settings_open_button'),any,title,true);badge(document.querySelector('#settings_modal [data-settings-tab="cores"]'),any,title,false);
+ }
+ window.refreshCoreUpdateBadges=async function(){
+  if(loading||document.hidden)return;loading=true;clearTimeout(timer);
+  try{var response=await fetch('/api/core_update_status',{cache:'no-store'});if(response.ok){var data=await response.json();if(data.ok)render(data);}}
+  catch(error){}finally{loading=false;if(!document.hidden)timer=setTimeout(window.refreshCoreUpdateBadges,60000);}
+ };
+ document.addEventListener('DOMContentLoaded',window.refreshCoreUpdateBadges);
+ document.addEventListener('visibilitychange',function(){clearTimeout(timer);if(!document.hidden)window.refreshCoreUpdateBadges();});
 })();
