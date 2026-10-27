@@ -77,9 +77,9 @@ opkg remove optiray
 
 ```sh
 opkg update && opkg install curl ca-bundle &&
-curl -fL https://github.com/HOLLL-DZ/OptiRay/releases/download/v1.0.4/install.sh \
+curl -fL https://github.com/HOLLL-DZ/OptiRay/releases/download/v1.0.15/install.sh \
   -o /tmp/install-optiray-go.sh &&
-sh /tmp/install-optiray-go.sh https://github.com/HOLLL-DZ/OptiRay/releases/download/v1.0.4
+sh /tmp/install-optiray-go.sh https://github.com/HOLLL-DZ/OptiRay/releases/download/v1.0.15
 ```
 
 Установщик выбирает пакет, проверяет SHA256, устанавливает зависимости и запускает службу. В конце выводится адрес интерфейса, например `http://192.168.1.1:3883` или `http://192.168.10.1:3883` — в зависимости от адреса роутера.
