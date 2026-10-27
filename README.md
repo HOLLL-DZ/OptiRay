@@ -47,6 +47,12 @@ opkg update && opkg install optiray
 ```sh
 opkg update && opkg upgrade optiray
 ```
+## Установка на устройствах с малым накопителем (Entware на внутренней памяти) в RAM:
+```sh
+opkg update && \
+OPTIRAY_BACKUP_DIR=/tmp/optiray-opkg-state \
+opkg -t /tmp --force-space upgrade optiray
+```
 
 ## Удаление:
 ```sh
@@ -64,12 +70,10 @@ opkg remove optiray
 Текущая Go-установка через скрипт может перейти на пакетную установку без сброса настроек.
 После перехода используйте opkg для обновления и удаления, чтобы учёт файлов оставался корректным.
 
-Пакетные временные файлы opkg на устройствах с малым накопителем можно перенести в RAM:
-`opkg -t /tmp install optiray` или `opkg -t /tmp upgrade optiray`.
 
 ## Установка скриптом
 
-Пакеты: [релиз 1.0.4](https://github.com/HOLLL-DZ/OptiRay/releases/tag/v1.0.4).
+Пакеты: [релиз 1.0.15](https://github.com/HOLLL-DZ/OptiRay/releases/tag/v1.0.15).
 
 ```sh
 opkg update && opkg install curl ca-bundle &&
