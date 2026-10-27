@@ -9,6 +9,27 @@ import (
 
 func (a *App) routingAPI(w http.ResponseWriter, r *http.Request) bool {
 	path := r.URL.Path
+	if path == "/api/routing_power" {
+		payload := Object{}
+		if r.Method != "POST" {
+			jsonReply(w, 405, Object{"ok": false, "error": "POST required"})
+			return true
+		}
+		err := json.NewDecoder(r.Body).Decode(&payload)
+		enabled, valid := payload["enabled"].(bool)
+		if err == nil && !valid {
+			err = fmt.Errorf("enabled must be boolean")
+		}
+		if err == nil {
+			err = a.setRoutingPower(r.Context(), str(payload["engine"]), enabled)
+		}
+		if err != nil {
+			jsonReply(w, 400, Object{"ok": false, "error": err.Error()})
+		} else {
+			jsonReply(w, 200, Object{"ok": true, "enabled": enabled})
+		}
+		return true
+	}
 	handled := path == "/api/optirout_license" || path == "/api/optirout_interfaces" || path == "/api/routing_rules_mode" || path == "/api/xray_backup_settings" || path == "/api/optirout_backup_settings" || path == "/api/xray_reset" || path == "/api/optirout_reset" || path == "/api/optirout_restore_backup" || path == "/api/reset_defaults"
 	if !handled {
 		return false

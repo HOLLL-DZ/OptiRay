@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"runtime"
 	"strings"
 	"time"
 
@@ -228,5 +229,13 @@ func (a *App) SaveConfig() error {
 	if err := os.Rename(temporary, cfgFileLocation); err != nil {
 		return fmt.Errorf("failed to replace config file: %w", err)
 	}
-	return nil
+	if runtime.GOOS == "windows" {
+		return nil
+	}
+	directory, err := os.Open(cfgFolderLocation)
+	if err != nil {
+		return err
+	}
+	defer directory.Close()
+	return directory.Sync()
 }

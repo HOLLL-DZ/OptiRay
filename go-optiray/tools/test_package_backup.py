@@ -52,7 +52,7 @@ class PackageBackupTests(unittest.TestCase):
         text = text.replace('/opt/', self.unix + '/opt/').replace(' /tmp/optiray-opkg-state', ' ' + self.unix + '/tmp/optiray-opkg-state')
         text = text.replace('@VERSION@', '1.0.12')
         # Git's minimal Windows shell has no du/df; emulate ample disk space.
-        text = text.replace('set -eu', 'set -eu\ndu() { echo "4 fixture"; }\ndf() { printf "Filesystem blocks used available capacity mount\\nfixture 1000000 0 ' + str(free) + ' 0 fixture\\n"; }', 1)
+        text = text.replace('set -eu', 'set -eu\ntimeout() { shift; "$@"; }\nsync() { :; }\ncurl() { return 7; }\ndu() { echo "4 fixture"; }\ndf() { printf "Filesystem blocks used available capacity mount\\nfixture 1000000 0 ' + str(free) + ' 0 fixture\\n"; }', 1)
         path = self.base / 'script.sh'
         path.write_text(text, newline='\n')
         env = dict(os.environ)
@@ -102,6 +102,15 @@ class PackageBackupTests(unittest.TestCase):
         result = self.run_script(feed.PREINST, '/opt/etc/optiray-go/backup')
         self.assertNotEqual(result.returncode, 0)
         self.assertIn('Unsafe backup path', result.stderr)
+
+    def test_preflight_failure_does_not_stop_service_or_create_backup(self):
+        self.put('bin/optiray', '#!/bin/sh\ncase "$*" in *--help*) echo --check-installation;; *--check-installation*) echo "corrupt routing/optirout.json" >&2; exit 1;; esac\n')
+        self.service.write_text('#!/bin/sh\n# OptiRay Go owned service\ntouch "' + self.unix + '/stopped"\n', newline='\n')
+        result = self.run_script(feed.PREINST)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('routing/optirout.json', result.stderr)
+        self.assertFalse((self.base / 'stopped').exists())
+        self.assertFalse((self.base / 'opt/tmp/optiray-opkg-state').exists())
 
 
 if __name__ == '__main__':

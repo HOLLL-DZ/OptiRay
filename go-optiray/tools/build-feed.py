@@ -36,6 +36,26 @@ fi
 if [ -e "$SERVICE" ]; then grep -q 'OptiRay Go owned service' "$SERVICE" || exit 1; fi
 HOOK=/opt/etc/ndm/netfilter.d/100-optiray-go-routing
 if [ -e "$HOOK" ]; then grep -q 'OptiRay Go owned netfilter hook' "$HOOK" || exit 1; fi
+# Validate before stopping the service or creating a recovery snapshot.
+if [ -x "$ROOT/bin/optiray" ]; then
+ timeout 10 "$ROOT/bin/optiray" --version >/dev/null 2>&1 || { echo "Manager failed startup check: $ROOT/bin/optiray. Existing files were preserved." >&2; exit 1; }
+ if "$ROOT/bin/optiray" --help 2>&1 | grep -q -- '-check-installation'; then
+  "$ROOT/bin/optiray" --data-dir "$ROOT" --check-installation
+ else
+  # Compatibility with managers predating the read-only validator.
+  for CORE in xray hysteria hysteria1; do
+   if [ -f "$ROOT/bin/$CORE" ]; then
+    timeout 10 "$ROOT/bin/$CORE" version >/dev/null 2>&1 || { echo "Core failed startup check: $ROOT/bin/$CORE. Reinstall this core before upgrading." >&2; exit 1; }
+   fi
+  done
+  if HEALTH=$(curl -fsS --max-time 5 http://127.0.0.1:3883/api/health 2>/dev/null); then
+   if printf '%s' "$HEALTH" | grep -Eq '"(core_ready|routing_ready)"[[:space:]]*:[[:space:]]*false'; then
+    echo "Existing installation is not ready. Check bin/xray and routing/optirout.json before upgrading; service was not stopped." >&2
+    exit 1
+   fi
+  fi
+ fi
+fi
 LIST=$(mktemp "$PARENT/optiray-backup-list.XXXXXX")
 trap 'rm -f "$LIST"' EXIT
 if [ -d "$ROOT" ]; then
@@ -69,6 +89,7 @@ fi
 if [ -e "$HOOK" ]; then
  cp -p "$HOOK" "$STATE/hook"
 fi
+sync
 rm -f "$LIST"
 trap - EXIT
 '''
@@ -102,6 +123,7 @@ recover() {
   cp -pR "$STATE/root/." "$ROOT/"
   [ ! -f "$STATE/service" ] || cp -p "$STATE/service" "$SERVICE"
   [ ! -f "$STATE/hook" ] || cp -p "$STATE/hook" /opt/etc/ndm/netfilter.d/100-optiray-go-routing
+  sync
   if [ -f "$STATE/running" ]; then "$SERVICE" start || true; fi
  fi
  echo "Package configuration failed. Recovery backup: $STATE. Keep this backup and reinstall the package after fixing the cause." >&2
@@ -109,7 +131,9 @@ recover() {
 trap recover EXIT
 printf '%s\n' 'OptiRay Go opkg installation' > "$ROOT/.optiray-go-install"
 LAN=$("$ROOT/bin/optiray" --router-address)
+"$ROOT/bin/optiray" --data-dir "$ROOT" --check-installation
 "$ROOT/bin/optiray" --data-dir "$ROOT" --initialize-install
+sync
 "$SERVICE" start
 "$ROOT/bin/optiray" --data-dir "$ROOT" --check-service
 trap - EXIT

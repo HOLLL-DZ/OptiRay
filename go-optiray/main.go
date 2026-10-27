@@ -18,7 +18,7 @@ import (
 //go:embed assets/*
 var assets embed.FS
 
-const version = "1.0.14"
+const version = "1.0.15"
 
 func main() {
 	dir := flag.String("data-dir", "/opt/etc/optiray-go", "settings directory")
@@ -41,6 +41,7 @@ func main() {
 	routerAddress := flag.Bool("router-address", false, "print detected LAN bridge IPv4")
 	initialize := flag.Bool("initialize-install", false, "persist defaults with the detected LAN address on a fresh installation")
 	checkService := flag.Bool("check-service", false, "check the owned installed HTTP service and routing/core readiness")
+	checkInstallation := flag.Bool("check-installation", false, "read-only validation of saved configuration and installed cores")
 	serviceAddress := flag.String("service-address", "127.0.0.1:3883", "local health check address")
 	stopLegacy := flag.Bool("stop-legacy", false, "stop only verified legacy OptiRay processes")
 	legacyStatus := flag.Bool("legacy-status", false, "check for verified legacy OptiRay processes")
@@ -56,6 +57,12 @@ func main() {
 		log.Fatal(e)
 	}
 	*dir = absoluteData
+	if *checkInstallation {
+		if e := checkInstallationFiles(context.Background(), *dir); e != nil {
+			log.Fatal(e)
+		}
+		return
+	}
 	if *hook {
 		if e := netfilterHook(context.Background(), *dir, *hookType, *hookTable); e != nil {
 			log.Fatal(e)

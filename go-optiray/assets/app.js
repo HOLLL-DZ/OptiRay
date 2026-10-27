@@ -5405,6 +5405,7 @@ document.addEventListener('change',function(event){
   var save=document.getElementById('mt_save_btn');
   if(save&&mode==='xray'){save.disabled=busy||!xrayDirty;save.setAttribute('aria-disabled',String(save.disabled));save.classList.toggle('mt-save-idle',!xrayDirty);save.classList.remove('mt-blocked','mt-has-dups');save.style.opacity='';}
   if(save&&mode==='optirout'){_mtSetSaveDirty(MT_STATE.dirty);if(window.__mtRefreshSaveBtn)window.__mtRefreshSaveBtn();}
+  if(save&&busy){save.disabled=true;save.setAttribute('aria-disabled','true');}
   if(mode==='xray'){var notice=document.getElementById('mt_dirty_notice');if(notice)notice.textContent=xrayDirty?'Есть несохранённые изменения':'';_mtSetStatus(xrayDirty?'Есть несохранённые изменения':'Правила Xray','ok');}
   else if(MT_STATE.config)_mtSetStatus('Конфиг загружен. '+ruCount((MT_STATE.config.groups||[]).length,'группа','группы','групп'),'ok');
  }
@@ -5431,6 +5432,18 @@ document.addEventListener('change',function(event){
   if(window.filterXrayGroups)window.filterXrayGroups();
   if(window._optirayRoutingKick)window._optirayRoutingKick();
  }
+ window.setRoutingPower=async function(toggle,engine){
+  var wanted=toggle.checked,previous=!wanted;
+  if(busy){toggle.checked=previous;syncPowerButtons();return;}
+  busy=true;toggle.disabled=true;refresh();syncPowerButtons();
+  try{
+   var response=await fetch('/api/routing_power',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({engine:engine,enabled:wanted})});
+   var result=await response.json();if(!response.ok||!result.ok)throw new Error(result.error||'Не удалось переключить маршрутизацию');
+   toggle.checked=result.enabled;
+   if(engine==='optirout'&&MT_STATE.config)MT_STATE.config.enabled=result.enabled;
+  }catch(error){toggle.checked=previous;alert(error.message);}
+  finally{busy=false;toggle.disabled=false;if(engine==='optirout')mtUpdatePowerUi();refresh();syncPowerButtons();}
+ };
  window.setXrayBackupEnabled=async function(toggle){
   if(busy)return;
   var previous=!toggle.checked,error;busy=true;refresh();
@@ -5501,6 +5514,7 @@ document.addEventListener('change',function(event){
   finally{busy=false;refresh();}
  };
  window.saveUnifiedRouting=async function(){
+  if(busy)return;
   if(mode==='optirout'){if(MT_STATE.dirty)await saveMtConfig();return;}
   if(busy||!xrayDirty)return;
   var editor=document.getElementById('routing_modal');
@@ -5619,6 +5633,7 @@ document.addEventListener('change',function(event){
   };
   ['input','change'].forEach(function(name){editor.addEventListener(name,function(event){
    if(event.optirayValidationOnly||event.target.id==='xr_backup_enabled')return;
+   if(event.target.name==='routing_enabled'){if(name==='change')window.setRoutingPower(event.target,'xray');return;}
    window.filterXrayGroups();
    if(event.target.closest('.xr-toolbar')&&event.target.name!=='routing_enabled')return;
    xrayDirty=true;refresh();
@@ -5763,7 +5778,7 @@ function mtUpdatePowerUi(){
  if(toggle)toggle.checked=enabled;if(label)label.textContent=enabled?'OptiRout вкл.':'OptiRout выкл.';
  if(groups)groups.classList.toggle('optirout-disabled',!enabled);syncPowerButtons();
 }
-function mtPowerChanged(toggle){if(!MT_STATE.config)return;MT_STATE.config.enabled=toggle.checked;MT_STATE.dirty=true;mtUpdatePowerUi();}
+function mtPowerChanged(toggle){if(!MT_STATE.config)return;window.setRoutingPower(toggle,'optirout');}
 
 function syncPowerButtons(){
  document.querySelectorAll('[data-power-target]').forEach(function(button){
@@ -6068,7 +6083,7 @@ document.addEventListener('submit',async function(event){
 // A single busy policy covers configuration writes and existing operation dialogs.
 (function(){
  var originalFetch=window.fetch.bind(window), pending=0, finishBusy=null;
- var mutations=new Set(['/manage','/select','/api/auto_select','/api/restore','/api/reset_defaults','/api/xray_action','/api/hysteria_action','/api/optirout_import','/api/optirout_config','/api/optirout_reset','/api/optirout_restore_backup','/api/routing_import','/api/xray_reset','/api/routing_rules_mode','/api/optiray_enabled','/api/reorder_subs','/api/save_sub_color','/api/optirout_backup_settings','/api/xray_backup_settings']);
+ var mutations=new Set(['/manage','/select','/api/auto_select','/api/restore','/api/reset_defaults','/api/xray_action','/api/hysteria_action','/api/optirout_import','/api/optirout_config','/api/optirout_reset','/api/optirout_restore_backup','/api/routing_import','/api/xray_reset','/api/routing_rules_mode','/api/routing_power','/api/optiray_enabled','/api/reorder_subs','/api/save_sub_color','/api/optirout_backup_settings','/api/xray_backup_settings']);
  function operationVisible(){return document.querySelector('.config-deletion-overlay,#wait_modal.active,#update_overlay.active');}
  window.fetch=async function(input,options){
   var path;try{path=new URL(typeof input==='string'?input:input.url,location.href).pathname;}catch(_){return originalFetch(input,options);}

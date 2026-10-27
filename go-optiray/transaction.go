@@ -70,7 +70,10 @@ func recoverSettings(dir string) error {
 			}
 		}
 	}
-	return os.Remove(path)
+	if e := os.Remove(path); e != nil {
+		return e
+	}
+	return syncDirectory(dir)
 }
 func writeSettingsTransaction(dir string, files map[string][]byte) error {
 	if e := recoverSettings(dir); e != nil {
@@ -111,7 +114,7 @@ func writeSettingsTransaction(dir string, files map[string][]byte) error {
 		}
 		return e
 	}
-	return nil
+	return syncDirectory(dir)
 }
 
 func syncDirectory(path string) error {

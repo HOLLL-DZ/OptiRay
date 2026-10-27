@@ -9,6 +9,10 @@ import (
 func (a *App) saveRouting(ctx context.Context, cfg Object, restart bool) error {
 	a.connectMu.Lock()
 	defer a.connectMu.Unlock()
+	return a.saveRoutingLocked(ctx, cfg, restart)
+}
+
+func (a *App) saveRoutingLocked(ctx context.Context, cfg Object, restart bool) error {
 	apply := restart && str(a.store.snapshot()["routing_engine"]) != "xray"
 	if apply && a.routing == nil {
 		return fmt.Errorf("OptiRout process management is disabled")
