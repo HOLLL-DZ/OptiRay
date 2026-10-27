@@ -52,7 +52,7 @@ class PackageBackupTests(unittest.TestCase):
         text = text.replace('/opt/', self.unix + '/opt/').replace(' /tmp/optiray-opkg-state', ' ' + self.unix + '/tmp/optiray-opkg-state')
         text = text.replace('@VERSION@', '1.0.12')
         # Git's minimal Windows shell has no du/df; emulate ample disk space.
-        text = text.replace('set -eu', 'set -eu\ntimeout() { shift; "$@"; }\nsync() { :; }\ncurl() { return 7; }\ndu() { echo "4 fixture"; }\ndf() { printf "Filesystem blocks used available capacity mount\\nfixture 1000000 0 ' + str(free) + ' 0 fixture\\n"; }', 1)
+        text = text.replace('set -eu', 'set -eu\nsync() { :; }\ncurl() { return 7; }\ndu() { echo "4 fixture"; }\ndf() { printf "Filesystem blocks used available capacity mount\\nfixture 1000000 0 ' + str(free) + ' 0 fixture\\n"; }', 1)
         path = self.base / 'script.sh'
         path.write_text(text, newline='\n')
         env = dict(os.environ)
@@ -110,6 +110,21 @@ class PackageBackupTests(unittest.TestCase):
         self.assertNotEqual(result.returncode, 0)
         self.assertIn('routing/optirout.json', result.stderr)
         self.assertFalse((self.base / 'stopped').exists())
+        self.assertFalse((self.base / 'opt/tmp/optiray-opkg-state').exists())
+
+    def test_legacy_preflight_does_not_require_timeout(self):
+        self.put('bin/xray', '#!/bin/sh\necho Xray\n')
+        (self.root / 'bin/xray').chmod(0o755)
+        script = feed.PREINST.replace('set -eu', 'set -eu\ntimeout() { return 127; }', 1)
+        result = self.run_script(script)
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_legacy_failed_core_preserves_files(self):
+        self.put('bin/xray', '#!/bin/sh\nexit 1\n')
+        (self.root / 'bin/xray').chmod(0o755)
+        result = self.run_script(feed.PREINST)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('Core failed startup check', result.stderr)
         self.assertFalse((self.base / 'opt/tmp/optiray-opkg-state').exists())
 
 

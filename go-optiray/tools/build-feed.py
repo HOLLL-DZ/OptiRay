@@ -38,14 +38,14 @@ HOOK=/opt/etc/ndm/netfilter.d/100-optiray-go-routing
 if [ -e "$HOOK" ]; then grep -q 'OptiRay Go owned netfilter hook' "$HOOK" || exit 1; fi
 # Validate before stopping the service or creating a recovery snapshot.
 if [ -x "$ROOT/bin/optiray" ]; then
- timeout 10 "$ROOT/bin/optiray" --version >/dev/null 2>&1 || { echo "Manager failed startup check: $ROOT/bin/optiray. Existing files were preserved." >&2; exit 1; }
+ "$ROOT/bin/optiray" --version >/dev/null 2>&1 || { echo "Manager failed startup check: $ROOT/bin/optiray. Existing files were preserved." >&2; exit 1; }
  if "$ROOT/bin/optiray" --help 2>&1 | grep -q -- '-check-installation'; then
   "$ROOT/bin/optiray" --data-dir "$ROOT" --check-installation
  else
   # Compatibility with managers predating the read-only validator.
   for CORE in xray hysteria hysteria1; do
    if [ -f "$ROOT/bin/$CORE" ]; then
-    timeout 10 "$ROOT/bin/$CORE" version >/dev/null 2>&1 || { echo "Core failed startup check: $ROOT/bin/$CORE. Reinstall this core before upgrading." >&2; exit 1; }
+    "$ROOT/bin/$CORE" version >/dev/null 2>&1 || { echo "Core failed startup check: $ROOT/bin/$CORE. Reinstall this core before upgrading." >&2; exit 1; }
    fi
   done
   if HEALTH=$(curl -fsS --max-time 5 http://127.0.0.1:3883/api/health 2>/dev/null); then
