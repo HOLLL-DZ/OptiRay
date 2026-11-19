@@ -8,7 +8,7 @@ import (
 
 func (a *App) uiAsset(name string) ([]byte, error) {
 	switch name {
-	case "page.html", "style.css", "app.js":
+	case "page.html", "style.css", "app.js", "routing-status.js":
 	default:
 		return nil, fmt.Errorf("unknown UI asset")
 	}

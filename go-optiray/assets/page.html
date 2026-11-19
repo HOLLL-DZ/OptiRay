@@ -69,7 +69,8 @@
                     </div>
                 </div>
 
-<div class="settings-workspace"><nav class="settings-sidebar" aria-label="Разделы настроек"><button type="button" class="settings-nav-item" data-settings-tab="connection" aria-controls="settings_panel_connection" onclick="selectSettingsTab('connection')">Подключение</button><button type="button" class="settings-nav-item" data-settings-tab="cores" aria-controls="settings_panel_cores" onclick="selectSettingsTab('cores')">Ядра</button><button type="button" class="settings-nav-item" data-settings-tab="testing" aria-controls="settings_panel_testing" onclick="selectSettingsTab('testing')">Проверка серверов</button><button type="button" class="settings-nav-item" data-settings-tab="appearance" aria-controls="settings_panel_appearance" onclick="selectSettingsTab('appearance')">Интерфейс</button><button type="button" class="settings-nav-item" data-settings-tab="security" aria-controls="settings_panel_security" onclick="selectSettingsTab('security')">Безопасность</button><button type="button" class="settings-nav-item" data-settings-tab="maintenance" aria-controls="settings_panel_maintenance" onclick="selectSettingsTab('maintenance')">Обслуживание</button><button type="button" class="settings-nav-item" data-settings-tab="backups" aria-controls="settings_panel_backups" onclick="selectSettingsTab('backups')">Резервное копирование и сброс</button></nav><div class="settings-scroll"><section id="settings_panel_connection" class="settings-panel" aria-label="Подключение"><div class="modal-section-title">Keenetic прокси</div>
+<div class="settings-workspace"><nav class="settings-sidebar" aria-label="Разделы настроек"><button type="button" class="settings-nav-item" data-settings-tab="connection" aria-controls="settings_panel_connection" onclick="selectSettingsTab('connection')">Подключение</button><button type="button" class="settings-nav-item" data-settings-tab="cores" aria-controls="settings_panel_cores" onclick="selectSettingsTab('cores')">Ядра</button><button type="button" class="settings-nav-item" data-settings-tab="testing" aria-controls="settings_panel_testing" onclick="selectSettingsTab('testing')">Проверка серверов</button><button type="button" class="settings-nav-item" data-settings-tab="appearance" aria-controls="settings_panel_appearance" onclick="selectSettingsTab('appearance')">Интерфейс</button><button type="button" class="settings-nav-item" data-settings-tab="security" aria-controls="settings_panel_security" onclick="selectSettingsTab('security')">Безопасность</button><button type="button" class="settings-nav-item" data-settings-tab="maintenance" aria-controls="settings_panel_maintenance" onclick="selectSettingsTab('maintenance')">Обслуживание</button><button type="button" class="settings-nav-item" data-settings-tab="backups" aria-controls="settings_panel_backups" onclick="selectSettingsTab('backups')">Резервное копирование и сброс</button></nav><div class="settings-scroll"><section id="settings_panel_connection" class="settings-panel" aria-label="Подключение"><div class="settings-section-card">
+<div class="modal-section-title">Keenetic прокси</div>
                 <div class="xray-manager-box">
                     <div class="setting-field"><label class="setting-label">Имя подключения:</label><input type="text" name="proxy_name" value="__PROXY_NAME__" class="setting-input"></div>
                     <div class="setting-field">
@@ -81,7 +82,9 @@
                     </div>
                 </div>
 
-                <div class="modal-section-title">Клиент для подписки</div>
+                </div>
+<div class="settings-section-card">
+<div class="modal-section-title">Клиент для подписки</div>
                 <div class="xray-manager-box">
                     <div class="setting-field">
                         <label class="setting-label" for="subscription_client_profile">User-Agent:</label>
@@ -94,7 +97,9 @@
                     <p class="settings-description">Профиль для загрузки и обновления подписок. HWID сохраняется. Данные устройства передаются вместе с выбранным User-Agent.</p>
                 </div>
 
-                <div class="modal-section-title">HWID</div>
+                </div>
+<div class="settings-section-card">
+<div class="modal-section-title">HWID</div>
                 <div class="xray-manager-box">
                     <div class="setting-field" style="align-items:flex-start;">
                         <label class="setting-label" style="margin-top:10px;">HWID устройства:</label>
@@ -109,7 +114,9 @@
                     </div>
                 </div>
 
-                </section><section id="settings_panel_cores" class="settings-panel" aria-label="Ядра" hidden><div class="modal-section-title settings-core-heading" data-core-kind="xray"><span>Xray-core</span></div>
+                </div>
+</section><section id="settings_panel_cores" class="settings-panel" aria-label="Ядра" hidden><div class="settings-section-card">
+<div class="modal-section-title settings-core-heading" data-core-kind="xray"><span>Xray-core</span></div>
                 <div class="xray-manager-box">
                     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
                         <span style="font-size:var(--text-size);font-weight:var(--text-weight);color: var(--text-2) !important;">Статус:</span>
@@ -126,6 +133,8 @@
                 </div>
 
                 
+</div>
+<div class="settings-section-card">
 <div class="modal-section-title settings-core-heading" data-core-kind="hysteria"><span>Hysteria (для hysteria/hysteria2)</span></div>
                 <div class="xray-manager-box">
                     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
@@ -139,6 +148,8 @@
                 </div>
 
                 
+</div>
+<div class="settings-section-card">
 <div class="modal-section-title">GeoIP и GeoSite</div>
 <div class="geo-data-settings">
  <div class="setting-field geo-source-field"><label class="setting-label" for="geo_data_source">Источник:</label><div class="geo-source-controls"><select id="geo_data_source" class="core-select" onchange="syncGeoSource()"><option value="standard">Стандартные — Xray-core</option><option value="github">Свой адрес</option></select><button type="button" id="geo_data_update" class="btn core-btn core-btn-install" onclick="updateGeoData(this)">Обновить</button></div></div>
@@ -157,7 +168,9 @@
  </div>
  <div id="geo_data_status" class="geo-data-help" role="status"></div>
 </div>
-</section><section id="settings_panel_testing" class="settings-panel" aria-label="Проверка серверов" hidden><div class="modal-section-title">Замеры задержки</div>
+</div>
+</section><section id="settings_panel_testing" class="settings-panel" aria-label="Проверка серверов" hidden><div class="settings-section-card">
+<div class="modal-section-title">Замеры задержки</div>
                 <div class="xray-manager-box">
                     <div class="setting-field"><label class="setting-label">Тестовый URL:</label><input type="text" name="test_url" value="__TEST_URL__" class="setting-input"></div>
                     <div class="setting-field"><label class="setting-label">Таймаут (сек):</label><input type="number" min="0.5" max="20" step="0.5" id="ping_timeout_input" name="ping_timeout" value="__PING_TIMEOUT__" style="width:90px;padding:8px;"></div>
@@ -167,7 +180,9 @@
                     <div style="font-size:var(--text-size);color:var(--text-2);margin-top:4px;padding-left:4px;">Больше потоков — быстрее пинг, но выше нагрузка на CPU роутера. Пауза снижает конкуренцию и даёт более точные замеры.</div>
                 </div>
 
-                <div class="modal-section-title">Автовыбор сервера</div>
+                </div>
+<div class="settings-section-card">
+<div class="modal-section-title">Автовыбор сервера</div>
                 <div class="xray-manager-box">
                     <div style="font-size:var(--text-size);color:var(--text-2);margin-bottom:8px;">
                         Источник для кнопки «Автовыбор» в подписке:
@@ -182,8 +197,13 @@
                     </label>
                 </div>
 
-                </section><section id="settings_panel_appearance" class="settings-panel" aria-label="Интерфейс" hidden><div class="modal-section-title">Интерфейс</div><div class="xray-manager-box settings-br0-option"><label class="setting-label" style="display:flex;align-items:center;gap:8px;width:auto;cursor:pointer;"><input type="checkbox" id="settings_show_br0" name="show_br0" value="1" __SHOW_BR0__>Показывать br0 в списках интерфейсов</label><p class="settings-description" style="margin:8px 0 0;">br0 — мост домашней сети, объединяющий LAN и Wi-Fi. Включите, если он нужен для маршрутизации к устройствам локальной сети. Для обычного выхода через VPN или SOCKS5 этот интерфейс не требуется. Настройка меняет только его видимость в списках.</p></div>
-                <div class="xray-manager-box">
+                </div>
+</section><section id="settings_panel_appearance" class="settings-panel" aria-label="Интерфейс" hidden><div class="settings-section-card">
+<div class="modal-section-title">Интерфейс</div><div class="xray-manager-box settings-br0-option"><label class="setting-label" style="display:flex;align-items:center;gap:8px;width:auto;cursor:pointer;"><input type="checkbox" id="settings_show_br0" name="show_br0" value="1" __SHOW_BR0__>Показывать br0 в списках интерфейсов</label><p class="settings-description" style="margin:8px 0 0;">br0 — мост домашней сети, объединяющий LAN и Wi-Fi. Включите, если он нужен для маршрутизации к устройствам локальной сети. Для обычного выхода через VPN или SOCKS5 этот интерфейс не требуется. Настройка меняет только его видимость в списках.</p></div>
+                </div>
+<div class="settings-section-card">
+<div class="modal-section-title">Проверка серверов и «Тест»</div>
+<div class="xray-manager-box">
                     <div class="setting-field">
                         <label class="setting-label" style="display:flex;align-items:center;gap:8px;width:auto;cursor:pointer;">
                             <input type="checkbox" name="show_ping_all" value="1" __SHOW_PING_ALL__ style="cursor:pointer;">
@@ -219,7 +239,18 @@
 
                 
 
-                </section><section id="settings_panel_security" class="settings-panel" aria-label="Безопасность" hidden><div class="modal-section-title">Безопасность</div>
+                </div>
+<div class="settings-section-card">
+<div class="modal-section-title">Список серверов</div>
+<label class="setting-label" style="display:flex;align-items:center;gap:8px;width:auto;cursor:pointer;margin-bottom:10px;"><input type="checkbox" name="always_show_favorites" value="1" __ALWAYS_SHOW_FAVORITES__>Всегда отображать избранное</label>
+<p class="settings-description" style="margin:0 0 12px;">Избранные серверы остаются видимыми независимо от поиска и выбранного отбора.</p>
+<label class="setting-label" style="display:flex;align-items:center;gap:8px;width:auto;cursor:pointer;margin-bottom:10px;"><input type="checkbox" name="prioritize_favorites" value="1" __PRIORITIZE_FAVORITES__>Приоритет избранного</label>
+<p class="settings-description" style="margin:0 0 12px;">Показывает избранные серверы первыми внутри каждой подписки при любой сортировке.</p>
+<label class="setting-label" style="display:flex;align-items:center;gap:8px;width:auto;cursor:pointer;"><input type="checkbox" id="settings_remember_server_browse" data-server-browse="__SERVER_BROWSE_STATE__" name="remember_server_browse" value="1" __REMEMBER_SERVER_BROWSE__>Сохранять отбор и сортировку серверов</label>
+<p class="settings-description" style="margin:8px 0 0;">Восстанавливает выбранный фильтр и порядок сортировки после обновления подписок и повторного открытия интерфейса. Выбор сохраняется в конфигурации OptiRay и восстанавливается в любом браузере. Поиск не сохраняется.</p>
+</div>
+</section><section id="settings_panel_security" class="settings-panel" aria-label="Безопасность" hidden><div class="settings-section-card">
+<div class="modal-section-title">Безопасность</div>
                 <div class="xray-manager-box">
                     <div class="setting-field">
                         <label class="setting-label" style="display:flex;align-items:center;gap:8px;width:auto;cursor:pointer;">
@@ -240,7 +271,9 @@
                     </div>
                 </div>
 
-</section><section id="settings_panel_maintenance" class="settings-panel" aria-label="Обслуживание" hidden><p class="settings-description">OptiRout создан на основе MagiTrickle. <a href="/api/optirout_license" target="_blank" rel="noopener">Авторы и лицензия GPLv3</a></p><div class="modal-section-title">Обновление подписок</div>
+</div>
+</section><section id="settings_panel_maintenance" class="settings-panel" aria-label="Обслуживание" hidden><p class="settings-description">OptiRout создан на основе MagiTrickle. <a href="/api/optirout_license" target="_blank" rel="noopener">Авторы и лицензия GPLv3</a></p><div class="settings-section-card">
+<div class="modal-section-title">Обновление подписок</div>
                 <div class="xray-manager-box">
                     <div class="setting-field">
                         <label class="setting-label" style="display:flex;align-items:center;gap:8px;width:auto;cursor:pointer;">
@@ -256,7 +289,9 @@
                     </div>
                 </div>
 
-                <div class="modal-section-title">Логирование</div>
+                </div>
+<div class="settings-section-card">
+<div class="modal-section-title">Логирование</div>
                 <div class="setting-field">
                     <label class="setting-label" style="display:flex;align-items:center;gap:8px;width:auto;cursor:pointer;">
                         <input type="checkbox" name="enable_logging" value="1" __LOGGING_CHECKED__ style="cursor:pointer;">
@@ -270,6 +305,7 @@
 OptiRay: <code>/opt/etc/optiray-go/log/manager.log</code><br>
 OptiRout: <code>/opt/etc/optiray-go/log/engine.log</code><br>
 Xray / Hysteria: <code>/opt/etc/optiray-go/log/xray-go.log</code>
+</div>
 </div>
 </section><section id="settings_panel_backups" class="settings-panel" aria-label="Резервное копирование и сброс" hidden>
 
@@ -476,6 +512,7 @@ Xray / Hysteria: <code>/opt/etc/optiray-go/log/xray-go.log</code>
                     </div>
                 </div>
 
+
                 <div id="mt_groups_container"></div><div id="mt_filter_empty" hidden>Ничего не найдено. Измените поиск или фильтр.</div><details class="mt-maintenance"><summary>Обслуживание</summary>
                 <label style="display:flex;align-items:center;gap:8px;margin:16px 0 8px;cursor:pointer;color:var(--text);">
                     <input type="checkbox" id="mt_backup_enabled" __OPTIROUT_SAVE_BACKUPS__ onchange="mtSetBackupEnabled(this)">
@@ -491,7 +528,7 @@ Xray / Hysteria: <code>/opt/etc/optiray-go/log/xray-go.log</code>
                 </button>
                 <p>Восстановление конфигурации OptiRout по умолчанию.</p></details>
             </div>
-            <div class="mt-modal-footer"><span class="mt-footer-version modal-app-version">OptiRay __APP_VER__</span><span id="mt_dirty_notice" aria-live="polite"></span><button type="button" class="btn mt-cancel-btn" onclick="closeMtModal()">Отмена</button><button type="button" onclick="saveUnifiedRouting()" id="mt_save_btn" class="btn core-btn core-btn-install">Сохранить</button>
+            <div class="mt-modal-footer"><span class="mt-footer-version modal-app-version">OptiRay __APP_VER__</span><span id="mt_runtime_notice" role="status" aria-live="polite"></span><span id="mt_dirty_notice" aria-live="polite"></span><button type="button" class="btn mt-cancel-btn" onclick="closeMtModal()">Отмена</button><button type="button" onclick="saveUnifiedRouting()" id="mt_save_btn" class="btn core-btn core-btn-install">Сохранить</button>
             </div>
         </div>
     </div>
@@ -633,5 +670,5 @@ Xray / Hysteria: <code>/opt/etc/optiray-go/log/xray-go.log</code>
 
 
 
-<script src="/assets/app.js"></script></body>
+<script src="/assets/app.js"></script><script src="/assets/routing-status.js"></script></body>
 </html>

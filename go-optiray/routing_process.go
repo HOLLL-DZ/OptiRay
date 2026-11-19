@@ -2,8 +2,10 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net"
+	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -45,13 +47,45 @@ func (p *RoutingProcess) runningLocked() bool {
 }
 func (p *RoutingProcess) Status() Object {
 	p.mu.Lock()
-	defer p.mu.Unlock()
 	running := p.runningLocked()
 	var pid any
 	if running {
 		pid = p.cmd.Process.Pid
 	}
-	return Object{"running": running, "pid": pid, "bin_name": "optiroutd", "bin_path": p.bin, "init_path": nil, "config_path": filepath.Join(p.dir, "routing", "optirout.json"), "config_format": "json", "supported": true}
+	p.mu.Unlock()
+	status := Object{"running": running, "ready": false, "pid": pid, "bin_name": "optiroutd", "bin_path": p.bin, "init_path": nil, "config_path": filepath.Join(p.dir, "routing", "optirout.json"), "config_format": "json", "supported": true}
+	if running {
+		health, err := routingHealth(p.dir)
+		if err != nil {
+			status["error"] = "Не удалось проверить готовность маршрутизации"
+		} else {
+			status["ready"] = boolean(health["ready"])
+			status["policy_guard"] = health
+			status["error"] = health["error"]
+		}
+	}
+	return status
+}
+
+func routingHealth(dir string) (Object, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+	transport := &http.Transport{DialContext: func(ctx context.Context, _, _ string) (net.Conn, error) {
+		return (&net.Dialer{}).DialContext(ctx, "unix", filepath.Join(dir, "routing", "engine.sock"))
+	}}
+	defer transport.CloseIdleConnections()
+	req, _ := http.NewRequestWithContext(ctx, "GET", "http://localhost/api/v1/system/routing-health", nil)
+	resp, err := (&http.Client{Transport: transport, Timeout: 2 * time.Second}).Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != 200 {
+		return nil, fmt.Errorf("routing health HTTP %d", resp.StatusCode)
+	}
+	health := Object{}
+	err = json.NewDecoder(resp.Body).Decode(&health)
+	return health, err
 }
 func (p *RoutingProcess) stopLocked() error {
 	if !p.runningLocked() {

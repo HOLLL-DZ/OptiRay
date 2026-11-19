@@ -15025,6 +15025,29 @@ hr.subscriptions-divider { height:0; border:0; border-top:2px solid var(--line);
  #settings_modal#settings_modal .settings-core-heading > .core-update-label[hidden] { display:none !important; }
 }
 
+/* Settings sections use the same surfaces and spacing as backup cards. */
+@layer optiray-interactions {
+ #settings_modal#settings_modal .settings-section-card {
+  box-sizing:border-box;min-width:0;margin:0 0 12px !important;padding:16px !important;
+  background:var(--settings-card) !important;border:1px solid var(--settings-line) !important;
+  border-radius:10px !important;box-shadow:none !important;
+ }
+ #settings_modal#settings_modal .settings-section-card:last-child { margin-bottom:0 !important; }
+ #settings_modal#settings_modal .settings-section-card > .modal-section-title {
+  margin:0 0 12px !important;padding:0 !important;
+ }
+ #settings_modal#settings_modal .settings-section-card > :is(.xray-manager-box,.geo-data-settings) {
+  margin:0 !important;padding:0 !important;min-width:0;
+ }
+ #settings_modal#settings_modal .settings-section-card > .xray-manager-box > .setting-field:last-child {
+  margin-bottom:0 !important;
+ }
+ #settings_modal#settings_modal .settings-section-card .geo-data-file:last-of-type { margin-bottom:0 !important; }
+ @media(max-width:760px) {
+  #settings_modal#settings_modal .settings-section-card { padding:14px !important; }
+ }
+}
+
 /* Warm amber update indicators, distinct from the primary action blue. */
 @layer optiray-interactions {
  .core-update-badge { background:#D59A32 !important;color:#fff !important; }
@@ -15035,5 +15058,30 @@ hr.subscriptions-divider { height:0; border:0; border-top:2px solid var(--line);
  [data-theme="dark"] .core-update-badge { background:#D4A34C !important;color:#211B12 !important; }
  [data-theme="dark"] #settings_modal#settings_modal .settings-core-heading > .core-update-label {
   border-color:#79613A !important;background:#30291E !important;color:#E6BD73 !important;
+ }
+}
+
+.routing-health-error{color:var(--danger,#d43d49)}
+@layer optiray-interactions {
+ #mt_modal #mt_runtime_notice {
+  display:flex;align-items:center;gap:6px;min-width:0;max-width:480px;
+  padding:5px 8px;border:1px solid color-mix(in srgb,#2982cb 25%,transparent);
+  border-radius:6px;background:color-mix(in srgb,#2982cb 8%,var(--bg));
+  color:var(--text-2);font-family:var(--text-font-family);font-size:12px;line-height:1.35;
+ }
+ #mt_modal #mt_runtime_notice:empty {display:none;}
+ #mt_modal #mt_runtime_notice::before {
+  content:'i';display:inline-flex;align-items:center;justify-content:center;flex:0 0 14px;
+  width:14px;height:14px;border:1px solid currentColor;border-radius:50%;
+  font-size:10px;font-weight:600;color:#2982cb;
+ }
+ #mt_modal #mt_runtime_notice.routing-health-error {
+  color:var(--danger,#d43d49);border-color:color-mix(in srgb,#d43d49 30%,transparent);
+  background:color-mix(in srgb,#d43d49 8%,var(--bg));
+ }
+ #mt_modal #mt_runtime_notice.routing-health-error::before {content:'!';color:inherit;}
+ @media(max-width:700px) {
+  #mt_modal .mt-modal-footer {flex-wrap:wrap;}
+  #mt_modal #mt_runtime_notice {order:-1;flex-basis:100%;max-width:none;}
  }
 }

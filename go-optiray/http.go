@@ -54,6 +54,10 @@ func (a *App) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	r.Body = http.MaxBytesReader(w, r.Body, 16<<20)
+	if r.URL.Path == "/api/server_browse" {
+		a.saveServerBrowse(w, r)
+		return
+	}
 	if a.routingAPI(w, r) {
 		return
 	}
@@ -278,7 +282,7 @@ func (a *App) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		if err == nil {
 			err = a.restoreState(r.Context(), payload)
 		}
-	case r.Method == "GET" && (r.URL.Path == "/assets/style.css" || r.URL.Path == "/assets/app.js"):
+	case r.Method == "GET" && (r.URL.Path == "/assets/style.css" || r.URL.Path == "/assets/app.js" || r.URL.Path == "/assets/routing-status.js"):
 		name := strings.TrimPrefix(r.URL.Path, "/assets/")
 		content, e := a.uiAsset(name)
 		if e != nil {
@@ -340,7 +344,7 @@ func (a *App) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	case r.Method == "GET" && r.URL.Path == "/api/health":
 		d := a.store.snapshot()
 		coreReady := !optirayEnabled(d) || str(d["selected"]) == "" || a.core != nil && a.core.Running()
-		routingReady := !a.routingWanted(d) || a.routing != nil && boolean(a.routing.Status()["running"])
+		routingReady := !a.routingWanted(d) || a.routing != nil && boolean(a.routing.Status()["ready"])
 		jsonReply(w, 200, Object{"ok": true, "version": version, "runtime": "go", "release_ready": false, "ready": coreReady && routingReady, "core_ready": coreReady, "routing_ready": routingReady})
 		return
 	case r.Method == "GET" && r.URL.Path == "/api/xray_routing_config":
@@ -537,7 +541,7 @@ func (a *App) render(w http.ResponseWriter) {
 		floating = `<a id="test_float_btn" class="btn-test-float" href="` + esc(d["test_button_url"]) + `" target="_blank" rel="noopener noreferrer">` + openIcon + `</a>`
 	}
 	s = strings.ReplaceAll(s, "__TEST_FLOAT_BTN__", floating)
-	checked := map[string]string{"__SHOW_BR0__": "show_br0", "__LOGGING_CHECKED__": "enable_logging", "__SHOW_PING_ALL__": "show_ping_all", "__SHOW_TEST_BUTTON__": "show_test_button", "__SHOW_TEST_FLOAT__": "show_test_float", "__UPDATE_FORCE_RESTART__": "update_force_restart", "__OPTIROUT_SAVE_BACKUPS__": "optirout_save_backups", "__BACKUP_INCLUDE_OPTIROUT__": "backup_include_optirout", "__BACKUP_INCLUDE_XRAY__": "backup_include_xray", "__XRAY_AUTO_CHECK__": "xray_auto_check", "__HYSTERIA_AUTO_CHECK__": "hysteria_auto_check"}
+	checked := map[string]string{"__ALWAYS_SHOW_FAVORITES__": "always_show_favorites", "__PRIORITIZE_FAVORITES__": "prioritize_favorites", "__REMEMBER_SERVER_BROWSE__": "remember_server_browse", "__SHOW_BR0__": "show_br0", "__LOGGING_CHECKED__": "enable_logging", "__SHOW_PING_ALL__": "show_ping_all", "__SHOW_TEST_BUTTON__": "show_test_button", "__SHOW_TEST_FLOAT__": "show_test_float", "__UPDATE_FORCE_RESTART__": "update_force_restart", "__OPTIROUT_SAVE_BACKUPS__": "optirout_save_backups", "__BACKUP_INCLUDE_OPTIROUT__": "backup_include_optirout", "__BACKUP_INCLUDE_XRAY__": "backup_include_xray", "__XRAY_AUTO_CHECK__": "xray_auto_check", "__HYSTERIA_AUTO_CHECK__": "hysteria_auto_check"}
 	for token, key := range checked {
 		v := ""
 		if boolean(d[key]) {
@@ -546,6 +550,8 @@ func (a *App) render(w http.ResponseWriter) {
 		s = strings.ReplaceAll(s, token, v)
 	}
 	profile := str(d["subscription_client_profile"])
+	browseState, _ := json.Marshal(obj(d["server_browse"]))
+	s = strings.ReplaceAll(s, "__SERVER_BROWSE_STATE__", html.EscapeString(string(browseState)))
 	for _, key := range []string{"happ", "incy", "optiray"} {
 		v := ""
 		if key == profile {

@@ -5104,26 +5104,64 @@ function setServerView(view) {
  document.querySelectorAll('[data-server-view]').forEach(function(b){b.setAttribute('aria-pressed',String(b.dataset.serverView===view));});
  try {localStorage.setItem('optiray_server_view',view);}catch(e){}
 }
+var serverBrowseTimer=null,serverBrowseSaved=null,serverBrowseWrites=Promise.resolve();
+function saveServerBrowse(force) {
+ var preference=document.getElementById('settings_remember_server_browse');
+ if(!preference || (!force && !preference.defaultChecked))return Promise.resolve();
+  var state=JSON.stringify({filter:document.getElementById('server_filter').value,sort:document.getElementById('server_sort').value});
+ clearTimeout(serverBrowseTimer);
+ function write(){
+  if(state===serverBrowseSaved)return serverBrowseWrites;
+  serverBrowseWrites=serverBrowseWrites.catch(function(){}).then(async function(){
+   if(state===serverBrowseSaved)return;
+   try{var response=await fetch('/api/server_browse',{method:'POST',headers:{'Content-Type':'application/json'},body:state,keepalive:true});if(!response.ok)throw Error('Не удалось сохранить отбор серверов');serverBrowseSaved=state;}
+   catch(error){console.warn(error.message);}
+  });return serverBrowseWrites;
+ }
+ if(force)return write();
+ serverBrowseTimer=setTimeout(write,500);return Promise.resolve();
+}
+function restoreServerBrowse() {
+ var preference=document.getElementById('settings_remember_server_browse');
+ if(!preference || !preference.defaultChecked)return;
+ try {
+  var state=JSON.parse(preference.dataset.serverBrowse||'{}');
+  if(!state.filter){try{state=JSON.parse(localStorage.getItem('optiray_server_browse')||'{}');}catch(e){}}
+  else serverBrowseSaved=JSON.stringify({filter:state.filter,sort:state.sort});
+  if(!state || typeof state!=='object')return;
+  [['server_filter','filter'],['server_sort','sort']].forEach(function(pair){var field=document.getElementById(pair[0]);if(Array.from(field.options).some(function(option){return option.value===state[pair[1]];}))field.value=state[pair[1]];});
+  try{localStorage.removeItem('optiray_server_browse');}catch(e){}
+ }catch(e){}
+}
+window.addEventListener('pagehide',function(){var preference=document.getElementById('settings_remember_server_browse');if(preference&&(preference.defaultChecked||preference.checked))saveServerBrowse(true);});
 function browseServers() {
  var root=document.getElementById('servers_container');if(!root)return;
  var query=document.getElementById('server_search').value.trim().toLowerCase();
  var filter=document.getElementById('server_filter').value,sort=document.getElementById('server_sort').value;
+ var alwaysFavorites=!!document.querySelector('[name="always_show_favorites"]')?.defaultChecked;
+ var priorityFavorites=!!document.querySelector('[name="prioritize_favorites"]')?.defaultChecked;
+ saveServerBrowse(false);
  root.classList.toggle('server-browse-active',!!query||filter!=='all');
- var visible=0,total=0;
+ var visible=0,total=0,visibleSections=0;
  root.querySelectorAll('.sub-section').forEach(function(section){
   var grid=section.querySelector('.server-grid'); if(!grid)return;
   var cards=Array.from(grid.querySelectorAll('.server-card')),matched=0;
   function latency(card){var badge=card.querySelector('.ping-badge');var value=badge?parseFloat(badge.textContent):NaN;return Number.isFinite(value)&&value>0?value:Infinity;}
   cards.forEach(function(card){
    var match=(!query||(card.dataset.name+' '+section.dataset.subname).toLowerCase().includes(query))&&(filter!=='favorites'||card.dataset.fav==='1')&&(filter!=='available'||latency(card)!==Infinity);
+   if(alwaysFavorites && card.dataset.fav==='1')match=true;
    card.classList.toggle('browse-hidden',!match);total++;if(match){matched++;visible++;}
   });
-  section.classList.toggle('browse-hidden',matched===0);
-  cards.sort(function(a,b){var active=Number(b.dataset.active==='1')-Number(a.dataset.active==='1');if(active)return active;if(sort==='name')return a.dataset.name.localeCompare(b.dataset.name,'ru');if(sort==='latency')return latency(a)-latency(b)||Number(a.dataset.browseOrder)-Number(b.dataset.browseOrder);return Number(b.dataset.fav==='1')-Number(a.dataset.fav==='1')||Number(a.dataset.browseOrder)-Number(b.dataset.browseOrder);});
+  var keepSection=matched>0||filter==='available';
+  section.classList.toggle('browse-hidden',!keepSection);if(keepSection)visibleSections++;
+  var empty=section.querySelector('.server-filter-empty');
+  if(!empty){empty=document.createElement('p');empty.className='server-filter-empty settings-description';empty.textContent='Нет доступных серверов по текущему отбору. Запусти или повтори замер.';grid.after(empty);}
+  empty.hidden=matched>0||filter!=='available';
+  cards.sort(function(a,b){var favorite=Number(b.dataset.fav==='1')-Number(a.dataset.fav==='1');if(priorityFavorites&&favorite)return favorite;var active=Number(b.dataset.active==='1')-Number(a.dataset.active==='1');if(active)return active;if(sort==='name')return a.dataset.name.localeCompare(b.dataset.name,'ru');if(sort==='latency')return latency(a)-latency(b)||Number(a.dataset.browseOrder)-Number(b.dataset.browseOrder);return favorite||Number(a.dataset.browseOrder)-Number(b.dataset.browseOrder);});
   cards.forEach(function(card){grid.appendChild(card);});
  });
  document.getElementById('server_results_count').textContent=visible+'/'+total;
- document.getElementById('server_results_empty').hidden=visible>0||total===0;
+ document.getElementById('server_results_empty').hidden=visibleSections>0||total===0;
 }
 document.addEventListener('DOMContentLoaded',function(){
  var root=document.getElementById('servers_container');if(!root)return;
@@ -5140,6 +5178,7 @@ document.addEventListener('DOMContentLoaded',function(){
   var main=document.createElement('div');main.className='server-row-main';main.append(identity,subtitle);
   card.replaceChildren(main,ping,action);ping.title='Нажмите для HTTP-проверки задержки';
  });
+ restoreServerBrowse();
  var view='list';try{view=localStorage.getItem('optiray_server_view')||'list';}catch(e){}setServerView(view==='cards'?'cards':'list');browseServers();
  var scheduled=false;
  new MutationObserver(function(records){

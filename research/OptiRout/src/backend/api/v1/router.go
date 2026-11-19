@@ -1,6 +1,7 @@
 package v1
 
 import (
+	"encoding/json"
 	"net/http"
 	"strconv"
 
@@ -86,6 +87,15 @@ func NewRouter(a app.Main) chi.Router {
 		})
 	})
 	r.Route("/system", func(r chi.Router) {
+		r.Get("/routing-health", func(w http.ResponseWriter, r *http.Request) {
+			provider, ok := a.(interface{ RoutingHealth() map[string]any })
+			if !ok {
+				http.Error(w, "health unavailable", 503)
+				return
+			}
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(provider.RoutingHealth())
+		})
 		r.Get("/interfaces", h.ListInterfaces)
 		r.Route("/config", func(r chi.Router) {
 			r.Post("/save", h.SaveConfig)

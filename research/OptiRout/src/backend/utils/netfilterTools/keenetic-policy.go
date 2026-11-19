@@ -2,10 +2,12 @@ package netfilterTools
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
+	"os/exec"
 	"sort"
 	"strconv"
 	"strings"
@@ -29,17 +31,30 @@ type policyState struct {
 type policyScope map[uint32]map[string]bool
 
 type keeneticPolicyGuard struct {
-	mu       sync.Mutex
-	client   *http.Client
-	baseURL  string
-	required bool
-	scopes   policyScope
-	links    map[*IPSetToLink]bool
+	mu        sync.Mutex
+	client    *http.Client
+	baseURL   string
+	required  bool
+	scopes    policyScope
+	links     map[*IPSetToLink]bool
+	runCLI    func(string) (string, error)
+	ready     bool
+	checked   time.Time
+	lastError string
+	source    string
 }
 
 func newPolicyGuard() *keeneticPolicyGuard {
 	_, err := os.Stat("/bin/ndmc")
-	return &keeneticPolicyGuard{client: &http.Client{Timeout: 2 * time.Second}, baseURL: "http://127.0.0.1:79", required: err == nil, links: map[*IPSetToLink]bool{}}
+	return &keeneticPolicyGuard{client: &http.Client{Timeout: 2 * time.Second}, baseURL: "http://127.0.0.1:79", required: err == nil, links: map[*IPSetToLink]bool{}, runCLI: func(command string) (string, error) {
+		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+		defer cancel()
+		data, e := exec.CommandContext(ctx, "/bin/ndmc", "-c", command).Output()
+		if e != nil {
+			return "", fmt.Errorf("ndmc read failed")
+		}
+		return string(data), nil
+	}}
 }
 
 func (g *keeneticPolicyGuard) read(path string, out any) error {
@@ -55,6 +70,23 @@ func (g *keeneticPolicyGuard) read(path string, out any) error {
 }
 
 func (g *keeneticPolicyGuard) load() (policyScope, error) {
+	s, err := g.loadHTTP()
+	if err == nil {
+		g.source = "http"
+		return s, nil
+	}
+	if g.required && g.runCLI != nil {
+		fallback, cliErr := g.loadCLI()
+		if cliErr == nil {
+			g.source = "cli"
+			return fallback, nil
+		}
+		return nil, fmt.Errorf("HTTP: %v; CLI: %w", err, cliErr)
+	}
+	return nil, err
+}
+
+func (g *keeneticPolicyGuard) loadHTTP() (policyScope, error) {
 	var config map[string]policyConfig
 	var state map[string]policyState
 	if err := g.read("/rci/ip/policy", &config); err != nil {
@@ -153,13 +185,21 @@ func deniedPolicyMarks(scopes policyScope, iface string, owned map[uint32]string
 	return result
 }
 
-func (nh *Helper) RefreshPolicyGuards() error {
+func (nh *Helper) RefreshPolicyGuards() (refreshErr error) {
 	g := nh.policyGuard
 	if !g.required {
 		return nil
 	}
 	g.mu.Lock()
 	defer g.mu.Unlock()
+	defer func() {
+		g.checked = time.Now()
+		g.ready = refreshErr == nil
+		g.lastError = ""
+		if refreshErr != nil {
+			g.lastError = refreshErr.Error()
+		}
+	}()
 	scopes, loadErr := g.load()
 	// On RCI failure skip interception, rather than bypass a device's policy.
 	g.scopes = scopes
@@ -193,4 +233,12 @@ func (nh *Helper) RefreshPolicyGuards() error {
 		}
 	}
 	return loadErr
+}
+
+func (nh *Helper) PolicyHealth() map[string]any {
+	g := nh.policyGuard
+	g.mu.Lock()
+	defer g.mu.Unlock()
+	ready := !g.required || g.ready && !g.checked.IsZero() && time.Since(g.checked) < 30*time.Second
+	return map[string]any{"ready": ready, "paused": !ready, "source": g.source, "error": g.lastError, "checked": g.checked}
 }

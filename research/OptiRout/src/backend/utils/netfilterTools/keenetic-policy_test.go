@@ -55,6 +55,7 @@ func TestPolicyRCI(t *testing.T) {
 	}))
 	defer srv.Close()
 	g := newPolicyGuard()
+	g.runCLI = nil // This test exercises HTTP failure without router dependencies.
 	g.baseURL = srv.URL
 	g.client = srv.Client()
 	s, err := g.load()

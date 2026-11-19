@@ -18,7 +18,7 @@ import (
 //go:embed assets/*
 var assets embed.FS
 
-const version = "1.0.15"
+const version = "1.0.16"
 
 func main() {
 	dir := flag.String("data-dir", "/opt/etc/optiray-go", "settings directory")
@@ -132,6 +132,11 @@ func main() {
 		log.Fatal(e)
 	}
 	log.SetOutput(newDiagnosticWriter(*dir, "log/manager.log"))
+	if _, exists := obj(store.snapshot()["server_browse"])["query"]; exists {
+		if err := store.change(func(d Object) error { delete(obj(d["server_browse"]), "query"); return nil }); err != nil {
+			log.Printf("Remove saved server search: %v", err)
+		}
+	}
 	listener, e := net.Listen("tcp", *addr)
 	if e != nil {
 		log.Fatalf("HTTP listen failed: %v", e)

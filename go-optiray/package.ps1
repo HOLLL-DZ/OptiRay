@@ -19,7 +19,7 @@ foreach($architecture in $targets){
     New-Item -ItemType Directory -Force -Path (Join-Path $folder 'bin'),(Join-Path $folder 'ui') | Out-Null
     Copy-Item -LiteralPath (Join-Path $PSScriptRoot "build/optiray-go-linux-$architecture") -Destination (Join-Path $folder 'bin/optiray')
     Copy-Item -LiteralPath (Join-Path $PSScriptRoot "build/optiroutd-linux-$architecture") -Destination (Join-Path $folder 'bin/optiroutd')
-    foreach($name in @('page.html','style.css','app.js')){Copy-Item -LiteralPath (Join-Path $PSScriptRoot "assets/$name") -Destination (Join-Path $folder "ui/$name")}
+    foreach($name in @('page.html','style.css','app.js','routing-status.js')){Copy-Item -LiteralPath (Join-Path $PSScriptRoot "assets/$name") -Destination (Join-Path $folder "ui/$name")}
     foreach($name in @('install.sh','uninstall.sh','S99optiray-go','100-optiray-go-routing')){Copy-Item -LiteralPath (Join-Path $PSScriptRoot "server-files/$name") -Destination $folder}
     Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'README.md') -Destination $folder
     Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'PORTING.md') -Destination $folder

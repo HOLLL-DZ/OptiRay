@@ -55,6 +55,13 @@ func New() *App {
 	return a
 }
 
+func (a *App) RoutingHealth() map[string]any {
+	if a.nfHelper == nil {
+		return map[string]any{"ready": false, "paused": true, "error": "routing initializing"}
+	}
+	return a.nfHelper.PolicyHealth()
+}
+
 // Config возвращает конфигурацию
 func (a *App) Config() models.AppConfig {
 	return a.config
