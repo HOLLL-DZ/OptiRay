@@ -118,6 +118,11 @@ func (a *App) Start(ctx context.Context) (err error) {
 	for _, linkName := range a.config.Link {
 		link, err := netlink.LinkByName(linkName)
 		if err != nil {
+			var missing netlink.LinkNotFoundError
+			if errors.As(err, &missing) {
+				log.Warn().Str("interface", linkName).Msg("configured DNS interface absent; skipping until restart")
+				continue
+			}
 			return fmt.Errorf("failed to find link %s: %w", linkName, err)
 		}
 		linkAddrList, err := netlink.AddrList(link, nl.FAMILY_ALL)
