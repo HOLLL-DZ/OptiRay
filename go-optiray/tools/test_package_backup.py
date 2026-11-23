@@ -40,7 +40,7 @@ class PackageBackupTests(unittest.TestCase):
     def put(self, name, data):
         p = self.root / name
         p.parent.mkdir(parents=True, exist_ok=True)
-        p.write_text(data, newline='\n')
+        p.write_text(data, encoding='utf-8', newline='\n')
 
     def binary(self, version, fail=False):
         self.put('VERSION', version)
@@ -54,14 +54,14 @@ class PackageBackupTests(unittest.TestCase):
         # Git's minimal Windows shell has no du/df; emulate ample disk space.
         text = text.replace('set -eu', 'set -eu\nsync() { :; }\ncurl() { return 7; }\ndu() { echo "4 fixture"; }\ndf() { printf "Filesystem blocks used available capacity mount\\nfixture 1000000 0 ' + str(free) + ' 0 fixture\\n"; }', 1)
         path = self.base / 'script.sh'
-        path.write_text(text, newline='\n')
+        path.write_text(text, encoding='utf-8', newline='\n')
         env = dict(os.environ)
         env['PATH'] = str(Path(self.shell).parent) + os.pathsep + env.get('PATH', '')
         if custom:
             env['OPTIRAY_BACKUP_DIR'] = self.unix + custom
         else:
             env.pop('OPTIRAY_BACKUP_DIR', None)
-        return subprocess.run([self.shell, str(path)], cwd=self.base, env=env, capture_output=True, text=True)
+        return subprocess.run([self.shell, str(path)], cwd=self.base, env=env, capture_output=True, encoding='utf-8')
 
     def test_selective_copy_and_success_cleanup(self):
         result = self.run_script(feed.PREINST, '/usb/custom-backup')
@@ -118,6 +118,14 @@ class PackageBackupTests(unittest.TestCase):
         script = feed.PREINST.replace('set -eu', 'set -eu\ntimeout() { return 127; }', 1)
         result = self.run_script(script)
         self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_old_hysteria_false_failure_can_upgrade(self):
+        self.put('bin/optiray', '#!/bin/sh\ncase "$*" in *--help*) echo --check-installation;; *--check-installation*) echo "ядро $2/bin/hysteria не прошло проверку запуска; переустановите ядро перед обновлением" >&2; exit 1;; esac\n')
+        result = self.run_script(feed.PREINST)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn('Deferring legacy Hysteria', result.stderr)
+        self.binary('1.0.12')
+        self.assertEqual(self.run_script(feed.POSTINST).returncode, 0)
 
     def test_legacy_failed_core_preserves_files(self):
         self.put('bin/xray', '#!/bin/sh\nexit 1\n')

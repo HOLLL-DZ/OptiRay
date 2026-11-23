@@ -8,6 +8,24 @@ import (
 	"testing"
 )
 
+func TestCoreVersionOutput(t *testing.T) {
+	for _, sample := range []string{
+		"Version:        v2.14.0\nBuildType:      release\nPlatform:       linux\nArchitecture:   mipsle\n",
+		"Hysteria\nVersion: v2.13.0\n",
+		"Version: v1.3.5\n",
+		"Xray 26.11.9 (Xray, Penetrates Everything.)\n",
+	} {
+		if !coreVersionLine.MatchString(sample) {
+			t.Errorf("rejected version output %q", sample)
+		}
+	}
+	for _, sample := range []string{"", "hysteria", "error: missing config 1.2.3", "Version: invalid"} {
+		if coreVersionLine.MatchString(sample) {
+			t.Errorf("accepted invalid output %q", sample)
+		}
+	}
+}
+
 func TestInstallationCheckRejectsCorruptFilesWithoutChangingThem(t *testing.T) {
 	for _, name := range []string{"subs.json", "routing/optirout.json", "core_release_schedule.json"} {
 		t.Run(name, func(t *testing.T) {

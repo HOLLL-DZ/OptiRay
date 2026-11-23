@@ -6,9 +6,11 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"strings"
+	"regexp"
 	"time"
 )
+
+var coreVersionLine = regexp.MustCompile(`(?im)^[ \t]*(?:version:[ \t]*|xray[ \t]+|hysteria(?:[ \t]+version:?)?[ \t]+)v?[0-9]+\.[0-9]+\.[0-9]+(?:[-+][0-9a-z.+-]+)?(?:[ \t\r]|$)`)
 
 // Do not initialize defaults, recover journals or alter a running process here.
 func checkInstallationFiles(ctx context.Context, dir string) error {
@@ -28,12 +30,11 @@ func checkInstallationFiles(ctx context.Context, dir string) error {
 		checkCtx, cancel := context.WithTimeout(ctx, 8*time.Second)
 		output, err := exec.CommandContext(checkCtx, path, "version").CombinedOutput()
 		cancel()
-		expected := "hysteria"
-		if name == "xray" {
-			expected = "xray"
+		if err != nil {
+			return fmt.Errorf("ядро %s не запустилось при проверке версии: %w", path, err)
 		}
-		if err != nil || !strings.Contains(strings.ToLower(string(output)), expected) {
-			return fmt.Errorf("ядро %s не прошло проверку запуска; переустановите ядро перед обновлением", path)
+		if !coreVersionLine.Match(output) {
+			return fmt.Errorf("ядро %s не сообщило номер версии", path)
 		}
 		if name == "xray" {
 			config := filepath.Join(dir, "xray_config.json")

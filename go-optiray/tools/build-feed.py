@@ -40,7 +40,16 @@ if [ -e "$HOOK" ]; then grep -q 'OptiRay Go owned netfilter hook' "$HOOK" || exi
 if [ -x "$ROOT/bin/optiray" ]; then
  "$ROOT/bin/optiray" --version >/dev/null 2>&1 || { echo "Manager failed startup check: $ROOT/bin/optiray. Existing files were preserved." >&2; exit 1; }
  if "$ROOT/bin/optiray" --help 2>&1 | grep -q -- '-check-installation'; then
-  "$ROOT/bin/optiray" --data-dir "$ROOT" --check-installation
+  if ! PREFLIGHT=$("$ROOT/bin/optiray" --data-dir "$ROOT" --check-installation 2>&1); then
+   case "$PREFLIGHT" in
+    *"ядро $ROOT/bin/hysteria не прошло проверку запуска; переустановите ядро перед обновлением")
+     # Old managers reject Hysteria version output without the product name.
+     # The new postinst checks it before startup, with rollback already armed.
+     echo 'Deferring legacy Hysteria startup check to the new manager.' >&2
+     ;;
+    *) printf '%s\n' "$PREFLIGHT" >&2; exit 1 ;;
+   esac
+  fi
  else
   # Compatibility with managers predating the read-only validator.
   for CORE in xray hysteria hysteria1; do
