@@ -42,6 +42,18 @@ func (a *App) commitState(ctx context.Context, before, next Object, extra map[st
 	if e != nil {
 		return e
 	}
+	oldBytes, _ := json.Marshal(oldOpt)
+	rollbackFiles := map[string][]byte{"routing/optirout.json": oldBytes}
+	if _, changesAuth := extra["auth.json"]; changesAuth {
+		oldAuth, err := a.store.auth()
+		if err != nil {
+			return err
+		}
+		rollbackFiles["auth.json"], e = json.Marshal(oldAuth)
+		if e != nil {
+			return e
+		}
+	}
 	if e = a.store.persistExtra(next, extra); e != nil {
 		return e
 	}
@@ -70,8 +82,7 @@ func (a *App) commitState(ctx context.Context, before, next Object, extra map[st
 		undo, e = a.keenetic.Apply(ctx, str(next["proxy_name"]), str(next["proxy_host"]), integer(next["proxy_port"]))
 	}
 	if e != nil {
-		oldBytes, _ := json.Marshal(oldOpt)
-		rollback := a.store.persistExtra(before, map[string][]byte{"routing/optirout.json": oldBytes})
+		rollback := a.store.persistExtra(before, rollbackFiles)
 		if rollback != nil {
 			return fmt.Errorf("apply failed: %v; settings rollback failed: %v", e, rollback)
 		}

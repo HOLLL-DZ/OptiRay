@@ -73,7 +73,7 @@ func collectInterfaces(root, text string) ([]any, error) {
 	tunnel := regexp.MustCompile(`(?i)^(t2s|nwg|wg|vpn|tun|tap|proxy)[0-9]+$`)
 	out := []any{}
 	for name := range names {
-		if skip[name] || hide.MatchString(name) || hints[name] == "" && !tunnel.MatchString(name) {
+		if skip[name] || hide.MatchString(name) || hints[name] == "" && !tunnel.MatchString(name) && !wifiSegmentName.MatchString(name) {
 			continue
 		}
 		out = append(out, Object{"name": name, "desc": hints[name]})

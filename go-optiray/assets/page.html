@@ -69,7 +69,7 @@
                     </div>
                 </div>
 
-<div class="settings-workspace"><nav class="settings-sidebar" aria-label="Разделы настроек"><button type="button" class="settings-nav-item" data-settings-tab="connection" aria-controls="settings_panel_connection" onclick="selectSettingsTab('connection')">Подключение</button><button type="button" class="settings-nav-item" data-settings-tab="cores" aria-controls="settings_panel_cores" onclick="selectSettingsTab('cores')">Ядра</button><button type="button" class="settings-nav-item" data-settings-tab="testing" aria-controls="settings_panel_testing" onclick="selectSettingsTab('testing')">Проверка серверов</button><button type="button" class="settings-nav-item" data-settings-tab="appearance" aria-controls="settings_panel_appearance" onclick="selectSettingsTab('appearance')">Интерфейс</button><button type="button" class="settings-nav-item" data-settings-tab="security" aria-controls="settings_panel_security" onclick="selectSettingsTab('security')">Безопасность</button><button type="button" class="settings-nav-item" data-settings-tab="maintenance" aria-controls="settings_panel_maintenance" onclick="selectSettingsTab('maintenance')">Обслуживание</button><button type="button" class="settings-nav-item" data-settings-tab="backups" aria-controls="settings_panel_backups" onclick="selectSettingsTab('backups')">Резервное копирование и сброс</button></nav><div class="settings-scroll"><section id="settings_panel_connection" class="settings-panel" aria-label="Подключение"><div class="settings-section-card">
+<div class="settings-workspace"><nav class="settings-sidebar" aria-label="Разделы настроек"><button type="button" class="settings-nav-item" data-settings-tab="connection" aria-controls="settings_panel_connection" onclick="selectSettingsTab('connection')">Подключение и маршрутизация</button><button type="button" class="settings-nav-item" data-settings-tab="cores" aria-controls="settings_panel_cores" onclick="selectSettingsTab('cores')">Ядра</button><button type="button" class="settings-nav-item" data-settings-tab="testing" aria-controls="settings_panel_testing" onclick="selectSettingsTab('testing')">Проверка серверов</button><button type="button" class="settings-nav-item" data-settings-tab="appearance" aria-controls="settings_panel_appearance" onclick="selectSettingsTab('appearance')">Интерфейс</button><button type="button" class="settings-nav-item" data-settings-tab="security" aria-controls="settings_panel_security" onclick="selectSettingsTab('security')">Безопасность</button><button type="button" class="settings-nav-item" data-settings-tab="maintenance" aria-controls="settings_panel_maintenance" onclick="selectSettingsTab('maintenance')">Обслуживание</button><button type="button" class="settings-nav-item" data-settings-tab="backups" aria-controls="settings_panel_backups" onclick="selectSettingsTab('backups')">Резервное копирование и сброс</button></nav><div class="settings-scroll"><section id="settings_panel_connection" class="settings-panel" aria-label="Подключение и маршрутизация"><div class="settings-section-card">
 <div class="modal-section-title">Keenetic прокси</div>
                 <div class="xray-manager-box">
                     <div class="setting-field"><label class="setting-label">Имя подключения:</label><input type="text" name="proxy_name" value="__PROXY_NAME__" class="setting-input"></div>
@@ -83,6 +83,11 @@
                 </div>
 
                 </div>
+<div class="settings-section-card">
+    <div class="modal-section-title">Маршрутизация для сегментов Wi-Fi</div>
+    <div id="settings_wifi_segments" style="display:flex;flex-wrap:wrap;gap:8px;"></div>
+    <p class="settings-description" style="margin:8px 0 0;">OptiRout перехватывает DNS-запросы в выбранных сегментах.</p>
+</div>
 <div class="settings-section-card">
 <div class="modal-section-title">Клиент для подписки</div>
                 <div class="xray-manager-box">
@@ -198,9 +203,7 @@
                 </div>
 
                 </div>
-</section><section id="settings_panel_appearance" class="settings-panel" aria-label="Интерфейс" hidden><div class="settings-section-card">
-<div class="modal-section-title">Интерфейс</div><div class="xray-manager-box settings-br0-option"><label class="setting-label" style="display:flex;align-items:center;gap:8px;width:auto;cursor:pointer;"><input type="checkbox" id="settings_show_br0" name="show_br0" value="1" __SHOW_BR0__>Показывать br0 в списках интерфейсов</label><p class="settings-description" style="margin:8px 0 0;">br0 — мост домашней сети, объединяющий LAN и Wi-Fi. Включите, если он нужен для маршрутизации к устройствам локальной сети. Для обычного выхода через VPN или SOCKS5 этот интерфейс не требуется. Настройка меняет только его видимость в списках.</p></div>
-                </div>
+</section><section id="settings_panel_appearance" class="settings-panel" aria-label="Интерфейс" hidden>
 <div class="settings-section-card">
 <div class="modal-section-title">Проверка серверов и «Тест»</div>
 <div class="xray-manager-box">
@@ -494,10 +497,6 @@ Xray / Hysteria: <code>/opt/etc/optiray-go/log/xray-go.log</code>
                 <div class="mt-global collapsed" id="mt_global_box" style="display:none;">
                     <div class="mt-global-title" onclick="document.getElementById('mt_global_box').classList.toggle('collapsed');">Глобальные настройки</div>
                     <div class="mt-global-body">
-                        <div class="mt-row">
-                            <label>Мониторить интерфейсы (link):</label>
-                            <div id="mt_link_container" style="flex:1;display:flex;flex-wrap:wrap;gap:6px;"></div>
-                        </div>
                         <div class="mt-row"><label>showAllInterfaces:</label><input type="checkbox" id="mt_show_all"></div>
                         <div class="mt-row"><label>DNS-proxy порт:</label><input type="number" id="mt_dns_port" min="1" max="65535" style="max-width:120px;"></div>
                         <div class="mt-row"><label>Веб-UI порт:</label><input type="number" id="mt_web_port" min="1" max="65535" style="max-width:120px;"></div>

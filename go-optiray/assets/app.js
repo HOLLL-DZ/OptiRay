@@ -1143,23 +1143,6 @@ function closeMtModal() {
 function mtRenderGlobal() {
     var cfg = MT_STATE.config || {};
     var app = cfg.app || {};
-    var link = app.link || [];
-    if (typeof link === 'string') link = [link];
-
-    var cont = document.getElementById('mt_link_container');
-    if (cont) {
-        var html = '';
-        for (var i = 0; i < MT_STATE.interfaces.length; i++) {
-            var item = MT_STATE.interfaces[i];
-            var iface = _mtIfaceName(item);
-            if (!iface) continue;
-            var checked = link.indexOf(iface) >= 0;
-            html += '<label style="display:inline-flex;align-items:center;gap:4px;font-size:var(--text-size);padding:3px 8px;border:1px solid var(--line);border-radius:999px;cursor:pointer;">'
-                + '<input type="checkbox" class="mt-link-chk" value="' + _mtEsc(iface) + '"' + (checked ? ' checked' : '') + '>'
-                + _mtEsc(_mtIfaceLabel(item)) + '</label>';
-        }
-        cont.innerHTML = html;
-    }
     var sa = document.getElementById('mt_show_all');
     if (sa) sa.checked = !!app.showAllInterfaces;
     var dp = document.getElementById('mt_dns_port');
@@ -1170,20 +1153,24 @@ function mtRenderGlobal() {
     if (ll) ll.value = app.logLevel || 'info';
 }
 
+function isLocalSegmentInterface(name) {
+    return /^br[0-9]+$/.test(name);
+}
+
 function _mtIfaceOptions(current) {
     var html = '';
     var seen = {blackhole:1};
     for (var i = 0; i < MT_STATE.interfaces.length; i++) {
         var item = MT_STATE.interfaces[i];
         var n = _mtIfaceName(item);
-        if (!n || (n === 'br0' && !document.getElementById('settings_show_br0')?.checked)) continue;
+        if (!n || isLocalSegmentInterface(n)) continue;
         seen[n] = 1;
         var d = _mtIfaceDesc(item) || '';
         var label = d ? (n + ' \u2014 ' + d) : n;
         html += '<option value="' + _mtEsc(n) + '" data-name="' + _mtEsc(n) + '" data-desc="' + _mtEsc(d) + '"' + (n === current ? ' selected' : '') + '>' + _mtEsc(label) + '</option>';
     }
-    if (current && (current !== 'br0' || document.getElementById('settings_show_br0')?.checked) && !seen[current]) {
-        html = '<option value="' + _mtEsc(current) + '" data-name="' + _mtEsc(current) + '" data-desc="" selected>' + _mtEsc(current) + '</option>' + html;
+    if (current && !seen[current]) {
+        html = '<option value="' + _mtEsc(current) + '" data-name="' + _mtEsc(current) + '" data-desc="" selected' + (isLocalSegmentInterface(current) ? ' hidden' : '') + '>' + _mtEsc(current) + '</option>' + html;
     }
     return html;
 }
@@ -1308,31 +1295,6 @@ function _mtCollectFromUi(silent) {
     // global
     var app = cfg.app || (cfg.app = {});
     app.showAllInterfaces = !!(document.getElementById('mt_show_all') || {}).checked;
-    /*
-     * FIX: не удалять скрытые/служебные link-интерфейсы.
-     * Например br0 может отсутствовать в списке UI, но уже присутствовать
-     * в app.link. Старый код превращал такой link в [] при сохранении.
-     */
-    var existingLinks = Array.isArray(app.link)
-        ? app.link.slice()
-        : (app.link ? [app.link] : []);
-
-    var links = [];
-    var visibleLinks = {};
-
-    document.querySelectorAll('.mt-link-chk').forEach(function(c) {
-        visibleLinks[c.value] = true;
-        if (c.checked) links.push(c.value);
-    });
-
-    /* Сохраняем интерфейсы, которых нет в текущем UI */
-    existingLinks.forEach(function(v) {
-        if (v && !visibleLinks[v] && links.indexOf(v) < 0) {
-            links.push(v);
-        }
-    });
-
-    app.link = links;
     var dns = app.dnsProxy || (app.dnsProxy = {});
     var dnsHost = dns.host || (dns.host = {});
     dnsHost.port = parseInt((document.getElementById('mt_dns_port') || {}).value, 10) || 3553;
@@ -1532,7 +1494,7 @@ window.mtOpenGlobalIface = function(btn) {
     for (var i = 0; i < MT_STATE.interfaces.length; i++) {
         var item = MT_STATE.interfaces[i];
         var n = _mtIfaceName(item);
-        if (!n || (n === 'br0' && !document.getElementById('settings_show_br0')?.checked)) continue;
+        if (!n || isLocalSegmentInterface(n)) continue;
         var d = _mtIfaceDesc(item) || '';
         var isCur = (n === MT_UI.globalIface);
         html += '<button type="button" role="menuitemradio" aria-checked="' + String(isCur) + '" class="mt-global-iface-dd-item' + (isCur ? ' is-current' : '') + '"'
@@ -5043,6 +5005,7 @@ document.addEventListener('change', function(event) {
   }
   menu.replaceChildren();
   Array.from(select.options).forEach(function(option) {
+   if (option.hidden) return;
    var item = document.createElement('button'); item.type = 'button';
    item.className = 'mt-group-iface-dd-item' + (option.selected ? ' is-current' : '');
    item.setAttribute('role','menuitemradio'); item.setAttribute('aria-checked', String(option.selected));
@@ -6359,8 +6322,43 @@ document.addEventListener('DOMContentLoaded',function(){
  function restore(){baseline.forEach(function(item){var e=item.element;e.value=item.value;e.checked=item.checked;e.setCustomValidity('');syncSelect(e);});updateSaveState();}
  document.addEventListener('DOMContentLoaded',capture);
  ['input','change'].forEach(function(name){document.addEventListener(name,function(event){if(event.target.closest&&event.target.closest('#settings_modal'))updateSaveState();});});
+ async function loadWifiSegments(){
+  const responses = await Promise.all(['/api/optirout_interfaces','/api/optirout_config'].map(url => fetch(url,{cache:'no-store'})));
+  if(responses.some(response => !response.ok)) throw Error('Не удалось загрузить сегменты');
+  const [interfaces, routing] = await Promise.all(responses.map(response => response.json()));
+  if(!Array.isArray(interfaces.interfaces) || !routing.ok) throw Error('Не удалось загрузить сегменты');
+  return {interfaces:interfaces.interfaces.filter(item => /^br[0-9]+$/.test(_mtIfaceName(item))), links:routing.config.app.link || []};
+ }
+ function renderWifiSegments(data){
+  const target = document.getElementById('settings_wifi_segments');
+  target.replaceChildren();
+  if(!data?.interfaces.length){
+   target.textContent = data ? 'Сегменты сети не найдены.' : 'Не удалось загрузить сегменты.';
+   return;
+  }
+  const marker = document.createElement('input');
+  marker.type='hidden';marker.name='wifi_segments_present';marker.value='1';
+  target.append(marker);
+  for(const item of data.interfaces){
+   const label=document.createElement('label');
+   label.className='setting-label';
+   const input=document.createElement('input');
+   input.type='checkbox';input.name='wifi_segment';input.value=_mtIfaceName(item);
+   input.defaultChecked=data.links.includes(input.value);
+   label.append(input,document.createTextNode(' '+_mtIfaceLabel(item)));
+   target.append(label);
+  }
+ }
+ document.getElementById('settings_modal')?.closest('form')?.addEventListener('formdata',function(event){
+  const segments=Array.from(document.querySelectorAll('#settings_wifi_segments input[type="checkbox"]'));
+  if(!segments.some(input=>input.checked!==input.defaultChecked)){
+   event.formData.delete('wifi_segments_present');
+   event.formData.delete('wifi_segment');
+  }
+ });
  window.openSettingsModal=async function(){
   var current=++revision;restore();
+  const wifiSegments=loadWifiSegments().catch(()=>null);
   try{
    var response=await fetch('/',{cache:'no-store'});if(!response.ok)throw Error('HTTP '+response.status);
    var page=new DOMParser().parseFromString(await response.text(),'text/html');
@@ -6368,6 +6366,9 @@ document.addEventListener('DOMContentLoaded',function(){
    var saved=Array.from(page.querySelectorAll('#settings_modal input,#settings_modal select,#settings_modal textarea'));
    if(!saved.length)throw Error('Не удалось получить сохранённые настройки');
    controls().forEach(function(e){var source=saved.find(function(s){return s.name===e.name&&s.type===e.type&&(e.type!=='radio'||s.value===e.value);});if(!source)return;e.value=source.value;e.checked=source.checked;e.setCustomValidity('');syncSelect(e);});
+   const segments=await wifiSegments;
+   if(current!==revision)return;
+   renderWifiSegments(segments);
    capture();originalOpen();
   }catch(e){if(current===revision)alert('Не удалось загрузить настройки: '+e.message);}
  };
@@ -6609,7 +6610,9 @@ function routingConfigSignature(kind,value){
  }
  // Engine power is applied immediately, outside the Save transaction.
  delete data.enabled;
- if(kind==='optirout')data.groups=(data.groups||[]).map(cleanGroup);
+ if(kind==='optirout'){
+  data.groups=(data.groups||[]).map(cleanGroup);
+ }
  else{
   ['block','direct','proxy'].forEach(function(cat){
    if(data.groups_ui&&data.groups_ui[cat])data.groups_ui[cat]=data.groups_ui[cat].map(cleanGroup);
