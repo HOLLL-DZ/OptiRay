@@ -69,8 +69,8 @@
                     </div>
                 </div>
 
-<div class="settings-workspace"><nav class="settings-sidebar" aria-label="Разделы настроек"><button type="button" class="settings-nav-item" data-settings-tab="connection" aria-controls="settings_panel_connection" onclick="selectSettingsTab('connection')">Подключение и маршрутизация</button><button type="button" class="settings-nav-item" data-settings-tab="cores" aria-controls="settings_panel_cores" onclick="selectSettingsTab('cores')">Ядра</button><button type="button" class="settings-nav-item" data-settings-tab="testing" aria-controls="settings_panel_testing" onclick="selectSettingsTab('testing')">Проверка серверов</button><button type="button" class="settings-nav-item" data-settings-tab="appearance" aria-controls="settings_panel_appearance" onclick="selectSettingsTab('appearance')">Интерфейс</button><button type="button" class="settings-nav-item" data-settings-tab="security" aria-controls="settings_panel_security" onclick="selectSettingsTab('security')">Безопасность</button><button type="button" class="settings-nav-item" data-settings-tab="maintenance" aria-controls="settings_panel_maintenance" onclick="selectSettingsTab('maintenance')">Обслуживание</button><button type="button" class="settings-nav-item" data-settings-tab="backups" aria-controls="settings_panel_backups" onclick="selectSettingsTab('backups')">Резервное копирование и сброс</button></nav><div class="settings-scroll"><section id="settings_panel_connection" class="settings-panel" aria-label="Подключение и маршрутизация"><div class="settings-section-card">
-<div class="modal-section-title">Keenetic прокси</div>
+<div class="settings-workspace"><nav class="settings-sidebar" aria-label="Разделы настроек"><button type="button" class="settings-nav-item" data-settings-tab="connection" aria-controls="settings_panel_connection" onclick="selectSettingsTab('connection')">Подключение</button><button type="button" class="settings-nav-item" data-settings-tab="routing" aria-controls="settings_panel_routing" onclick="selectSettingsTab('routing')">Маршрутизация</button><button type="button" class="settings-nav-item" data-settings-tab="cores" aria-controls="settings_panel_cores" onclick="selectSettingsTab('cores')">Ядра</button><button type="button" class="settings-nav-item" data-settings-tab="testing" aria-controls="settings_panel_testing" onclick="selectSettingsTab('testing')">Проверка серверов</button><button type="button" class="settings-nav-item" data-settings-tab="appearance" aria-controls="settings_panel_appearance" onclick="selectSettingsTab('appearance')">Интерфейс</button><button type="button" class="settings-nav-item" data-settings-tab="security" aria-controls="settings_panel_security" onclick="selectSettingsTab('security')">Безопасность</button><button type="button" class="settings-nav-item" data-settings-tab="maintenance" aria-controls="settings_panel_maintenance" onclick="selectSettingsTab('maintenance')">Обслуживание</button><button type="button" class="settings-nav-item" data-settings-tab="backups" aria-controls="settings_panel_backups" onclick="selectSettingsTab('backups')">Резервное копирование и сброс</button></nav><div class="settings-scroll"><section id="settings_panel_connection" class="settings-panel" aria-label="Подключение"><div class="settings-section-card">
+<div class="modal-section-title">Keenetic прокси SOCKS5</div>
                 <div class="xray-manager-box">
                     <div class="setting-field"><label class="setting-label">Имя подключения:</label><input type="text" name="proxy_name" value="__PROXY_NAME__" class="setting-input"></div>
                     <div class="setting-field">
@@ -83,11 +83,6 @@
                 </div>
 
                 </div>
-<div class="settings-section-card">
-    <div class="modal-section-title">Маршрутизация для сегментов Wi-Fi</div>
-    <div id="settings_wifi_segments" style="display:flex;flex-wrap:wrap;gap:8px;"></div>
-    <p class="settings-description" style="margin:8px 0 0;">OptiRout перехватывает DNS-запросы в выбранных сегментах.</p>
-</div>
 <div class="settings-section-card">
 <div class="modal-section-title">Клиент для подписки</div>
                 <div class="xray-manager-box">
@@ -120,6 +115,31 @@
                 </div>
 
                 </div>
+</section><section id="settings_panel_routing" class="settings-panel" aria-label="Маршрутизация" hidden><div class="settings-section-card">
+    <div class="modal-section-title">Маршрутизация для сегментов Wi-Fi</div>
+    <div id="settings_wifi_segments" style="display:flex;flex-wrap:wrap;gap:8px;"></div>
+    <p class="settings-description" style="margin:8px 0 0;">OptiRout перехватывает DNS-запросы в выбранных сегментах.</p>
+</div>
+<div class="settings-section-card">
+<div class="modal-section-title">GeoIP и GeoSite</div>
+<div class="geo-data-settings">
+ <div class="setting-field geo-source-field"><label class="setting-label" for="geo_data_source">Источник:</label><div class="geo-source-controls"><select id="geo_data_source" class="core-select" onchange="syncGeoSource()"><option value="standard">Стандартные — Xray-core</option><option value="github">Свой адрес</option></select><button type="button" id="geo_data_update" class="btn core-btn core-btn-install" onclick="updateGeoData(this)">Обновить</button></div></div>
+ <p class="geo-data-help">Укажите прямую ссылку на каждый DAT-файл. Обе базы обновляются общей кнопкой. Адреса сохраняются после успешного скачивания. Обновление базы кратковременно перезапускает активное соединение Xray.</p>
+ <div class="geo-data-file" data-geo-name="geoip.dat">
+  <div class="geo-data-file-heading"><label for="geo_geoip_url">GeoIP</label></div>
+  <input id="geo_geoip_url" class="setting-input geo-file-url" type="url" placeholder="https://…/geoip.dat" autocomplete="off" spellcheck="false" aria-label="Адрес GeoIP">
+  <div class="geo-data-file-info" aria-live="polite">Загрузка информации о файле…</div>
+  <div class="geo-data-path"></div>
+ </div>
+ <div class="geo-data-file" data-geo-name="geosite.dat">
+  <div class="geo-data-file-heading"><label for="geo_geosite_url">GeoSite</label></div>
+  <input id="geo_geosite_url" class="setting-input geo-file-url" type="url" placeholder="https://…/geosite.dat" autocomplete="off" spellcheck="false" aria-label="Адрес GeoSite">
+  <div class="geo-data-file-info" aria-live="polite">Загрузка информации о файле…</div>
+  <div class="geo-data-path"></div>
+ </div>
+ <div id="geo_data_status" class="geo-data-help" role="status"></div>
+</div>
+</div>
 </section><section id="settings_panel_cores" class="settings-panel" aria-label="Ядра" hidden><div class="settings-section-card">
 <div class="modal-section-title settings-core-heading" data-core-kind="xray"><span>Xray-core</span></div>
                 <div class="xray-manager-box">
@@ -153,26 +173,6 @@
                 </div>
 
                 
-</div>
-<div class="settings-section-card">
-<div class="modal-section-title">GeoIP и GeoSite</div>
-<div class="geo-data-settings">
- <div class="setting-field geo-source-field"><label class="setting-label" for="geo_data_source">Источник:</label><div class="geo-source-controls"><select id="geo_data_source" class="core-select" onchange="syncGeoSource()"><option value="standard">Стандартные — Xray-core</option><option value="github">Свой адрес</option></select><button type="button" id="geo_data_update" class="btn core-btn core-btn-install" onclick="updateGeoData(this)">Обновить</button></div></div>
- <p class="geo-data-help">Укажите прямую ссылку на каждый DAT-файл. Обе базы обновляются общей кнопкой. Адреса сохраняются после успешного скачивания. Обновление базы кратковременно перезапускает активное соединение Xray.</p>
- <div class="geo-data-file" data-geo-name="geoip.dat">
-  <div class="geo-data-file-heading"><label for="geo_geoip_url">GeoIP</label></div>
-  <input id="geo_geoip_url" class="setting-input geo-file-url" type="url" placeholder="https://…/geoip.dat" autocomplete="off" spellcheck="false" aria-label="Адрес GeoIP">
-  <div class="geo-data-file-info" aria-live="polite">Загрузка информации о файле…</div>
-  <div class="geo-data-path"></div>
- </div>
- <div class="geo-data-file" data-geo-name="geosite.dat">
-  <div class="geo-data-file-heading"><label for="geo_geosite_url">GeoSite</label></div>
-  <input id="geo_geosite_url" class="setting-input geo-file-url" type="url" placeholder="https://…/geosite.dat" autocomplete="off" spellcheck="false" aria-label="Адрес GeoSite">
-  <div class="geo-data-file-info" aria-live="polite">Загрузка информации о файле…</div>
-  <div class="geo-data-path"></div>
- </div>
- <div id="geo_data_status" class="geo-data-help" role="status"></div>
-</div>
 </div>
 </section><section id="settings_panel_testing" class="settings-panel" aria-label="Проверка серверов" hidden><div class="settings-section-card">
 <div class="modal-section-title">Замеры задержки</div>
@@ -575,11 +575,11 @@ Xray / Hysteria: <code>/opt/etc/optiray-go/log/xray-go.log</code>
             </div>
             <div class="setting-field" style="flex-direction: column; align-items: stretch;">
                 <div>
-                    Первая строка — <b>название группы</b>, далее по одной строке — <b>правила</b>.
-                    Пустые строки и комментарии (<code>#</code>) пропускаются.
-                    Вставьте текст через Ctrl+V и нажмите «Добавить».
+                    Каждая строка — отдельное правило. Пустые строки и комментарии (#) пропускаются.
+                    Вставь список и нажми «Добавить».
                 </div>
                 <div class="paste-mode-toggle" role="group" aria-label="Режим вставки правил"><input type="checkbox" id="paste_group_modal_replace" hidden><button type="button" aria-pressed="true" onclick="selectPasteMode(this,false)">Добавить</button><button type="button" aria-pressed="false" onclick="selectPasteMode(this,true)">Заменить</button></div>
+                <input type="text" id="paste_group_name" class="setting-input" aria-label="Название группы" placeholder="Название группы — по умолчанию Новая группа" autocomplete="off">
                 <textarea id="paste_group_textarea" class="setting-input"
                           rows="10" spellcheck="false"
                           placeholder="Вставьте сюда (Ctrl+V)…"

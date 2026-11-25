@@ -17,6 +17,7 @@ import (
 )
 
 type App struct {
+	geoProgress           geoDownloadState
 	coreIndicators        coreIndicatorState
 	geoCatalog            geoCatalogState
 	metrics               routerMetricsState
@@ -71,6 +72,19 @@ func (a *App) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	case r.Method == "GET" && r.URL.Path == "/api/geo_categories":
 		a.geoCategories(w, r)
+		return
+	case r.Method == "GET" && r.URL.Path == "/api/optirout_geo_rules":
+		a.optiroutGeoRules(w, r)
+		return
+	case r.Method == "POST" && r.URL.Path == "/api/optirout_geo_sync":
+		if err := a.syncSavedGeo(); err != nil {
+			jsonReply(w, 400, Object{"ok": false, "error": err.Error()})
+		} else {
+			jsonReply(w, 200, Object{"ok": true})
+		}
+		return
+	case r.Method == "GET" && r.URL.Path == "/api/geo_download_progress":
+		jsonReply(w, 200, a.geoProgress.snapshot())
 		return
 	case r.URL.Path == "/api/geo_data":
 		a.geoAPI(w, r)
@@ -439,21 +453,14 @@ func (a *App) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	case r.Method == "POST" && r.URL.Path == "/api/save_sub_color":
 		err = r.ParseForm()
 		if err == nil {
-			err = a.store.change(func(d Object) error {
-				color := r.Form.Get("color")
-				if !regexp.MustCompile(`^#[0-9a-fA-F]{6}$`).MatchString(color) {
-					return fmt.Errorf("invalid color")
-				}
-				id := r.Form.Get("sub_id")
-				for _, v := range list(d["subscriptions"]) {
-					s := obj(v)
-					if str(s["id"]) == id {
-						s["color"] = color
-						return nil
-					}
-				}
-				return fmt.Errorf("subscription not found")
-			})
+			color := r.Form.Get("color")
+			if !regexp.MustCompile(`^#[0-9a-fA-F]{6}$`).MatchString(color) {
+				err = fmt.Errorf("invalid color")
+			} else {
+				a.connectMu.Lock()
+				err = a.store.setSubscriptionColor(r.Form.Get("sub_id"), color)
+				a.connectMu.Unlock()
+			}
 		}
 	default:
 		jsonReply(w, http.StatusNotFound, Object{"ok": false, "error": "Unknown endpoint"})

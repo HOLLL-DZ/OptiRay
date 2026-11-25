@@ -4,6 +4,7 @@ import (
 	"archive/zip"
 	"context"
 	"encoding/binary"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -12,6 +13,7 @@ import (
 	"path"
 	"path/filepath"
 	"runtime"
+	"runtime/debug"
 	"strings"
 	"time"
 	"unicode/utf8"
@@ -273,7 +275,8 @@ func (a *App) updateGeoFiles(ctx context.Context, source string, requested map[s
 	}()
 	if source == "github" {
 		for _, name := range names {
-			if err = downloadCore(ctx, addresses[name], filepath.Join(stage, name)); err != nil {
+			a.geoProgress.set(name, 0, 0, "download")
+			if err = downloadCoreProgress(ctx, addresses[name], filepath.Join(stage, name), func(done, total int64) { a.geoProgress.set(name, done, total, "download") }); err != nil {
 				return fmt.Errorf("%s: %w", name, err)
 			}
 		}
@@ -283,7 +286,8 @@ func (a *App) updateGeoFiles(ctx context.Context, source string, requested map[s
 			return err
 		}
 		archivePath := filepath.Join(stage, "xray.zip")
-		if err = downloadCore(ctx, "https://github.com/XTLS/Xray-core/releases/latest/download/Xray-linux-"+arch+".zip", archivePath); err != nil {
+		a.geoProgress.set("Xray.zip", 0, 0, "download")
+		if err = downloadCoreProgress(ctx, "https://github.com/XTLS/Xray-core/releases/latest/download/Xray-linux-"+arch+".zip", archivePath, func(done, total int64) { a.geoProgress.set("Xray.zip", done, total, "download") }); err != nil {
 			return err
 		}
 		archive, err := zip.OpenReader(archivePath)
@@ -318,6 +322,8 @@ func (a *App) updateGeoFiles(ctx context.Context, source string, requested map[s
 			}
 		}
 	}
+	a.geoProgress.set("", 0, 0, "apply")
+	defer a.geoProgress.set("", 0, 0, "idle")
 	for _, name := range names {
 		data, err := os.ReadFile(filepath.Join(stage, name))
 		if err != nil {
@@ -327,62 +333,58 @@ func (a *App) updateGeoFiles(ctx context.Context, source string, requested map[s
 			return fmt.Errorf("%s: %w", name, err)
 		}
 	}
-	undo, err := replaceCoreFiles(root, stage, names)
+	debug.FreeOSMemory()
+	before := a.store.snapshot()
+	next := clone(before)
+	previous, err := a.store.loadOptirout()
 	if err != nil {
 		return err
 	}
-	d := a.store.snapshot()
-	active := a.core != nil && a.core.Running() && first(a.core.kind, "xray") == "xray"
-	restore := func(cause error) error {
-		if err := undo(); err != nil {
-			keepStage = true
-			return fmt.Errorf("%v; ошибка отката файлов: %w; копия: %s", cause, err, stage)
-		}
-		if active {
-			if err := a.rollbackRuntime(d, nil); err != nil {
-				return fmt.Errorf("%v; ошибка восстановления соединения: %w", cause, err)
-			}
-		}
-		return cause
+	updated, err := syncOptiroutGeo(previous, stage, names)
+	if err != nil {
+		return err
 	}
-	if active {
-		server, _ := findServer(d, str(d["selected"]), "")
-		if server == nil {
-			return restore(fmt.Errorf("Активный сервер не найден"))
-		}
-		if err = a.core.ApplyServer(server, d, integer(d["proxy_port"])); err != nil {
-			return restore(err)
+	debug.FreeOSMemory()
+	extra := map[string][]byte{}
+	diskFiles := map[string]string{}
+	for _, name := range names {
+		diskFiles["bin/"+name] = filepath.Join(stage, name)
+	}
+	extra["routing/optirout.json"], err = json.Marshal(updated)
+	if err != nil {
+		return err
+	}
+	configs := obj(next["geo_data_files"])
+	if len(configs) == 0 {
+		configs = Object{}
+		for _, file := range geoNames {
+			configs[file] = geoFileConfig(next, file)
 		}
 	}
-	if err = a.store.change(func(next Object) error {
-		configs := obj(next["geo_data_files"])
-		if len(configs) == 0 {
-			configs = Object{}
-			for _, file := range geoNames {
-				configs[file] = geoFileConfig(next, file)
+	for _, name := range names {
+		address := addresses[name]
+		if source == "standard" {
+			address = str(geoFileConfig(next, name)["url"])
+			if entered := strings.TrimSpace(requested[name]); entered != "" {
+				address = entered
 			}
 		}
-		for _, name := range names {
-			address := addresses[name]
-			if source == "standard" {
-				address = str(geoFileConfig(next, name)["url"])
-				if entered := strings.TrimSpace(requested[name]); entered != "" {
-					address = entered
-				}
-			}
-			configs[name] = Object{"source": source, "url": address}
-		}
-		next["geo_data_files"] = configs
-		delete(next, "geo_data_source")
-		delete(next, "geo_data_repository")
-		return nil
-	}); err != nil {
-		return restore(err)
+		configs[name] = Object{"source": source, "url": address}
+	}
+	next["geo_data_files"] = configs
+	delete(next, "geo_data_source")
+	delete(next, "geo_data_repository")
+	if err := a.store.backupGeoRouting(previous, updated); err != nil {
+		return err
+	}
+	if err := a.commitState(ctx, before, next, extra, diskFiles); err != nil {
+		return err
 	}
 	return nil
 }
 
 func (a *App) geoAPI(w http.ResponseWriter, r *http.Request) {
+	defer debug.FreeOSMemory()
 	if r.Method == "GET" {
 		jsonReply(w, 200, a.geoInfo())
 		return

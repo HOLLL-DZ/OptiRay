@@ -57,6 +57,16 @@ func sanitizeOptirout(input Object) (Object, error) {
 			enabled = boolean(v)
 		}
 		out := Object{"id": id, "name": str(g["name"]), "color": first(str(g["color"]), "#888888"), "interface": str(g["interface"]), "enable": enabled}
+		if source := str(g["geo_source"]); source != "" {
+			if !geoRuleSource.MatchString(source) {
+				return nil, fmt.Errorf("invalid OptiRout geo source")
+			}
+			out["geo_source"] = source
+			if notice := str(g["geo_notice"]); notice != "" {
+				out["geo_notice"] = notice
+			}
+			out["name"] = source
+		}
 		rules := []any{}
 		for _, v := range list(g["rules"]) {
 			r := obj(v)

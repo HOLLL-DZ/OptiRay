@@ -37,7 +37,7 @@ func TestPolicyCLIFallback(t *testing.T) {
 	g.required = true
 	g.baseURL = srv.URL
 	g.client = srv.Client()
-	config := "! $$$ Agent: http/rci\nip policy Policy0\n    permit global ISP\n    no permit global Proxy0\n!\nip policy Policy1\n    permit global Proxy0\n!\n"
+	config := "! $$$ Agent: http/rci\nip policy Policy0\n    permit global ISP\n    no permit global Proxy0\n    no permit global GigabitEthernet0/Vlan3\n!\nip policy Policy1\n    permit global Proxy0\n    permit global GigabitEthernet0/Vlan4\n!\n"
 	state := "policy, name = Policy0, description = Test:\n mark: ffffaaa\npolicy, name = Policy1, description = Other:\n mark: ffffaab\n"
 	g.runCLI = func(command string) (string, error) {
 		switch command {
@@ -49,6 +49,8 @@ func TestPolicyCLIFallback(t *testing.T) {
 			return "\n system-name: eth3\n", nil
 		case "show interface Proxy0 system-name":
 			return " system-name: t2s0\r\n\x1b[K", nil
+		case "show interface GigabitEthernet0/Vlan4 system-name":
+			return "system-name: eth0.4\n", nil
 		default:
 			return "", fmt.Errorf("unexpected CLI command")
 		}
@@ -57,7 +59,7 @@ func TestPolicyCLIFallback(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if g.source != "cli" || scopes[0xffffaaa]["t2s0"] || !scopes[0xffffaaa]["eth3"] || !scopes[0xffffaab]["t2s0"] {
+	if g.source != "cli" || scopes[0xffffaaa]["t2s0"] || !scopes[0xffffaaa]["eth3"] || !scopes[0xffffaab]["t2s0"] || !scopes[0xffffaab]["eth0.4"] {
 		t.Fatalf("bad scopes: %#v", scopes)
 	}
 	state = "policy, name = Policy0:\n mark: ffffaaa\n"
@@ -71,6 +73,11 @@ func TestPolicyCLIFallback(t *testing.T) {
 }
 
 func TestPolicyCLIRejectsUnknownPermissionsAndBadMarks(t *testing.T) {
+	for _, name := range []string{"GigabitEthernet0//Vlan3", "GigabitEthernet0/Vlan3;show", "/Vlan3"} {
+		if _, err := parseCLIPolicyConfig("ip policy Policy0\n permit global " + name + "\n"); err == nil {
+			t.Errorf("invalid interface name accepted: %s", name)
+		}
+	}
 	if _, err := parseCLIPolicyConfig("ip policy Policy0\n permit local Proxy0\n"); err == nil {
 		t.Fatal("unsupported permission accepted")
 	}

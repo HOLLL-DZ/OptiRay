@@ -8,6 +8,7 @@ import (
 )
 
 var cliPolicyID = regexp.MustCompile(`^[a-zA-Z0-9_-]+$`)
+var cliInterfaceID = regexp.MustCompile(`^[a-zA-Z0-9_-]+(?:/[a-zA-Z0-9_-]+)*$`)
 var cliSystemName = regexp.MustCompile(`^[a-zA-Z0-9_.:-]{1,15}$`)
 var cliPolicyHeader = regexp.MustCompile(`^policy, name = ([a-zA-Z0-9_-]+)(?:,|:)`)
 var cliEscape = regexp.MustCompile("\x1b\\[[0-?]*[ -/]*[@-~]")
@@ -44,7 +45,7 @@ func parseCLIPolicyConfig(text string) (map[string]policyConfig, error) {
 		if len(fields) == 0 || fields[0] != "permit" {
 			continue
 		}
-		if len(fields) != 3 || fields[1] != "global" || !cliPolicyID.MatchString(fields[2]) {
+		if len(fields) != 3 || fields[1] != "global" || !cliInterfaceID.MatchString(fields[2]) {
 			return nil, fmt.Errorf("unsupported policy permit")
 		}
 		p := config[id]

@@ -576,12 +576,46 @@ function genNewHwid() {
     el.dispatchEvent(new Event('input',{bubbles:true}));
 }
 
-var subColorSaving = false;
+var subColorsSaving = new Set();
+
+function previewSubscriptionColor(subId, hex) {
+    var row = document.getElementById('sub-row-' + subId);
+    var section = document.getElementById('sub-section-' + subId);
+    if (row) {
+        var source = row.querySelector('input[type="color"]');
+        if (source) source.value = hex;
+        row.style.setProperty('--subscription-color', hex);
+        row.style.background = hex + '10';
+        row.style.borderColor = hex + '40';
+        row.style.borderLeftColor = hex + '80';
+    }
+    if (section) {
+        section.style.setProperty('--subscription-color', hex);
+        section.style.background = hex + '10';
+        section.style.borderColor = hex + '40';
+        section.style.borderLeftColor = hex + '80';
+        section.dataset.subcolor = hex;
+    }
+    var rows = Array.from(document.querySelectorAll('.sub-row'));
+    var chip = document.querySelectorAll('.subs-name-chip')[rows.indexOf(row)];
+    if (chip) {
+        chip.style.setProperty('--subscription-color', hex);
+        var dot = chip.querySelector('.subs-name-dot');
+        if (dot) dot.style.background = hex;
+    }
+}
+
 async function changeSubColor(subId, hex) {
-    if (subColorSaving) return false;
-    subColorSaving = true;
-    var controls = Array.from(document.querySelectorAll('.sub-manual-color-trigger,.sub-row .dice-btn,#sub_manual_palette input'));
+    var row = document.getElementById('sub-row-' + subId);
+    if (!row || subColorsSaving.has(subId)) return false;
+    var source = row.querySelector('input[type="color"]');
+    if (!source) return false;
+    var previous = source.defaultValue;
+    if (hex.toLowerCase() === previous.toLowerCase()) return true;
+    subColorsSaving.add(subId);
+    var controls = Array.from(row.querySelectorAll('.dice-btn,input[type="color"]'));
     controls.forEach(function (control) { control.disabled = true; });
+    previewSubscriptionColor(subId, hex);
     try {
         var response = await fetch('/api/save_sub_color', {
             method: 'POST',
@@ -591,32 +625,14 @@ async function changeSubColor(subId, hex) {
         if (!response.ok) throw new Error('Не удалось сохранить цвет');
         var result = await response.json();
         if (result.ok === false) throw new Error(result.error || 'Не удалось сохранить цвет');
-        var source = document.querySelector('input[name="sub_color_' + subId + '"]');
-        if (source) source.value = hex;
-    var row = document.getElementById('sub-row-' + subId);
-    var sec = document.getElementById('sub-section-' + subId);
-    if (row) {
-        row.style.setProperty('--subscription-color',hex);
-        row.style.background = hex + '10';
-        row.style.border = '1px solid ' + hex + '35';
-        row.style.borderLeft = '5px solid ' + hex;
-    }
-    if (sec) {
-        sec.style.setProperty('--subscription-color',hex);
-        sec.style.background = hex + '10';
-        sec.style.border = '1px solid ' + hex + '35';
-        sec.style.borderLeft = '5px solid ' + hex;
-        sec.dataset.subcolor = hex;
-    }
-    var rows = Array.from(document.querySelectorAll('.sub-row'));
-    var chip = document.querySelectorAll('.subs-name-chip')[rows.indexOf(row)];
-    if (chip) { chip.style.setProperty('--subscription-color',hex); var dot=chip.querySelector('.subs-name-dot'); if(dot)dot.style.background=hex; }
+        source.defaultValue = hex;
         return true;
     } catch (error) {
+        previewSubscriptionColor(subId, previous);
         alert(error.message || 'Не удалось сохранить цвет');
         return false;
     } finally {
-        subColorSaving = false;
+        subColorsSaving.delete(subId);
         controls.forEach(function (control) { control.disabled = false; });
     }
 }
@@ -1209,8 +1225,9 @@ var OPTIRAY_ROUTING_ICONS = {
 
 function _mtRuleHtml(gid, r) {
     var off = (r.enable === false) ? ' mt-rule-off' : '';
-    var typeOpts = ['namespace', 'wildcard', 'subnet'].map(function(t) {
-        return '<option value="' + t + '"' + (t === r.type ? ' selected' : '') + '>' + t + '</option>';
+    var labels = {namespace: 'Domain', wildcard: 'Domain wildcard', subnet: 'IP, CIDR'};
+    var typeOpts = Object.keys(labels).map(function(t) {
+        return '<option value="' + t + '"' + (t === r.type ? ' selected' : '') + '>' + labels[t] + '</option>';
     }).join('');
     return '<div class="mt-rule' + off + '" data-cat="mt" data-gid="' + _mtEsc(gid) + '" data-rid="' + _mtEsc(r.id) + '">'
         + '<span class="mt-rule-drag" title="Перетащить"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="5" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="19" r="1"/></svg></span>'
@@ -1229,19 +1246,29 @@ function _mtGroupHtml(g) {
     var off = (g.enable === false) ? ' mt-group-off' : '';
     var rulesHtml = '';
     var rs = g.rules || [];
+    var geo = g.geo_source;
+    if (geo) {
+        rulesHtml = '<div class="mt-geo-preview"><strong>' + _mtEsc(geo) + '</strong>'
+            + '<div class="mt-geo-tools"><button type="button" onclick="syncRoutingGeoGroups()">Обновить из базы</button>'
+            + '<button type="button" onclick="detachRoutingGeoGroup(&quot;' + _mtEsc(g.id) + '&quot;)">Сделать обычной группой</button>'
+            + (g.geo_notice ? '<button type="button" onclick="replaceRoutingGeoGroup(&quot;' + _mtEsc(g.id) + '&quot;)">Загрузить доступные правила</button>' : '')
+            + '</div><ul>'
+            + rs.map(function(r){return '<li data-geo-rule-key="' + _mtEsc(String(r.type || 'namespace').toLowerCase() + ':' + String(r.rule).trim().toLowerCase().replace(/\.+$/, '')) + '">' + _mtEsc(r.rule) + '</li>';}).join('')
+            + '</ul></div>';
+    }
     if (!rs.length) rs = [{id: _mtNewId(), type: 'namespace', rule: '', enable: true}];
-    for (var i = 0; i < rs.length; i++) rulesHtml += _mtRuleHtml(g.id, rs[i]);
+    if (!geo) for (var i = 0; i < rs.length; i++) rulesHtml += _mtRuleHtml(g.id, rs[i]);
     return '<div class="mt-group-card' + collapsed + off + '" style="--rule-group-color:' + (/^#[0-9a-f]{6}$/i.test(g.color || '') ? g.color : '#888888') + '" data-gid="' + _mtEsc(g.id) + '">'
         + '<div class="mt-group-head">'
         +   '<span class="mt-group-drag" title="Перетащить"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="5" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="19" r="1"/></svg></span>'
         +   '<label class="rt-check" title="Включить группу"><input type="checkbox" class="mt-group-enable"' + (g.enable !== false ? ' checked' : '') + '></label>'
-        +   '<span aria-hidden="true"></span><input type="color" class="mt-group-color" value="' + _mtEsc(g.color || '#888888') + '" title="Цвет">'
-        +   '<input type="text" class="mt-group-name" value="' + _mtEsc(g.name || '') + '" placeholder="Имя группы">'
+        +   '<span aria-hidden="true"></span><input type="color" class="mt-group-color" value="' + _mtEsc(g.color || '#888888') + '" title="Цвет"' + (geo ? ' disabled' : '') + '>'
+        +   '<input type="text" class="mt-group-name" value="' + _mtEsc(g.geo_source || g.name || '') + '" placeholder="Имя группы"' + (geo ? ' readonly tabindex="-1" title="Группа из геобазы"' : '') + '>'
         +   '<div class="mt-group-controls" role="group" aria-label="Интерфейс и действия группы">'
         +   _mtIfacePickerHtml(g.interface || '', g.id)
-        +   '<div class="mt-group-actions"><button type="button" class="rt-icon-btn mt-add-rule" title="Добавить правило" aria-label="Добавить правило"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>'
+        +   '<div class="mt-group-actions">' + (geo ? '' : '<button type="button" class="rt-icon-btn mt-add-rule" title="Добавить правило" aria-label="Добавить правило"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>'
         +   '<button type="button" class="rt-icon-btn mt-group-bulk" title="Добавить правила списком">' + OPTIRAY_ROUTING_ICONS.bulk + '</button>'
-        +   '<button type="button" class="rt-icon-btn mt-group-copy" title="Копировать группу в буфер">' + OPTIRAY_ROUTING_ICONS.copy + '</button>'
+        +   '<button type="button" class="rt-icon-btn mt-group-copy" title="Копировать группу в буфер">' + OPTIRAY_ROUTING_ICONS.copy + '</button>')
         +   '<button type="button" class="rt-icon-btn rt-group-del" title="Удалить группу">' + OPTIRAY_ROUTING_ICONS.delete + '</button>'
         +   '</div>'
         +   '</div>'
@@ -1249,6 +1276,7 @@ function _mtGroupHtml(g) {
         +       OPTIRAY_ROUTING_ICONS.toggle
         +   '</button>'
         + '</div>'
+        + (g.geo_notice ? '<div class="mt-geo-notice" role="status">' + _mtEsc(g.geo_notice) + '</div>' : '')
         + '<div class="mt-group-body">'
         +   '<div class="mt-rules">' + rulesHtml + '</div>'
         
@@ -1337,7 +1365,7 @@ function _mtCollectFromUi(silent) {
             if (cfg.groups[i].id === gid) { g = cfg.groups[i]; break; }
         }
         if (!g) g = { id: gid, name: '', color: '#888888', interface: '', enable: true, rules: [] };
-        g.name = (card.querySelector('.mt-group-name') || {}).value || '';
+        g.name = g.geo_source || (card.querySelector('.mt-group-name') || {}).value || '';
         g.color = (card.querySelector('.mt-group-color') || {}).value || '#888888';
         g.interface = (card.querySelector('.mt-group-iface') || {}).value || '';
         g.enable = !!(card.querySelector('.mt-group-enable') || {}).checked;
@@ -1346,6 +1374,7 @@ function _mtCollectFromUi(silent) {
         if (MT_UI && MT_UI.collapsed) {
             MT_UI.collapsed[gid] = card.classList.contains('collapsed');
         }
+        if (g.geo_source) { newGroups.push(g); return; }
         var newRules = [];
         card.querySelectorAll('.mt-rule').forEach(function(rEl) {
             var rid = rEl.getAttribute('data-rid');
@@ -1377,7 +1406,7 @@ window.mtAddGroup = function() {
         id: _mtNewId(),
         name: 'Новая группа',
         color: randomRoutingGroupColor(),
-        interface: (_mtIfaceName(MT_STATE.interfaces[0]) || 't2s0'),
+        interface: 'blackhole',
         enable: true,
         collapsed: false,
         rules: [{ id: _mtNewId(), name: '', type: 'namespace', rule: '', enable: true }]
@@ -1439,6 +1468,10 @@ window.mtImportFile = function(inp) {
 };
 
 window.saveMtConfig = function() {
+    if(window.__mtScanRuleTypes)window.__mtScanRuleTypes();
+    var invalid=document.querySelector('#mt_groups_container .mt-rule-input[aria-invalid="true"]');
+    if(invalid){alert('Проверь подсвеченное правило: '+invalid.title);invalid.focus();return;}
+
     if(!MT_STATE.dirty)return;
     if (!_mtCollectFromUi(false)) {
         // _mtCollectFromUi вернул false — есть расхождение, показали ошибку, не сохраняем
@@ -1461,7 +1494,8 @@ window.saveMtConfig = function() {
                 _mtSetStatus('Ошибка: ' + ((d && d.error) || ('HTTP ' + r.status)), 'err');
                 return;
             }
-            _mtSetStatus(d.restarted ? 'Сохранено. OptiRout запущен.' : 'Сохранено. OptiRout не запущен.', 'ok');
+            window.refreshRoutingDuplicateBadge?.();
+        _mtSetStatus(d.restarted ? 'Сохранено. OptiRout запущен.' : 'Сохранено. OptiRout не запущен.', 'ok');
             MT_STATE.dirty = false;
         });
     }).catch(function(e) {
@@ -2344,7 +2378,7 @@ window.mtOpenPasteModal = function(btn) {
     var hint = document.getElementById('paste_group_hint');
     if (!m || !ta) { alert('Не удалось открыть окно вставки.'); return; }
     ta.value = '';
-    if (hint) hint.textContent = 'Первая строка — название группы, далее правила. Ctrl+Enter — добавить.';
+    if (hint) hint.textContent = 'Если имя пустое — «Новая группа». Ctrl+Enter — добавить.';
     window.__mt_paste_ctx = { btn: btn, isMt: true };
     m.style.display = 'flex';
     setTimeout(function() { try { ta.focus(); } catch(e) {} }, 60);
@@ -2360,13 +2394,12 @@ window.applyPasteGroupMt = function() {
         return;
     }
     var lines = String(raw).split(/\r?\n/);
-    var name = '';
+    var name = 'Новая группа';
     var rules = [];
     for (var i = 0; i < lines.length; i++) {
         var v = String(lines[i] || '').replace(/^\s+|\s+$/g, '');
         if (!v) continue;
         if (v.charAt(0) === '#') continue;
-        if (!name) { name = v; continue; }
         rules.push(v);
     }
     if (!name && !rules.length) {
@@ -2953,18 +2986,18 @@ window.applyPasteGroupAny = function () {
         if (!ta) { window.closePasteGroupModal(); return; }
         var raw = ta.value || '';
         if (!String(raw).trim()) {
+            inputEl.removeAttribute('aria-invalid');inputEl.classList.remove('mt-invalid-rule');inputEl.removeAttribute('title');
             if (hint) hint.textContent = 'Пусто — нечего добавлять.';
             return;
         }
         var lines = String(raw).split(/\r?\n/);
-        var name = '';
+        var name = 'Новая группа';
         var rules = [];
         for (var i = 0; i < lines.length; i++) {
             var v = String(lines[i] || '').replace(/^\s+|\s+$/g, '');
             if (!v) continue;
             if (v.charAt(0) === '#') continue;
-            if (!name) { name = v; continue; }
-            rules.push(v);
+                rules.push(v);
         }
         if (!name && !rules.length) {
             if (hint) hint.textContent = 'Не удалось распознать формат.';
@@ -3936,112 +3969,89 @@ window.applyPasteGroup = function () {
     function scan() {
         var modal = document.getElementById('mt_modal');
         if (!modal || modal.style.display !== 'flex') return;
-
-        // 1. Снять старые метки
-        var inputs = modal.querySelectorAll('.mt-rule-input');
-        for (var i = 0; i < inputs.length; i++) {
-            inputs[i].classList.remove('mt-dup');
-            inputs[i].classList.remove('mt-dup-x');
-        }
-        var cards = modal.querySelectorAll('.mt-group-card');
-        for (var i = 0; i < cards.length; i++) {
-            cards[i].removeAttribute('data-has-dup');
-            cards[i].removeAttribute('data-has-conf');
-            var old = cards[i].querySelector('.mt-dup-badge-group');
-            if (old && old.parentNode) old.parentNode.removeChild(old);
-        }
-
-        // 2. Собрать карту: normalized_rule -> [{el, gid}]
-        var map = {};
-        for (var i = 0; i < inputs.length; i++) {
-            var el = inputs[i];
-            var rEl = el.closest('.mt-rule');
-            if (!rEl) continue;
-            var chk = rEl.querySelector('.mt-rule-enable');
-            if (chk && !chk.checked) continue;
-            var card = el.closest('.mt-group-card');
-            if (card && card.classList.contains('mt-group-off')) continue;
-            var typeEl = rEl.querySelector('.mt-rule-type');
-            var type = typeEl ? typeEl.value : 'namespace';
-            var v = normRule(type, el.value);
-            if (!v) continue;
-            if (!map[v]) map[v] = [];
-            map[v].push({
-                el: el,
-                gid: card ? (card.getAttribute('data-gid') || '') : ''
+        var entries = new Map();
+        var groups = new Map((MT_STATE.config?.groups || []).map(g => [g.id,g]));
+        modal.querySelectorAll('.mt-dup-badge-group').forEach(el => el.remove());
+        modal.querySelectorAll('.mt-group-card').forEach(card => {
+            ['data-has-dup','data-has-conf','data-has-geo-dup'].forEach(k => card.removeAttribute(k));
+            card.querySelectorAll('.mt-rule-input,.mt-geo-preview li').forEach(el => {
+                el.classList.remove('mt-dup','mt-dup-x','mt-geo-duplicate','mt-geo-rule-duplicate','mt-repeat');
+                el.removeAttribute('title');
             });
-        }
-
-        // 3. Разметить дубликаты
-        var perGroup = {};
-        var totalDup = 0, totalConf = 0;
-
-        Object.keys(map).forEach(function(k) {
-            var arr = map[k];
-            if (arr.length < 2) return;
-            var byGid = {};
-            for (var i = 0; i < arr.length; i++) {
-                var g = arr[i].gid;
-                byGid[g] = (byGid[g] || 0) + 1;
+            if (!card.querySelector('.mt-group-enable')?.checked) return;
+            var group = groups.get(card.dataset.gid);
+            var iface = card.querySelector('.mt-group-iface');
+            var direction = iface?.value || group?.interface || 'blackhole';
+            var name = card.querySelector('.mt-group-name').value;
+            function add(key,el) {
+                if (!key || key.endsWith(':')) return;
+                if (!entries.has(key)) entries.set(key,[]);
+                entries.get(key).push({card,el,direction,name});
             }
-            var hasSameGroup = false;
-            Object.keys(byGid).forEach(function(g) { if (byGid[g] > 1) hasSameGroup = true; });
-
-            if (hasSameGroup) totalDup += arr.length;
-            else              totalConf += arr.length;
-
-            for (var i = 0; i < arr.length; i++) {
-                var a = arr[i];
-                a.el.classList.add(hasSameGroup ? 'mt-dup' : 'mt-dup-x');
-                if (!perGroup[a.gid]) perGroup[a.gid] = { d: 0, x: 0 };
-                if (hasSameGroup) perGroup[a.gid].d++;
-                else              perGroup[a.gid].x++;
-            }
+            if (group?.geo_source) {
+                var items = new Map([...card.querySelectorAll('[data-geo-rule-key]')].map(el => [el.dataset.geoRuleKey,el]));
+                group.rules.filter(r => r.enable !== false).forEach(r => {
+                    var key = normRule(r.type,r.rule);
+                    add(key,items.get(key));
+                });
+            } else card.querySelectorAll('.mt-rule').forEach(row => {
+                if (!row.querySelector('.mt-rule-enable')?.checked) return;
+                var el = row.querySelector('.mt-rule-input');
+                if(el) add(normRule(row.querySelector('.mt-rule-type')?.value,el.value),el);
+            });
         });
-
-        // 4. Бейджи на группах
-        for (var i = 0; i < cards.length; i++) {
-            var card2 = cards[i];
-            var gid2 = card2.getAttribute('data-gid') || '';
-            var gi = perGroup[gid2];
-            if (!gi || (gi.d === 0 && gi.x === 0)) continue;
-
-            if (gi.d > 0) card2.setAttribute('data-has-dup', '1');
-            else          card2.setAttribute('data-has-conf', '1');
-
-            var head = card2.querySelector('.mt-group-head');
-            if (!head) continue;
-            if (head.querySelector('.mt-dup-badge-group')) continue;
-
-            var text = '';
-            if (gi.d > 0) text += '\u26A0 ' + gi.d;
-            if (gi.x > 0) text += (text ? ' / ' : '') + '\u26A0 ' + gi.x + ' \u043A\u043E\u043D\u0444\u043B.';
-            var b = document.createElement('span');
-            b.className = 'mt-dup-badge-group' + (gi.d === 0 ? ' mt-dup-badge-group-x' : '');
-            b.textContent = text;
-            b.title = (gi.d > 0 ? gi.d + ' \u0434\u0443\u0431\u043B\u0438\u043A\u0430\u0442(\u043E\u0432) \u0432 \u0433\u0440\u0443\u043F\u043F\u0435' : '') +
-                      (gi.x > 0 ? (gi.d ? '; ' : '') + gi.x + ' \u043A\u043E\u043D\u0444\u043B\u0438\u043A\u0442(\u043E\u0432) \u0441 \u0434\u0440\u0443\u0433\u043E\u0439 \u0433\u0440\u0443\u043F\u043F\u043E\u0439' : '');
-            var titleEl = head.querySelector('.mt-group-name');
-            if (titleEl && titleEl.nextSibling) head.insertBefore(b, titleEl.nextSibling);
-            else head.appendChild(b);
+        var summaries = new Map();
+        function countLabel(count, forms) {
+            var last = count % 10, lastTwo = count % 100;
+            return count + ' ' + forms[lastTwo >= 11 && lastTwo <= 14 ? 2 : last === 1 ? 0 : last >= 2 && last <= 4 ? 1 : 2];
         }
 
-        // 5. Индикатор на кнопке Сохранить
-        var btn = document.getElementById('mt_save_btn');
-        if (btn) {
-            var hasIssues = (totalDup > 0 || totalConf > 0);
-            btn.classList.toggle('mt-has-dups', hasIssues);
-            btn.title = hasIssues
-                ? ('\u26A0 \u0414\u0443\u0431\u043B\u0438\u043A\u0430\u0442\u044B: '
-                   + totalDup + ' \u0432\u043D\u0443\u0442\u0440\u0438 \u0433\u0440\u0443\u043F\u043F, '
-                   + totalConf + ' \u043C\u0435\u0436\u0434\u0443 \u0433\u0440\u0443\u043F\u043F\u0430\u043C\u0438')
-                : '';
+        entries.forEach(matches => {
+            if(matches.length < 2) return;
+            var conflict = new Set(matches.map(m => m.direction)).size > 1;
+            var description = [...new Set(matches.map(m => m.name+' → '+(m.direction === 'blackhole' ? 'Блокировать' : m.direction)))].join('\n');
+            matches.forEach(m => {
+                var info = summaries.get(m.card) || {repeat:0,conflict:0,details:new Set()};
+                info[conflict?'conflict':'repeat']++;
+                info.details.add(description);
+                summaries.set(m.card,info);
+                if(m.el) {
+                    m.el.classList.add(conflict?'mt-dup-x':'mt-repeat');
+                    m.el.title = (conflict?'Конфликт направлений':'Повтор с одинаковым направлением')+'\n'+description;
+                }
+            });
+        });
+        var summary = document.getElementById('mt_duplicate_summary');
+        if (!summary) {
+            summary = document.createElement('span');
+            summary.id = 'mt_duplicate_summary';
+            summary.setAttribute('role','status');
+            document.getElementById('mt_status_bar')?.after(summary);
         }
-
-        if (window.console && (totalDup || totalConf)) {
-            console.log('optiray: MT \u0434\u0443\u0431\u043B\u0438\u043A\u0430\u0442\u044B: ' + totalDup
-                        + ', \u043A\u043E\u043D\u0444\u043B\u0438\u043A\u0442\u044B: ' + totalConf);
-        }
+        var repeats = 0, conflicts = 0;
+        entries.forEach(matches => {
+            if(matches.length < 2) return;
+            if(new Set(matches.map(m => m.direction)).size > 1) conflicts++;
+            else repeats++;
+        });
+        summary.replaceChildren();
+        [[repeats,'Повторы','mt-summary-repeat'],[conflicts,'Конфликты','mt-summary-conflict']].forEach(([count,label,style]) => {
+            if(!count) return;
+            var item = document.createElement('span');
+            item.className = style;
+            item.textContent = label + ': ' + count;
+            item.title = 'Количество совпадающих правил';
+            summary.append(item);
+        });
+        summary.hidden = !repeats && !conflicts;
+        summaries.forEach((info,card) => {
+            card.setAttribute(info.conflict?'data-has-conf':'data-has-dup','1');
+            var badge=document.createElement('span');
+            badge.className='mt-dup-badge-group'+(info.conflict?' mt-dup-badge-group-x':' mt-repeat');
+            badge.textContent=[info.repeat ? countLabel(info.repeat,['повтор','повтора','повторов']) : '',info.conflict ? '⚠ '+countLabel(info.conflict,['конфликт','конфликта','конфликтов']) : ''].filter(Boolean).join(' / ');
+            badge.title=[...info.details].join('\n\n');
+            card.querySelector('.mt-group-name').after(badge);
+        });
     }
 
     function schedule() {
@@ -4063,7 +4073,7 @@ window.applyPasteGroup = function () {
         if (!t || !t.closest || !t.closest('#mt_modal')) return;
         if (t.classList && (t.classList.contains('mt-rule-type') ||
                             t.classList.contains('mt-rule-enable') ||
-                            t.classList.contains('mt-group-enable'))) {
+                            t.classList.contains('mt-group-enable') || t.classList.contains('mt-group-iface'))) {
             schedule();
         }
     }, true);
@@ -4146,8 +4156,8 @@ window.applyPasteGroup = function () {
             try { window.__mtScanDups(); } catch(e) {}
         }
         return {
-            dups:  modal.querySelectorAll('.mt-rule-input.mt-dup').length,
-            confs: modal.querySelectorAll('.mt-rule-input.mt-dup-x').length
+            dups: 0,
+            confs: modal.querySelectorAll('[data-has-conf]').length
         };
     }
 
@@ -4412,6 +4422,34 @@ window.applyPasteGroup = function () {
         return null;
     }
 
+    function validAddress(value) {
+        var parts=value.split('/'),host=parts[0];
+        if(parts.length>2)return false;
+        if(host.includes(':')){
+            try { new URL('http://['+host+']/'); } catch(e){return false;}
+            return parts.length===1 || (/^\d+$/.test(parts[1]) && Number(parts[1])<=128);
+        }
+        return /^\d{1,3}(\.\d{1,3}){3}$/.test(host) && host.split('.').every(n=>Number(n)<=255) &&
+            (parts.length===1 || (/^\d+$/.test(parts[1]) && Number(parts[1])<=32));
+    }
+    window.mtRuleValidationError=function(type,value){
+        value=String(value||'').trim();
+        if(!value)return '';
+        if(type==='subnet'||type==='subnet6'){
+            if(validAddress(value))return '';
+            var range=value.split('-');
+            if(type==='subnet' && range.length===2 && range.every(v=>!v.includes('/')&&!v.includes(':')&&validAddress(v))){
+                var number=v=>v.split('.').reduce((a,n)=>a*256+Number(n),0);
+                if(number(range[0])<=number(range[1]))return '';
+            }
+            return 'Укажи корректный IP, CIDR или диапазон адресов.';
+        }
+        if(validAddress(value)||/^\d{1,3}(\.\d{1,3}){3}(?:\/.*)?$/.test(value)||value.includes(':'))
+            return 'Для IP-адреса или сети выбери IP, CIDR.';
+        if(type==='wildcard')return /^[a-z0-9_*?.-]+$/i.test(value)?'':'Некорректная маска домена.';
+        return value.length<=253 && value.replace(/\.$/,'').split('.').every(part=>/^[a-z0-9_](?:[a-z0-9_-]{0,61}[a-z0-9_])?$/i.test(part))?'':'Укажи домен без протокола, пути и маски.';
+    };
+
     function mtApplyDetection(ruleEl, autoSwitch) {
         var inputEl = ruleEl.querySelector('.mt-rule-input');
         var typeEl = ruleEl.querySelector('.mt-rule-type');
@@ -4442,8 +4480,12 @@ window.applyPasteGroup = function () {
             }
         }
 
+        var error=window.mtRuleValidationError(typeEl.value,raw);
+        inputEl.setAttribute('aria-invalid',String(!!error));
+        inputEl.classList.toggle('mt-invalid-rule',!!error);
+        inputEl.title=error;
         // Подсветка расхождения
-        if (detected && detected !== typeEl.value) {
+        if (error || (detected && detected !== typeEl.value)) {
             typeEl.classList.add('mt-type-mismatch');
             typeEl.title = 'Похоже на тип «' + (LABELS[detected] || detected) + '»';
         } else {
@@ -4598,6 +4640,7 @@ window.applyPasteGroup = function () {
         }
 
         var added = 0;
+        var incoming = [];
         for (var j = 0; j < parsed.length; j++) {
             if (existing[parsed[j]]) continue;
             var type = 'namespace';
@@ -4605,7 +4648,7 @@ window.applyPasteGroup = function () {
                 var detected = window.mtParseImportedRule(parsed[j]);
                 parsed[j] = detected.rule; type = detected.type;
             }
-            g.rules.push({
+            incoming.push({
                 id: _mtNewId(),
                 name: '',
                 type: type,
@@ -4615,15 +4658,16 @@ window.applyPasteGroup = function () {
             existing[parsed[j]] = 1;
             added++;
         }
+        g.rules = incoming.concat(g.rules);
         if (!g.rules.length) {
-            g.rules.push({ id: _mtNewId(), name: '', type: 'namespace', rule: '', enable: true });
+            incoming.push({ id: _mtNewId(), name: '', type: 'namespace', rule: '', enable: true });
         }
         if (added === 0) { _mtHint('Все правила уже есть в группе.'); return; }
 
-        try { MT_STATE.dirty = true; } catch(e) {}
         /* Авторазворот свёрнутой группы, чтобы пользователь сразу увидел результат */
         _mtUncollapseGroup(ctx.gid);
         mtRenderGroups();
+        MT_STATE.dirty = true;
         window.closeMtBulkRulesModal();
         /* После rerender — ещё раз убедиться, что группа развёрнута (на случай гонок) */
         setTimeout(function() { _mtUncollapseGroup(ctx.gid); }, 0);
@@ -4668,10 +4712,10 @@ window.applyPasteGroup = function () {
             newRules.push({ id: _mtNewId(), name: '', type: 'namespace', rule: '', enable: true });
         }
         g.rules = newRules;
-        try { MT_STATE.dirty = true; } catch(e) {}
         /* Авторазворот свёрнутой группы */
         _mtUncollapseGroup(ctx.gid);
         mtRenderGroups();
+        MT_STATE.dirty = true;
         window.closeMtBulkRulesModal();
         setTimeout(function() { _mtUncollapseGroup(ctx.gid); }, 0);
         if (typeof _mtSetStatus === 'function') {
@@ -4894,7 +4938,6 @@ window.applyPasteGroup = function () {
 })();
 
 function selectSettingsTab(key) {
-    if (key === "routing") key = "connection";
     var modal = document.getElementById('settings_modal');
     if (!modal) return;
     window.optiraySettingsTab = key;
@@ -4906,7 +4949,8 @@ function selectSettingsTab(key) {
         else button.removeAttribute('aria-current');
     });
     modal.querySelector('.settings-scroll').scrollTop = 0;
-    if (key === 'cores') { loadXrayVersions(); checkHysteria(); loadGeoData(); }
+    if (key === 'cores') { loadXrayVersions(); checkHysteria(); }
+    if (key === 'routing') loadGeoData();
 }
 document.addEventListener('keydown', function(event) {
     var modal = document.getElementById('settings_modal');
@@ -4961,7 +5005,8 @@ function mtFilterGroups() {
   if (head && name) {
    var badge = head.querySelector('.mt-group-rule-count');
    if (!badge) { badge = document.createElement('span'); badge.className = 'mt-group-rule-count'; name.after(badge); }
-   var count = values.filter(function(value) { return value.trim(); }).length;
+   var group = MT_STATE.config?.groups?.find(function(g){return g.id === card.dataset.gid;});
+   var count = group?.geo_source ? group.rules.length : values.filter(function(value) { return value.trim(); }).length;
    var n = count % 100, last = count % 10;
    badge.textContent = count + ' ' + (n >= 11 && n <= 14 ? 'правил' : last === 1 ? 'правило' : last >= 2 && last <= 4 ? 'правила' : 'правил');
   }
@@ -5430,7 +5475,7 @@ document.addEventListener('change',function(event){
   editor.querySelectorAll('[name="routing_mode"]').forEach(function(input){input.checked=input.value===(routing.direct_default?'direct_default':'proxy_default');});
   ['block','direct','proxy'].forEach(function(cat){editor.querySelector('[name="routing_'+cat+'_rules"]').value=routing[cat+'_rules']||'';});
   window.__rt_set_data(groups,{clean:true});syncXrayOutboundOrder();xrayBaseline=xraySignature();xrayDirty=false;
-  if(window.refreshXrayGeoCategories)window.refreshXrayGeoCategories();
+  if(window.refreshXrayGeoCategories)window.refreshXrayGeoCategories();window.refreshRoutingDuplicateBadge?.();
   if(window.filterXrayGroups)window.filterXrayGroups();
   if(window._optirayRoutingKick)window._optirayRoutingKick();
  }
@@ -5803,61 +5848,15 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
 function subscriptionDisclosureIcon() {
     return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="12" height="16" rx="2"/><path d="M5 8h6M5 12h6M5 16h3"/><path class="subs-disclosure-chevron" d="m17 9 3 3-3 3"/></svg>';
 }
-// Visible manual color controls avoid clipped native picker anchors.
+// Anchor the native color picker to the subscription accent.
 document.addEventListener('DOMContentLoaded', function () {
     document.querySelectorAll('#subs_container .sub-row').forEach(function (row) {
-        var auto = row.querySelector('.dice-btn');
-        if (!auto) return;
-        auto.title = 'Автоцвет';
-        auto.setAttribute('aria-label', 'Выбрать автоматический цвет');
-        auto.onclick = function () { randomSubColor(Number(row.dataset.subId)); };
-        var button = document.createElement('button');
-        button.type = 'button';
-        button.className = 'sub-manual-color-trigger';
-        row.appendChild(button);
-        button.removeAttribute('onclick');
-        button.title = 'Выбрать цвет';
-        button.setAttribute('aria-label', 'Выбрать цвет подписки');
-        button.addEventListener('click', function (event) {
-            event.stopPropagation();
-            var old = document.getElementById('sub_manual_palette');
-            if (old) { if (old.closePalette) old.closePalette(); else old.remove(); }
-            var row = button.closest('.sub-row');
-            var source = row.querySelector('input[type="color"]');
-            if (!source) return;
-            var panel = document.createElement('div');
-            panel.id = 'sub_manual_palette';
-            panel.setAttribute('role', 'dialog');
-            panel.setAttribute('aria-label', 'Цвет подписки');
-            var picker = document.createElement('input');
-            picker.type = 'color'; picker.value = source.value;
-            picker.setAttribute('aria-label', 'Выбрать цвет');
-            var hex = document.createElement('input');
-            hex.type = 'text'; hex.value = source.value; hex.maxLength = 7;
-            hex.setAttribute('aria-label', 'HEX-код цвета');
-            async function apply(value) {
-                if (!/^#[0-9a-f]{6}$/i.test(value)) return;
-                
-                var saved = await changeSubColor(Number(row.dataset.subId), value);
-                picker.value = source.value; hex.value = source.value;
-            }
-            picker.addEventListener('change', function () { apply(picker.value); });
-            hex.addEventListener('change', function () { apply(hex.value.trim()); });
-            panel.append(picker, hex);
-            panel.addEventListener('click', function (e) { e.stopPropagation(); });
-            document.body.appendChild(panel);
-            var rect = button.getBoundingClientRect();
-            panel.style.left = Math.max(8, Math.min(rect.right - 180, innerWidth - 188)) + 'px';
-            panel.style.top = Math.min(rect.bottom + 5, innerHeight - 70) + 'px';
-            function close(e) {
-                if (e.type === 'keydown' && e.key !== 'Escape') return;
-                panel.remove();
-                document.removeEventListener('click', close);
-                document.removeEventListener('keydown', close);
-            }
-            panel.closePalette = function () { close({type:'click'}); };
-            document.addEventListener('click', close);
-            document.addEventListener('keydown', close);
+        var picker = row.querySelector('.color-btn');
+        if (!picker) return;
+        row.appendChild(picker);
+        picker.setAttribute('aria-label', 'Выбрать цвет подписки');
+        picker.addEventListener('input', function () {
+            previewSubscriptionColor(Number(row.dataset.subId), picker.value);
         });
     });
 });
@@ -5994,7 +5993,7 @@ function syncRoutingHeaderActions(mode){
   iface.style.setProperty('display','none','important');
   syncSharedXraySearch();
  }else{
-  add.setAttribute('onclick',add.dataset.originalClick);paste.setAttribute('onclick',paste.dataset.originalClick);reload.setAttribute('onclick',reload.dataset.originalClick);
+  if(add.openOptiroutMenu)add.onclick=add.openOptiroutMenu;else add.setAttribute('onclick',add.dataset.originalClick);paste.setAttribute('onclick',paste.dataset.originalClick);reload.setAttribute('onclick',reload.dataset.originalClick);
   iface.style.removeProperty('display');
  }
 }
@@ -6085,7 +6084,7 @@ document.addEventListener('submit',async function(event){
 // A single busy policy covers configuration writes and existing operation dialogs.
 (function(){
  var originalFetch=window.fetch.bind(window), pending=0, finishBusy=null;
- var mutations=new Set(['/manage','/select','/api/auto_select','/api/restore','/api/reset_defaults','/api/xray_action','/api/hysteria_action','/api/optirout_import','/api/optirout_config','/api/optirout_reset','/api/optirout_restore_backup','/api/routing_import','/api/xray_reset','/api/routing_rules_mode','/api/routing_power','/api/optiray_enabled','/api/reorder_subs','/api/save_sub_color','/api/optirout_backup_settings','/api/xray_backup_settings']);
+ var mutations=new Set(['/manage','/select','/api/auto_select','/api/restore','/api/reset_defaults','/api/xray_action','/api/hysteria_action','/api/optirout_import','/api/optirout_config','/api/optirout_reset','/api/optirout_restore_backup','/api/routing_import','/api/xray_reset','/api/routing_rules_mode','/api/routing_power','/api/optiray_enabled','/api/reorder_subs','/api/optirout_backup_settings','/api/xray_backup_settings']);
  function operationVisible(){return document.querySelector('.config-deletion-overlay,#wait_modal.active,#update_overlay.active');}
  window.fetch=async function(input,options){
   var path;try{path=new URL(typeof input==='string'?input:input.url,location.href).pathname;}catch(_){return originalFetch(input,options);}
@@ -6244,7 +6243,7 @@ document.addEventListener('DOMContentLoaded',function(){
 (function(){
  var routingApply=window.applyPasteGroup;
  function close(){
-  var modal=document.getElementById('paste_group_modal');if(modal)modal.style.display='none';
+  var modal=document.getElementById('paste_group_modal');if(modal){modal.style.display='none';delete modal.dataset.newGroup;}
   window.__mt_paste_ctx=null;window.__paste_group_ctx=null;
  }
  function open(button){
@@ -6252,21 +6251,23 @@ document.addEventListener('DOMContentLoaded',function(){
   var modal=document.getElementById('paste_group_modal');
   modal.querySelector('textarea').value='';
   selectPasteMode(modal.querySelector('.paste-mode-toggle button'),false);
-  document.getElementById('paste_group_hint').textContent='Первая строка — название группы, далее правила. Ctrl+Enter — добавить.';
+  modal.dataset.newGroup='true';
+  document.getElementById('paste_group_name').value='';
+  document.getElementById('paste_group_hint').textContent='Если имя пустое — «Новая группа». Ctrl+Enter — добавить.';
   modal.style.display='flex';setTimeout(function(){modal.querySelector('textarea').focus();},60);
  }
  function apply(){
   if(!window.__mt_paste_ctx||!window.__mt_paste_ctx.isMt){if(routingApply)return routingApply();return;}
   var hint=document.getElementById('paste_group_hint');
   var lines=document.getElementById('paste_group_textarea').value.split(/\r\n|\n|\r/).map(function(v){return v.trim();}).filter(function(v){return v&&v[0]!=='#';});
-  if(lines.length<2){hint.textContent='Укажите название группы и хотя бы одно правило.';return;}
-  var name=lines.shift(),rules=[],seen=new Set();
+  if(!lines.length){hint.textContent='Укажите хотя бы одно правило.';return;}
+  var name=document.getElementById('paste_group_name').value.trim()||'Новая группа',rules=[],seen=new Set();
   lines.forEach(function(value){var parsed=window.mtParseImportedRule?window.mtParseImportedRule(value):{rule:value,type:'namespace'};var key=parsed.type+'\n'+parsed.rule;if(!seen.has(key)){seen.add(key);rules.push({id:_mtNewId(),name:'',type:parsed.type,rule:parsed.rule,enable:true});}});
   if(typeof _mtCollectFromUi==='function')_mtCollectFromUi(true);
   var state=window.MT_STATE,config=state&&state.config;
   if(!config){hint.textContent='Конфиг OptiRout не загружен.';return;}
   config.groups=config.groups||[];
-  var group=config.groups.find(function(g){return g.name===name;});
+  var group=null;
   var replace=document.getElementById('paste_group_modal_replace').checked;
   if(group){
    if(replace)group.rules=rules;
@@ -6274,7 +6275,7 @@ document.addEventListener('DOMContentLoaded',function(){
    group.collapsed=false;
   }else{
    var iface=state.interfaces&&state.interfaces[0];
-   config.groups.unshift({id:_mtNewId(),name:name,color:randomRoutingGroupColor(),interface:iface?(_mtIfaceName(iface)||'t2s0'):'t2s0',enable:true,rules:rules});
+   config.groups.unshift({id:_mtNewId(),name:name,color:randomRoutingGroupColor(),interface:'blackhole',enable:true,rules:rules});
   }
   state.dirty=true;mtRenderGroups();close();
   _mtSetStatus('Группа «'+name+'» обновлена. Нажмите «Сохранить» для применения.','ok');
@@ -6420,6 +6421,8 @@ async function loadGeoData(){
  catch(error){setSettingsInfo(document.getElementById('geo_data_status'),error.message,infoRevision);}
 }
 async function updateGeoData(button){
+ if(MT_STATE.dirty){alert('Сначала сохрани или отмени изменения правил маршрутизации, затем обнови базы.');return;}
+
  var infoRevision=window.optiraySettingsInfoRevision||0;
  if(window.optirayGeoBusy)return;
  var source=document.getElementById('geo_data_source'),ip=document.getElementById('geo_geoip_url'),site=document.getElementById('geo_geosite_url'),status=document.getElementById('geo_data_status');
@@ -6428,9 +6431,38 @@ async function updateGeoData(button){
  button.disabled=source.disabled=true;document.querySelectorAll('.geo-file-url').forEach(function(field){field.disabled=true;});
  var trigger=document.querySelector('[data-select-id="geo_data_source"]');if(trigger)trigger.disabled=true;
  setSettingsInfo(status,'Скачивание и применение GeoIP и GeoSite…',infoRevision);
- try{var response=await fetch('/api/geo_data',{method:'POST',body:new URLSearchParams({source:source.value,geoip_url:ip.value.trim(),geosite_url:site.value.trim()})});var data=await response.json();if(!response.ok||!data.ok)throw Error(data.error||'Не удалось обновить базы');renderGeoData(data,false);setSettingsInfo(status,'GeoIP и GeoSite обновлены',infoRevision);if(window.refreshXrayGeoCategories)window.refreshXrayGeoCategories();}
+ var progress=document.getElementById('geo_download_progress');
+ if(!progress){
+  progress=document.createElement('div');progress.id='geo_download_progress';
+  progress.innerHTML='<progress aria-label="Обновление GeoIP и GeoSite"></progress><span role="status" aria-live="polite"></span>';
+  status.before(progress);
+ }
+ progress.hidden=false;
+ var started=Date.now();
+ function showElapsed(){
+  progress.querySelector('span').textContent='Скачивание и применение баз · '+Math.floor((Date.now()-started)/1000)+' сек.';
+ }
+ showElapsed();
+ var progressPolling=false;
+ async function loadDownloadProgress(){
+  if(progressPolling)return;
+  progressPolling=true;
+  try {
+   var res=await fetch('/api/geo_download_progress',{cache:'no-store'});
+   if(!res.ok)return;
+   var data=await res.json(),bar=progress.querySelector('progress'),label=progress.querySelector('span');
+   if(data.phase==='download'){
+    if(data.total>0){bar.max=data.total;bar.value=data.downloaded;}else bar.removeAttribute('value');
+    var size=(data.downloaded/1048576).toFixed(1)+' МБ';
+    label.textContent=data.file+' · '+size+(data.total>0?' / '+(data.total/1048576).toFixed(1)+' МБ · '+Math.floor(data.downloaded*100/data.total)+'%':'');
+   } else if(data.phase==='apply'){bar.removeAttribute('value');label.textContent='Проверка и применение баз…';}
+  }catch(error){}finally{progressPolling=false;}
+ }
+ var progressTimer=setInterval(loadDownloadProgress,600);
+
+ try{var response=await fetch('/api/geo_data',{method:'POST',body:new URLSearchParams({source:source.value,geoip_url:ip.value.trim(),geosite_url:site.value.trim()})});var data=await response.json();if(!response.ok||!data.ok)throw Error(data.error||'Не удалось обновить базы');renderGeoData(data,false);setSettingsInfo(status,'GeoIP и GeoSite обновлены',infoRevision);if(window.refreshXrayGeoCategories)window.refreshXrayGeoCategories();window.refreshRoutingDuplicateBadge?.();if(MT_STATE.config)await window.mtReloadConfig();}
  catch(error){setSettingsInfo(status,error.message,infoRevision);}
- finally{window.optirayGeoBusy=false;button.disabled=source.disabled=false;if(trigger)trigger.disabled=false;syncGeoSource();}
+ finally{clearInterval(progressTimer);progress.hidden=true;window.optirayGeoBusy=false;button.disabled=source.disabled=false;if(trigger)trigger.disabled=false;syncGeoSource();}
 }
 document.addEventListener('DOMContentLoaded',function(){
  if(window.optirayEnhanceSelect)window.optirayEnhanceSelect(document.getElementById('geo_data_source'));
@@ -6521,7 +6553,7 @@ function setSettingsInfo(element,message,revision){
   if(!pickerState)return;
   var state=pickerState,kind=state.kind,file=catalog&&catalog[kind],list=picker.querySelector('.geo-picker-list'),message=picker.querySelector('.geo-picker-message'),query=picker.querySelector('input[type="search"]').value.trim().toLowerCase();list.replaceChildren();message.textContent='';
   picker.querySelectorAll('[data-geo-kind]').forEach(function(button){button.setAttribute('aria-pressed',String(button.dataset.geoKind===kind));});
-  if(!file||!file.exists)message.textContent='Файл '+kind+'.dat не установлен. Добавьте его в Настройки → Ядра.';
+  if(!file||!file.exists)message.textContent='Файл '+kind+'.dat не установлен. Добавьте его в Настройки → Маршрутизация.';
   else if(file.error)message.textContent=file.error;
   else {
    var entries=[];(file.categories||[]).forEach(function(item){entries.push({code:item.code,count:item.count});(item.attributes||[]).forEach(function(attr){entries.push({code:item.code+'@'+attr,count:null});});});
@@ -6534,7 +6566,7 @@ function setSettingsInfo(element,message,revision){
   }
   updatePickerButton();
  }
- function updatePickerButton(){var button=picker.querySelector('.geo-picker-add');button.disabled=!pickerState||!pickerState.selected.size;button.textContent=pickerState&&pickerState.selected.size?'Добавить ('+pickerState.selected.size+')':'Добавить выбранные';}
+ function updatePickerButton(){var button=picker.querySelector('.geo-picker-add');button.disabled=!pickerState||pickerState.loading||!pickerState.selected.size;button.textContent=pickerState&&pickerState.selected.size?'Добавить ('+pickerState.selected.size+')':'Добавить выбранные';}
  function ensurePicker(){
   if(picker)return;
   picker=document.createElement('div');picker.className='geo-picker-modal';picker.hidden=true;picker.setAttribute('role','dialog');picker.setAttribute('aria-modal','true');picker.setAttribute('aria-labelledby','geo_picker_title');
@@ -6543,14 +6575,16 @@ function setSettingsInfo(element,message,revision){
   picker.querySelector('.geo-picker-close').onclick=closePicker;picker.querySelector('.geo-picker-cancel').onclick=closePicker;picker.addEventListener('click',function(event){if(event.target===picker)closePicker();});
   picker.querySelectorAll('[data-geo-kind]').forEach(function(button){button.onclick=function(){pickerState.kind=button.dataset.geoKind;drawPicker();};});picker.querySelector('input[type="search"]').oninput=drawPicker;
   picker.querySelector('.geo-picker-add').onclick=function(){
-   if(!pickerState)return;var cat=pickerState.cat,existing=existingRules(cat),selected=Array.from(pickerState.selected).filter(function(rule){return !existing.has(xrayRuleKey(rule));});
+   if(!pickerState || pickerState.loading)return;
+   if(pickerState.cat==='optirout'){addOptiroutGeo(pickerState);return;}
+   var cat=pickerState.cat,existing=existingRules(cat),selected=Array.from(pickerState.selected).filter(function(rule){return !existing.has(xrayRuleKey(rule));});
    if(selected.length){var original=canonical(cat);original.value=selected.join('\n')+(original.value?'\n'+original.value:'');var box=splitBox(cat);if(box)delete box.dataset.serialized;window.syncXraySplitFields();original.dispatchEvent(new Event('input',{bubbles:true}));}
    closePicker();window.validateXrayGeoReferences();
   };
   picker.querySelector('.geo-picker-settings').onclick=async function(){
    closePicker();var routing=document.getElementById('mt_modal');routing.style.display='none';window.optirayGeoReturnRouting=true;
    await window.openSettingsModal();var settings=document.getElementById('settings_modal');
-   if(settings.style.display==='flex')window.selectSettingsTab('cores');else{routing.style.display='flex';window.optirayGeoReturnRouting=false;}
+   if(settings.style.display==='flex')window.selectSettingsTab('routing');else{routing.style.display='flex';window.optirayGeoReturnRouting=false;}
   };
   window.addEventListener('keydown',function(event){
    if(!pickerState)return;
@@ -6558,11 +6592,67 @@ function setSettingsInfo(element,message,revision){
    if(event.key==='Tab'){var fields=Array.from(picker.querySelectorAll('button,input')).filter(function(el){return !el.disabled&&el.getClientRects().length;});var first=fields[0],last=fields[fields.length-1];if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus();}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}event.stopImmediatePropagation();}
   },true);
  }
+ async function addOptiroutGeo(state){
+  state.loading=true;
+  updatePickerButton();
+  var groups=[], errors=[];
+  for(var source of Array.from(state.selected)){
+   try {
+    var response=await fetch('/api/optirout_geo_rules?source='+encodeURIComponent(source),{cache:'no-store'});
+    var data=await response.json();
+    if(pickerState!==state)return;
+    if(!response.ok||!data.ok)throw Error(data.error||'Не удалось прочитать категорию');
+    if(data.skipped&&!confirm(source+' — пропустить неподдерживаемые записи ('+data.skipped+')?'))continue;
+    groups.push({source:source,rules:data.rules});
+   } catch(error){errors.push(source+' — '+error.message);}
+  }
+  if(pickerState!==state)return;
+  if(groups.length){
+   _mtCollectFromUi();
+   for(var entry of groups){
+    var id=_mtNewId();
+    MT_UI.collapsed[id]=true;
+    MT_STATE.config.groups.unshift({id:id,name:entry.source,geo_source:entry.source,color:randomRoutingGroupColor(),
+     interface: 'blackhole',enable:true,
+     rules:entry.rules.map(function(rule){return {id:_mtNewId(),name:'',enable:true,type:rule.type,rule:rule.rule};})});
+   }
+   mtRenderGroups();
+   MT_STATE.dirty=true;
+   window.__mtScanDups?.();
+   closePicker();
+  } else {
+   state.loading=false;
+   updatePickerButton();
+  }
+  if(errors.length)alert(errors.join('\n'));
+ }
  async function openPicker(cat,button){
-  ensurePicker();pickerState={cat:cat,kind:'geosite',selected:new Set(),existing:existingRules(cat),returnFocus:button};picker.hidden=false;picker.querySelector('#geo_picker_title').textContent='Из геобазы — '+({block:'Блокировать',direct:'Напрямую',proxy:'Через прокси'}[cat]);picker.querySelector('input[type="search"]').value='';picker.querySelector('input[type="search"]').focus();picker.querySelector('.geo-picker-message').textContent='Чтение категорий…';
+  ensurePicker();
+  var existing = cat === 'optirout'
+   ? new Set((MT_STATE.config?.groups || []).filter(function(group){return group.geo_source;}).map(function(group){return xrayRuleKey(group.geo_source);}))
+   : existingRules(cat);
+  pickerState={cat:cat,kind:'geosite',selected:new Set(),existing:existing,returnFocus:button};picker.hidden=false;picker.querySelector('#geo_picker_title').textContent='Из геобазы — '+({optirout:'OptiRout',block:'Блокировать',direct:'Напрямую',proxy:'Через прокси'}[cat]);picker.querySelector('input[type="search"]').value='';picker.querySelector('input[type="search"]').focus();picker.querySelector('.geo-picker-message').textContent='Чтение категорий…';
   var state=pickerState;picker.querySelector('.geo-picker-list').replaceChildren();var loaded=await window.refreshXrayGeoCategories();if(pickerState===state&&loaded)drawPicker();
  }
  document.addEventListener('DOMContentLoaded',function(){
+  var add=document.querySelector('.mt-groups-toolbar .mt-add-group');
+  if(add){
+   var menu=document.createElement('div');
+   menu.className='mt-add-menu';menu.popover='auto';
+   menu.innerHTML='<button type="button">Группа</button><button type="button">Из геобазы</button>';
+   document.body.append(menu);
+   var buttons=menu.querySelectorAll('button');
+   buttons[0].onclick=function(){menu.hidePopover();window.mtAddGroup();add.focus();};
+   buttons[1].onclick=function(){menu.hidePopover();if(MT_STATE.config)openPicker('optirout',add);};
+   add.openOptiroutMenu=add.onclick=function(){
+    if(menu.matches(':popover-open')){menu.hidePopover();return;}
+    var rect=add.getBoundingClientRect();
+    menu.style.left=rect.left+'px';menu.style.top=rect.bottom+'px';
+    menu.showPopover();buttons[0].focus();
+   };
+   add.setAttribute('aria-expanded','false');
+   menu.addEventListener('toggle',function(){add.setAttribute('aria-expanded',String(menu.matches(':popover-open')));});
+  }
   cats.forEach(function(cat){var original=canonical(cat);if(!original)return;original.classList.add('xr-combined-rules');
    var box=document.createElement('div');box.className='xr-split-fields';box.dataset.cat=cat;
    ['addresses','ips'].forEach(function(side){var field=document.createElement('div'),label=document.createElement('label'),input=document.createElement('textarea'),warning=document.createElement('div');field.className='xr-split-field';label.textContent=side==='ips'?'IP':'Адреса';input.id='xr_'+cat+'_'+side;label.htmlFor=input.id;input.dataset.ruleSide=side;input.className='setting-input';input.rows=4;input.spellcheck=false;input.placeholder=side==='ips'?'IP, подсети, geoip:…':'Домены, geosite:…';warning.className='xr-geo-list-warning';warning.hidden=true;input.addEventListener('input',function(){combine(cat);window.validateXrayGeoReferences();});field.append(label,input,warning);box.append(field);});original.after(box);
@@ -6648,3 +6738,81 @@ function routingConfigSignature(kind,value){
  document.addEventListener('DOMContentLoaded',window.refreshCoreUpdateBadges);
  document.addEventListener('visibilitychange',function(){clearTimeout(timer);if(!document.hidden)window.refreshCoreUpdateBadges();});
 })();
+
+(function(){
+    var revision = 0;
+    window.refreshRoutingDuplicateBadge = async function(){
+        var current = ++revision;
+        var button = document.querySelector('a[data-routing-engine]');
+        if (!button) return;
+        try {
+            var response = await fetch('/api/optirout_config', {cache:'no-store'});
+            var data = await response.json();
+            if (!response.ok || !data.ok || current !== revision) return;
+            var seen = new Map(), duplicate = false, conflict = false;
+            var notice = (data.config.groups || []).some(function(group){return !!group.geo_notice;});
+            for (var group of data.config.groups || []) {
+                if (group.enable === false) continue;
+                for (var rule of group.rules || []) {
+                    if (rule.enable === false) continue;
+                    var value = String(rule.rule || '').trim().toLowerCase().replace(/\.+$/, '');
+                    if (!value) continue;
+                    var key = (rule.type || 'namespace') + ':' + value;
+                    if (seen.has(key)) {
+                        duplicate = true;
+                        if (seen.get(key) !== (group.interface || 'blackhole')) conflict = true;
+                    } else seen.set(key, group.interface || 'blackhole');
+                }
+            }
+            var badge = button.querySelector('.routing-duplicate-badge');
+            if ((duplicate || notice) && !badge) {
+                badge = document.createElement('span');
+                badge.className = 'routing-duplicate-badge';
+                badge.textContent = '!';
+                badge.setAttribute('aria-hidden','true');
+                button.append(badge);
+            }
+            if (!duplicate && !notice && badge) badge.remove();
+            if (badge) badge.classList.toggle('routing-conflict-badge', conflict);
+
+            button.title = conflict ? 'Маршрутизация — конфликт направлений правил' : notice ? 'Маршрутизация — проверь группы из геобазы' : duplicate ? 'Маршрутизация — в конфиге есть дубли правил' : 'Маршрутизация';
+            button.setAttribute('aria-label',button.title);
+        } catch (error) {}
+    };
+    document.addEventListener('DOMContentLoaded', window.refreshRoutingDuplicateBadge);
+    window.addEventListener('focus', window.refreshRoutingDuplicateBadge);
+})();
+
+window.syncRoutingGeoGroups = async function(){
+    if (MT_STATE.dirty && !confirm('Есть несохранённые изменения. Загрузить сохранённый конфиг и обновить геогруппы?')) return;
+    try {
+        var response = await fetch('/api/optirout_geo_sync', {method:'POST'});
+        var data = await response.json();
+        if (!response.ok || !data.ok) throw Error(data.error || 'Не удалось обновить группы');
+        await window.mtReloadConfig();
+        window.refreshRoutingDuplicateBadge?.();
+    } catch(error) { alert(error.message); }
+};
+window.detachRoutingGeoGroup = function(id){
+    if (!confirm('Сделать группу обычной? Текущие правила сохранятся, их можно будет редактировать вручную.')) return;
+    _mtCollectFromUi();
+    var group = MT_STATE.config.groups.find(function(g){return g.id === id;});
+    delete group.geo_source;
+    delete group.geo_notice;
+    mtRenderGroups();
+    MT_STATE.dirty = true;
+};
+window.replaceRoutingGeoGroup = async function(id){
+    var group = MT_STATE.config.groups.find(function(g){return g.id === id;});
+    try {
+        var response = await fetch('/api/optirout_geo_rules?source=' + encodeURIComponent(group.geo_source), {cache:'no-store'});
+        var data = await response.json();
+        if (!response.ok || !data.ok) throw Error(data.error || 'Категория недоступна');
+        if (!confirm('Заменить сохранённые правила доступными из базы? Неподдерживаемых записей: ' + data.skipped + '. Изменения вступят в силу после сохранения.')) return;
+        _mtCollectFromUi();
+        group.rules = data.rules.map(function(rule){return {id:_mtNewId(),name:'',enable:true,type:rule.type,rule:rule.rule};});
+        delete group.geo_notice;
+        mtRenderGroups();
+        MT_STATE.dirty = true;
+    } catch(error) { alert(error.message); }
+};

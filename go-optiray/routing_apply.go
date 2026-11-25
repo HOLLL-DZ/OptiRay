@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"path/filepath"
+	"reflect"
 )
 
 func (a *App) saveRouting(ctx context.Context, cfg Object, restart bool) error {
@@ -13,15 +14,26 @@ func (a *App) saveRouting(ctx context.Context, cfg Object, restart bool) error {
 }
 
 func (a *App) saveRoutingLocked(ctx context.Context, cfg Object, restart bool) error {
-	apply := restart && str(a.store.snapshot()["routing_engine"]) != "xray"
-	if apply && a.routing == nil {
-		return fmt.Errorf("OptiRout process management is disabled")
-	}
 	previous, e := a.store.loadOptirout()
 	if e != nil {
 		return e
 	}
-	if e = a.store.saveOptirout(cfg); e != nil {
+	clean, e := sanitizeOptirout(cfg)
+	if e != nil {
+		return e
+	}
+	previousClean, e := sanitizeOptirout(previous)
+	if e != nil {
+		return e
+	}
+	if reflect.DeepEqual(previousClean, clean) {
+		return nil
+	}
+	apply := restart && optiroutRuntimeChanged(previousClean, clean) && str(a.store.snapshot()["routing_engine"]) != "xray"
+	if apply && a.routing == nil {
+		return fmt.Errorf("OptiRout process management is disabled")
+	}
+	if e = a.store.saveOptirout(clean); e != nil {
 		return e
 	}
 	if !apply {
@@ -51,4 +63,16 @@ func (a *App) saveRoutingLocked(ctx context.Context, cfg Object, restart bool) e
 		return fmt.Errorf("routing restart failed; previous engine restored: %w", e)
 	}
 	return nil
+}
+
+func optiroutRuntimeChanged(before, after Object) bool {
+	before, after = clone(before), clone(after)
+	for _, cfg := range []Object{before, after} {
+		cfg["enabled"] = configEnabled(cfg)
+		for _, group := range list(cfg["groups"]) {
+			delete(obj(group), "color")
+			delete(obj(group), "geo_notice")
+		}
+	}
+	return !reflect.DeepEqual(before, after)
 }

@@ -163,6 +163,7 @@ func newStore(dir string) (*Store, error) {
 	if e = os.Remove(filepath.Join(dir, "hwid.txt")); e != nil && !os.IsNotExist(e) {
 		return nil, fmt.Errorf("remove legacy HWID file: %w", e)
 	}
+	loadUIPreferences(dir, d)
 	setDiagnosticLogging(dir, boolean(d["enable_logging"]))
 	return &Store{dir: dir, data: d}, nil
 }
@@ -183,7 +184,7 @@ func (s *Store) change(fn func(Object) error) error {
 func (s *Store) persist(d Object) error {
 	return s.persistExtra(d, nil)
 }
-func (s *Store) persistExtra(d Object, extra map[string][]byte) error {
+func (s *Store) persistExtra(d Object, extra map[string][]byte, diskFiles ...map[string]string) error {
 	persisted := clone(d)
 	delete(persisted, "routing")
 	settings, e := json.MarshalIndent(persisted, "", "  ")
@@ -195,6 +196,18 @@ func (s *Store) persistExtra(d Object, extra map[string][]byte) error {
 		return e
 	}
 	files := map[string][]byte{"subs.json": settings, "routing/xray.json": routing}
+	ui, e := json.MarshalIndent(uiPreferences(d), "", "  ")
+	if e != nil {
+		return e
+	}
+	ui = append(ui, '\n')
+	currentUI, readUIErr := os.ReadFile(filepath.Join(s.dir, "ui.json"))
+	if readUIErr != nil && !os.IsNotExist(readUIErr) {
+		return readUIErr
+	}
+	if !bytes.Equal(currentUI, ui) {
+		files["ui.json"] = ui
+	}
 	for k, v := range extra {
 		files[k] = v
 	}
@@ -212,7 +225,7 @@ func (s *Store) persistExtra(d Object, extra map[string][]byte) error {
 			return e
 		}
 	}
-	if e = writeSettingsTransaction(s.dir, files); e != nil {
+	if e = writeSettingsTransaction(s.dir, files, diskFiles...); e != nil {
 		return e
 	}
 	setDiagnosticLogging(s.dir, boolean(d["enable_logging"]))

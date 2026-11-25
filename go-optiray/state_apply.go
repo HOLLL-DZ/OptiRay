@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
 	"path/filepath"
 	"strings"
 )
@@ -30,7 +31,7 @@ func defaultOptirout() (Object, error) {
 }
 
 // Caller serializes connection mutations. Disk and runtime are restored on failure.
-func (a *App) commitState(ctx context.Context, before, next Object, extra map[string][]byte) error {
+func (a *App) commitState(ctx context.Context, before, next Object, extra map[string][]byte, diskFiles ...map[string]string) error {
 	a.store.mu.Lock()
 	defer a.store.mu.Unlock()
 	oldJSON, _ := json.Marshal(before)
@@ -54,7 +55,31 @@ func (a *App) commitState(ctx context.Context, before, next Object, extra map[st
 			return e
 		}
 	}
-	if e = a.store.persistExtra(next, extra); e != nil {
+	rollbackDisk := map[string]string{}
+	if len(diskFiles) > 0 {
+		for name := range diskFiles[0] {
+			target := filepath.Join(a.store.dir, filepath.FromSlash(name))
+			backup := filepath.Join(a.store.dir, ".runtime-rollback-"+filepath.Base(name))
+			if err := copyTransactionFile(target, backup); os.IsNotExist(err) {
+				rollbackFiles[name] = nil
+			} else if err != nil {
+				return err
+			} else {
+				rollbackDisk[name] = backup
+			}
+		}
+	}
+	for name := range extra {
+		if name != "bin/geosite.dat" && name != "bin/geoip.dat" {
+			continue
+		}
+		content, err := os.ReadFile(filepath.Join(a.store.dir, filepath.FromSlash(name)))
+		if err != nil && !os.IsNotExist(err) {
+			return err
+		}
+		rollbackFiles[name] = content
+	}
+	if e = a.store.persistExtra(next, extra, diskFiles...); e != nil {
 		return e
 	}
 	// loadOptirout is otherwise locked by applyRuntime, so runtime uses files directly here.
@@ -82,7 +107,7 @@ func (a *App) commitState(ctx context.Context, before, next Object, extra map[st
 		undo, e = a.keenetic.Apply(ctx, str(next["proxy_name"]), str(next["proxy_host"]), integer(next["proxy_port"]))
 	}
 	if e != nil {
-		rollback := a.store.persistExtra(before, rollbackFiles)
+		rollback := a.store.persistExtra(before, rollbackFiles, rollbackDisk)
 		if rollback != nil {
 			return fmt.Errorf("apply failed: %v; settings rollback failed: %v", e, rollback)
 		}

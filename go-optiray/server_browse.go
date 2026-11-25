@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"reflect"
 )
 
 func validServerBrowse(state Object) bool {
@@ -24,10 +23,7 @@ func (a *App) saveServerBrowse(w http.ResponseWriter, r *http.Request) {
 	if err == nil {
 		clean := Object{"filter": state["filter"], "sort": state["sort"]}
 		a.connectMu.Lock()
-		current := a.store.snapshot()
-		if boolean(current["remember_server_browse"]) && !reflect.DeepEqual(obj(current["server_browse"]), clean) {
-			err = a.store.change(func(d Object) error { d["server_browse"] = clean; return nil })
-		}
+		err = a.store.setServerBrowse(clean)
 		a.connectMu.Unlock()
 	}
 	if err != nil {

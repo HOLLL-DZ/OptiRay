@@ -65,7 +65,10 @@ func validateELF(path, arch string) error {
 	return nil
 }
 func downloadCore(ctx context.Context, address, path string) error {
-	ctx, cancel := context.WithTimeout(ctx, 90*time.Second)
+	return downloadCoreProgress(ctx, address, path, nil)
+}
+func downloadCoreProgress(ctx context.Context, address, path string, report func(int64, int64)) error {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Minute)
 	defer cancel()
 	req, e := http.NewRequestWithContext(ctx, "GET", address, nil)
 	if e != nil {
@@ -84,7 +87,11 @@ func downloadCore(ctx context.Context, address, path string) error {
 	if e != nil {
 		return e
 	}
-	n, e := io.Copy(f, io.LimitReader(resp.Body, (128<<20)+1))
+	var writer io.Writer = f
+	if report != nil {
+		writer = &geoProgressWriter{target: f, total: resp.ContentLength, report: report}
+	}
+	n, e := io.Copy(writer, io.LimitReader(resp.Body, (128<<20)+1))
 	if e == nil && n > 128<<20 {
 		e = fmt.Errorf("core download exceeds size limit")
 	}

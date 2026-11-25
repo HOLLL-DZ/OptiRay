@@ -10240,7 +10240,7 @@ hr.subscriptions-divider { height:0; border:0; border-top:2px solid var(--line);
     :is(#paste_group_modal,#bulk_rules_modal,#mt_bulk_rules_modal) .paste-mode-toggle > button:focus:not(:focus-visible) {
         outline:none !important;
     }
-    :is(#paste_group_modal,#bulk_rules_modal,#mt_bulk_rules_modal) textarea.setting-input {
+    :is(#paste_group_modal,#bulk_rules_modal,#mt_bulk_rules_modal) :is(textarea.setting-input,#paste_group_name) {
         padding:12px !important;
         box-sizing:border-box !important;
         border:1px solid var(--ui-control-outline) !important;
@@ -10253,12 +10253,12 @@ hr.subscriptions-divider { height:0; border:0; border-top:2px solid var(--line);
         font-size:14px !important;
         font-weight:400 !important;
     }
-    :is(#paste_group_modal,#bulk_rules_modal,#mt_bulk_rules_modal) textarea.setting-input::placeholder {
+    :is(#paste_group_modal,#bulk_rules_modal,#mt_bulk_rules_modal) :is(textarea.setting-input,#paste_group_name)::placeholder {
         color:var(--text-2) !important;
         font-style:normal !important;
         opacity:1 !important;
     }
-    :is(#paste_group_modal,#bulk_rules_modal,#mt_bulk_rules_modal) textarea.setting-input:focus {
+    :is(#paste_group_modal,#bulk_rules_modal,#mt_bulk_rules_modal) :is(textarea.setting-input,#paste_group_name):focus {
         background-image:linear-gradient(var(--btn-info-text),var(--btn-info-text)),linear-gradient(var(--btn-info-text),var(--btn-info-text)),linear-gradient(var(--btn-info-text),var(--btn-info-text)) !important;
         background-size:calc(100% - 24px) 2px,2px 5px,2px 5px !important;
         background-position:center bottom 6px,left 12px bottom 6px,right 12px bottom 6px !important;
@@ -11835,30 +11835,24 @@ hr.subscriptions-divider { height:0; border:0; border-top:2px solid var(--line);
     }
     #servers_container.server-view-cards .server-card:not(.active-card) { border-color:var(--line) !important; }
 }
-#sub_manual_palette {
-    position:fixed; z-index:200000; display:flex; align-items:center; gap:8px;
-    width:180px; box-sizing:border-box; padding:10px;
-    background:#fff; border:1px solid var(--line); border-radius:8px;
-    box-shadow:0 4px 14px rgba(0,0,0,.12);
-}
-#sub_manual_palette input[type="color"] { position:static; width:38px; height:32px; padding:0; cursor:pointer; }
-#sub_manual_palette input[type="text"] { min-width:0; width:105px; height:32px; padding:4px 6px; box-sizing:border-box; color:#101010; background:#fff; border:1px solid var(--line); border-radius:4px; }
-
-/* Automatic height accents with five-pixel inset and manual color hit area. */
+/* Center subscription accents and their hit area against the left edge. */
 @layer optiray-interactions {
     #subs_container .sub-row::before,
     #servers_container .sub-header::before {
-        top:5px !important; bottom:5px !important; left:5px !important;
-        height:auto !important; width:12px !important;
+        top:20% !important; bottom:20% !important; left:0 !important;
+        height:60% !important; width:10px !important;
+        border-radius:0 5px 5px 0 !important;
     }
-    #subs_container .sub-row .sub-manual-color-trigger {
-        position:absolute !important; left:5px !important;
-        top:5px !important; bottom:5px !important;
-        width:12px !important; height:auto !important;
-        padding:0 !important; margin:0 !important;
-        border:0 !important; border-radius:6px !important;
-        background:transparent !important; box-shadow:none !important;
-        cursor:pointer !important; z-index:3;
+    #subs_container .sub-row > .color-btn {
+        inset:20% auto auto 0 !important;
+        width:10px !important; height:60% !important;
+        min-width:0 !important; max-width:none !important;
+        border-radius:0 5px 5px 0 !important;
+        opacity:0 !important; pointer-events:auto !important; z-index:3 !important;
+    }
+    #subs_container .sub-row:has(> .color-btn:focus-visible)::before {
+        outline:2px solid var(--btn-info-text);
+        outline-offset:2px;
     }
 }
 
@@ -13246,7 +13240,7 @@ hr.subscriptions-divider { height:0; border:0; border-top:2px solid var(--line);
     [data-theme="dark"] #mt_modal#mt_modal #routing_modal .rt-group-actions > .rt-group-del { color:#ee727c !important; }
     [data-theme="dark"] #mt_modal#mt_modal #routing_modal .xr-rule-controls { background:transparent !important; }
     [data-theme="dark"] #mt_modal#mt_modal #routing_modal .xr-rule-controls > .rt-rule-del { background:var(--app-dark-hover) !important; }
-    [data-theme="dark"] #sub_manual_palette { background:var(--app-dark-surface); border-color:var(--app-dark-line); }
+
 }
 @layer optiray-interactions {
     [data-theme="dark"] #subs_container .sub-row-controls.sub-row-controls :is(.dice-btn,.hwid-label):hover,
@@ -13297,15 +13291,16 @@ hr.subscriptions-divider { height:0; border:0; border-top:2px solid var(--line);
 @layer optiray-interactions {
     #mt_modal#mt_modal .mt-group-head::before,
     #mt_modal#mt_modal #routing_modal .rt-group-head::before {
+        inset:0 auto 0 0 !important;
         width:min(230px,38%) !important;
         border-radius:0 !important;
         background:linear-gradient(90deg,
-            color-mix(in srgb,var(--rule-group-color,#888888) 17%,transparent) 0%,
-            color-mix(in srgb,var(--rule-group-color,#888888) 7%,transparent) 48%,
+            color-mix(in srgb,var(--rule-group-color,#888888) 13%,transparent) 0%,
+            color-mix(in srgb,var(--rule-group-color,#888888) 5%,transparent) 48%,
             transparent 100%) !important;
     }
     #mt_modal#mt_modal .mt-group-head {
-        grid-template-columns:24px 48px 0px minmax(0,1fr) 68px 284px 36px !important;
+        grid-template-columns:24px 36px 0px minmax(0,1fr) 68px 284px 36px !important;
     }
     #mt_modal#mt_modal .mt-group-controls.mt-group-controls,
     #mt_modal#mt_modal .mt-group-head > .mt-group-controls {
@@ -13315,17 +13310,17 @@ hr.subscriptions-divider { height:0; border:0; border-top:2px solid var(--line);
         width:152px !important; min-width:152px !important; flex:0 0 152px !important;
     }
     #mt_modal#mt_modal #routing_modal .rt-group-head {
-        grid-template-columns:24px 48px 0px minmax(0,1fr) 68px 158px 30px !important;
+        grid-template-columns:24px 36px 0px minmax(0,1fr) 68px 158px 30px !important;
     }
     #mt_modal#mt_modal #routing_modal .rt-group-actions {
         width:158px !important; min-width:158px !important; flex:0 0 158px !important;
     }
     @media(max-width:760px) {
         #mt_modal#mt_modal .mt-group-head {
-            grid-template-columns:24px 40px 0px minmax(0,1fr) 68px 30px !important;
+            grid-template-columns:24px 36px 0px minmax(0,1fr) 68px 30px !important;
         }
         #mt_modal#mt_modal #routing_modal .rt-group-head {
-            grid-template-columns:24px 40px 0px minmax(0,1fr) 30px !important;
+            grid-template-columns:24px 36px 0px minmax(0,1fr) 30px !important;
         }
     }
 }
@@ -13662,7 +13657,7 @@ hr.subscriptions-divider { height:0; border:0; border-top:2px solid var(--line);
   width:max-content !important; min-width:0 !important; max-width:none !important; flex:0 0 auto !important;
  }
  #mt_modal#mt_modal#mt_modal .mt-rule-controls > .optiray-select-trigger::before {
-  content:"namespace" !important; visibility:hidden !important; position:static !important;
+  content:"Domain wildcard" !important; visibility:hidden !important; position:static !important;
   grid-column:1 !important; grid-row:1 !important; font:inherit !important;
   width:auto !important; height:auto !important; transform:none !important;
   padding:0 !important; margin:0 !important; pointer-events:none !important;
@@ -15083,5 +15078,358 @@ hr.subscriptions-divider { height:0; border:0; border-top:2px solid var(--line);
  @media(max-width:700px) {
   #mt_modal .mt-modal-footer {flex-wrap:wrap;}
   #mt_modal #mt_runtime_notice {order:-1;flex-basis:100%;max-width:none;}
+ }
+}
+
+/* Center the routing group color picker against the left edge. */
+@layer optiray-interactions {
+    #mt_modal#mt_modal .mt-group-head,
+    #mt_modal#mt_modal #routing_modal .rt-group-head {
+        padding-left:24px !important;
+    }
+    #mt_modal#mt_modal .mt-group-head > .mt-group-color,
+    #mt_modal#mt_modal #routing_modal .rt-group-head > .xr-group-color {
+        inset:20% auto auto 0 !important;
+        width:10px !important;
+        min-width:10px !important;
+        height:60% !important;
+        appearance:none;
+        border:0 !important;
+        border-radius:0 4px 4px 0 !important;
+        opacity:1 !important;
+        background:color-mix(in srgb,var(--rule-group-color,#888888) 45%,transparent) !important;
+    }
+    #mt_modal :is(.mt-group-color,.xr-group-color)::-webkit-color-swatch-wrapper { padding:0; }
+    #mt_modal :is(.mt-group-color,.xr-group-color)::-webkit-color-swatch {
+        border:0;
+        background:transparent !important;
+    }
+    #mt_modal :is(.mt-group-color,.xr-group-color)::-moz-color-swatch {
+        border:0;
+        background:transparent !important;
+    }
+    #mt_modal :is(.mt-group-color,.xr-group-color):focus-visible {
+        outline:2px solid var(--btn-primary-bg);
+        outline-offset:2px;
+    }
+}
+
+/* Give the switch one grid gap on each side and keep the counters out of auto-placement. */
+@layer optiray-interactions {
+    #mt_modal#mt_modal .mt-group-head,
+    #mt_modal#mt_modal #routing_modal .rt-group-head {
+        column-gap:10px !important;
+        padding-inline-end:4px !important;
+    }
+    #mt_modal#mt_modal .mt-group-head > .mt-group-drag,
+    #mt_modal#mt_modal #routing_modal .rt-group-head > .rt-group-drag {
+        grid-column:1 !important;
+        grid-row:1 !important;
+    }
+    #mt_modal#mt_modal .mt-group-head > .rt-check,
+    #mt_modal#mt_modal #routing_modal .rt-group-head > .rt-check-group {
+        grid-column:2 !important;
+        grid-row:1 !important;
+        width:36px !important;
+        min-width:36px !important;
+        padding:0 !important;
+        margin:0 !important;
+    }
+    #mt_modal#mt_modal .mt-group-head > .rt-check > input,
+    #mt_modal#mt_modal #routing_modal .rt-group-head > .rt-check-group > input {
+        margin:0 !important;
+    }
+    #mt_modal#mt_modal .mt-group-head > span[aria-hidden="true"],
+    #mt_modal#mt_modal #routing_modal .rt-group-head > .xr-category-dot {
+        display:none !important;
+    }
+    #mt_modal#mt_modal .mt-group-head > .mt-group-name,
+    #mt_modal#mt_modal #routing_modal .rt-group-head > .rt-group-title {
+        grid-column:3 / 5 !important;
+        grid-row:1 !important;
+        padding-inline-start:14px !important;
+    }
+    @media (min-width:761px) {
+        #mt_modal#mt_modal .mt-group-head > .mt-group-rule-count,
+        #mt_modal#mt_modal #routing_modal .rt-group-head > .xr-group-count {
+            grid-column:5 !important;
+            grid-row:1 !important;
+        }
+    }
+}
+
+@layer optiray-interactions {
+    .mt-add-menu {
+        position:fixed; inset:auto; margin:0; min-width:144px; padding:4px;
+        color:var(--text); background:var(--app-background);
+        border:1px solid var(--line); border-radius:10px;
+        box-shadow:0 6px 18px rgba(0,0,0,.15);
+    }
+    .mt-add-menu button {
+        display:block; width:100%; padding:8px 10px; border:0; border-radius:6px;
+        color:inherit; background:transparent; text-align:left; cursor:pointer;
+    }
+    .mt-add-menu button:is(:hover,:focus-visible) { background:var(--ui-control-bg); }
+    #mt_modal .mt-geo-preview { padding:10px 16px; overflow-wrap:anywhere; }
+    #mt_modal .mt-geo-preview ul { padding-inline-start:20px; }
+    #mt_modal#mt_modal .mt-rule-input.mt-geo-duplicate {
+        background-color:color-mix(in srgb,#d98421 17%,transparent) !important;
+        outline:1px solid #d98421 !important;
+    }
+}
+
+@layer optiray-interactions {
+    #mt_modal .mt-group-card[data-has-geo-dup] .mt-group-rule-count {
+        color:var(--btn-danger-text);
+    }
+}
+
+@layer optiray-interactions {
+    #mt_modal .mt-geo-preview ul {
+        display:grid;
+        grid-template-columns:repeat(4,minmax(0,1fr));
+        column-gap:28px;
+        row-gap:4px;
+        padding-inline-start:20px;
+    }
+    #mt_modal .mt-geo-preview li { min-width:0; overflow-wrap:anywhere; }
+    #mt_modal .mt-group-name[readonly] { cursor:default; }
+    @media(max-width:900px) {
+        #mt_modal .mt-geo-preview ul { grid-template-columns:repeat(2,minmax(0,1fr)); }
+    }
+    @media(max-width:520px) {
+        #mt_modal .mt-geo-preview ul { grid-template-columns:minmax(0,1fr); }
+    }
+}
+
+/* Keep duplicate warnings visible over the rule field interaction styles. */
+@layer optiray-interactions {
+    #mt_modal#mt_modal .mt-rule > .mt-rule-input.mt-dup {
+        background-color:color-mix(in srgb,#e34848 16%,transparent) !important;
+        outline:1px solid #e34848 !important;
+    }
+    #mt_modal#mt_modal .mt-rule > .mt-rule-input:is(.mt-dup-x,.mt-geo-duplicate) {
+        background-color:color-mix(in srgb,#d98421 17%,transparent) !important;
+        outline:1px solid #d98421 !important;
+    }
+}
+
+@layer optiray-interactions {
+    #mt_modal .mt-geo-preview li.mt-geo-rule-duplicate {
+        color:#d93645 !important;
+        background:color-mix(in srgb,#d93645 12%,transparent);
+        border-radius:3px;
+    }
+}
+
+@layer optiray-interactions {
+    a[data-routing-engine] { position:relative; }
+    a[data-routing-engine] .routing-duplicate-badge {
+        position:absolute; top:-2px; right:-2px;
+        display:flex; align-items:center; justify-content:center;
+        width:13px; height:13px; border-radius:50%;
+        background:#df9a24; color:#fff;
+        font:700 10px/1 sans-serif; border:1px solid var(--app-background);
+        pointer-events:none;
+    }
+}
+
+@layer optiray-interactions {
+    .subs-header-actions a[data-routing-engine] {
+        position:relative !important;
+        overflow:visible !important;
+    }
+    .subs-header-actions a[data-routing-engine] > .routing-duplicate-badge {
+        position:absolute !important;
+        inset:-2px -2px auto auto !important;
+        display:flex !important;
+        width:13px !important; min-width:13px !important; height:13px !important;
+        padding:0 !important; margin:0 !important;
+        background:#df9a24 !important; color:#fff !important;
+        border-radius:50% !important; z-index:5 !important;
+        opacity:1 !important; visibility:visible !important;
+        font:700 10px/1 sans-serif !important;
+        align-items:center !important; justify-content:center !important;
+    }
+}
+
+@layer optiray-interactions {
+    #mt_modal .mt-geo-notice {
+        padding:8px 16px;
+        color:var(--text-2); background:color-mix(in srgb,#df9a24 8%,transparent);
+        font-size:13px;
+    }
+    #mt_modal .mt-geo-tools { display:flex;flex-wrap:wrap;gap:8px;margin-top:10px; }
+    #mt_modal .mt-geo-tools button {
+        padding:6px 10px; border:1px solid var(--line);border-radius:8px;
+        color:var(--text);background:var(--ui-control-bg);cursor:pointer;
+    }
+}
+
+/* Align the first routing group with the bottom of its toolbar. */
+@layer optiray-interactions {
+    #mt_modal#mt_modal .mt-root,
+    #mt_modal#mt_modal .mobile-modal-scroll > .mt-root,
+    #mt_modal#mt_modal #routing_modal .rt-routing-root {
+        padding-top:0 !important;
+        margin-top:0 !important;
+    }
+    #mt_modal#mt_modal #mt_groups_container { margin-top:0 !important; padding-top:0 !important; }
+}
+
+@layer optiray-interactions {
+    .mt-add-menu button { font-size:14px !important; }
+}
+
+@layer optiray-interactions {
+    #mt_modal#mt_modal .mt-group-head .mt-group-name[readonly],
+    #mt_modal#mt_modal .mt-group-head .mt-group-name[readonly]:is(:hover,:focus,:focus-visible) {
+        background-image:none !important;
+        border:0 !important;
+        outline:none !important;
+        box-shadow:none !important;
+        pointer-events:none;
+        cursor:default;
+    }
+}
+
+@layer optiray-interactions {
+ #mt_modal#mt_modal .mt-repeat { color:var(--text-2) !important; }
+ #mt_modal#mt_modal .mt-rule-input.mt-repeat { background-color:color-mix(in srgb,#df9a24 9%,transparent) !important; }
+ #mt_modal#mt_modal .mt-geo-preview li.mt-dup-x { color:#d93645 !important; background:color-mix(in srgb,#d93645 12%,transparent); }
+}
+
+@layer optiray-interactions {
+ #mt_duplicate_summary { display:inline-flex; flex-wrap:wrap; gap:8px; margin-inline-start:8px; font-size:12px; }
+ #mt_duplicate_summary[hidden] { display:none; }
+ #mt_duplicate_summary .mt-summary-repeat { color:#98620c; }
+ #mt_duplicate_summary .mt-summary-conflict { color:#c73543; }
+ [data-theme="dark"] #mt_duplicate_summary .mt-summary-repeat { color:#edbd68; }
+ [data-theme="dark"] #mt_duplicate_summary .mt-summary-conflict { color:#ff8994; }
+}
+
+@layer optiray-interactions {
+ .subs-header-actions a[data-routing-engine] > .routing-duplicate-badge.routing-conflict-badge {
+    background:#c73543 !important;
+ }
+ [data-theme="dark"] .subs-header-actions a[data-routing-engine] > .routing-duplicate-badge.routing-conflict-badge {
+    background:#d94b59 !important;
+ }
+}
+
+#geo_download_progress { margin:12px 0; color:var(--text-2); font-size:13px; }
+#geo_download_progress[hidden] { display:none; }
+#geo_download_progress progress { display:block; width:100%; height:8px; margin-bottom:7px; accent-color:#287ec9; }
+
+@layer optiray-interactions {
+ #mt_modal#mt_modal .mt-iface-picker:has(.mt-group-iface option[value="blackhole"]:checked) .mt-iface-display {
+    background:color-mix(in srgb,#df3f49 14%,var(--app-background)) !important;
+    color:#b52632 !important;
+ }
+ #mt_modal#mt_modal .mt-iface-picker:has(.mt-group-iface option[value="blackhole"]:checked) .mt-iface-name {
+    color:inherit !important;
+ }
+ [data-theme="dark"] #mt_modal#mt_modal .mt-iface-picker:has(.mt-group-iface option[value="blackhole"]:checked) .mt-iface-display {
+    background:color-mix(in srgb,#df3f49 23%,var(--app-background)) !important;
+    color:#ff9ba3 !important;
+ }
+}
+
+@layer optiray-interactions {
+ #mt_modal#mt_modal .mt-group-head .mt-dup-badge-group {
+    display:inline-flex !important;
+    align-items:center !important;
+    width:max-content !important;
+    min-width:0 !important;
+    max-width:100% !important;
+    justify-self:start !important;
+    box-sizing:border-box !important;
+    padding:3px 9px !important;
+    margin:4px 0 4px 6px !important;
+    border-radius:6px !important;
+    font-size:12px !important;
+    font-weight:500 !important;
+    line-height:18px !important;
+    white-space:normal !important;
+    background:color-mix(in srgb,#d99a29 10%,var(--app-background)) !important;
+    color:#94600d !important;
+    border:1px solid color-mix(in srgb,#d99a29 40%,transparent) !important;
+ }
+ #mt_modal#mt_modal .mt-group-head .mt-dup-badge-group-x {
+    background:color-mix(in srgb,#d8404b 10%,var(--app-background)) !important;
+    color:#b42d39 !important;
+    border-color:color-mix(in srgb,#d8404b 40%,transparent) !important;
+ }
+ [data-theme="dark"] #mt_modal#mt_modal .mt-group-head .mt-dup-badge-group { color:#edbd68 !important; }
+ [data-theme="dark"] #mt_modal#mt_modal .mt-group-head .mt-dup-badge-group-x { color:#ff9ba3 !important; }
+}
+
+@layer optiray-interactions {
+ #mt_modal#mt_modal .mt-group-head > .mt-dup-badge-group {
+    grid-column:3 / -1 !important;
+    grid-row:2 !important;
+    width:max-content !important;
+    max-width:none !important;
+    min-width:max-content !important;
+    white-space:nowrap !important;
+    overflow-wrap:normal !important;
+    word-break:normal !important;
+    margin:2px 0 4px 14px !important;
+    justify-self:start !important;
+ }
+}
+
+@layer optiray-interactions {
+ #paste_group_modal[data-new-group="true"] .paste-mode-toggle { display:none !important; }
+}
+
+@layer optiray-interactions {
+ #paste_group_modal#paste_group_modal#paste_group_modal[data-new-group="true"] .paste-mode-toggle { display:none !important; }
+}
+
+@layer optiray-interactions {
+ #paste_group_modal#paste_group_modal #paste_group_name {
+    display:none; box-sizing:border-box; width:100%; margin:0 0 12px; min-height:38px;
+ }
+ #paste_group_modal#paste_group_modal[data-new-group="true"] #paste_group_name { display:block; }
+}
+
+@layer optiray-interactions {
+ #mt_modal#mt_modal .mt-rule-input.mt-invalid-rule {
+    outline:1px solid #d8404b !important;
+    background-color:color-mix(in srgb,#d8404b 12%,transparent) !important;
+ }
+}
+
+
+@layer optiray-interactions {
+ #paste_group_modal#paste_group_modal #paste_group_name {
+    padding-inline:20px !important;
+    text-indent:0 !important;
+ }
+}
+
+@layer optiray-interactions {
+ #paste_group_modal#paste_group_modal #paste_group_name {
+    padding:6px 14px 10px !important;
+    border:0 !important; border-radius:0 !important;
+    outline:none !important; box-shadow:none !important;
+    background-color:transparent !important; color:var(--text) !important;
+    background-image:linear-gradient(var(--ui-field-line),var(--ui-field-line)),linear-gradient(var(--ui-field-line),var(--ui-field-line)),linear-gradient(var(--ui-field-line),var(--ui-field-line)) !important;
+    background-size:calc(100% - 16px) 1px,1px 4px,1px 4px !important;
+    background-position:center bottom 6px,left 8px bottom 6px,right 8px bottom 6px !important;
+    background-repeat:no-repeat !important;
+ }
+ #paste_group_modal#paste_group_modal #paste_group_name:focus {
+    background-image:linear-gradient(var(--btn-info-text),var(--btn-info-text)),linear-gradient(var(--btn-info-text),var(--btn-info-text)),linear-gradient(var(--btn-info-text),var(--btn-info-text)) !important;
+    background-size:calc(100% - 16px) 2px,2px 5px,2px 5px !important;
+    background-position:center bottom 6px,left 8px bottom 6px,right 8px bottom 6px !important;
+ }
+}
+
+@layer optiray-interactions {
+ .geo-picker-modal .geo-picker-tabs button[aria-pressed="true"],
+ :is(#paste_group_modal#paste_group_modal,#bulk_rules_modal#bulk_rules_modal,#mt_bulk_rules_modal#mt_bulk_rules_modal) .paste-mode-toggle > button[aria-pressed="true"] {
+    font-weight:600 !important;
  }
 }

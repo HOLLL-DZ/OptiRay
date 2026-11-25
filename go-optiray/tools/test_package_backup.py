@@ -12,6 +12,9 @@ feed = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(feed)
 
 
+UI_PREFERENCES = '{"subscription_colors":{"1":"#123456"}}'
+
+
 class PackageBackupTests(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
@@ -25,6 +28,7 @@ class PackageBackupTests(unittest.TestCase):
         (self.base / 'tmp').mkdir()
         self.put('.optiray-go-install', 'owned')
         self.put('subs.json', '{"subscriptions":[]}')
+        self.put('ui.json', UI_PREFERENCES)
         self.put('routing/optirout.json', '{"groups":[]}')
         self.put('routing/backups/keep.json', 'keep')
         self.put('log/engine.log', 'x' * 100000)
@@ -68,6 +72,7 @@ class PackageBackupTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         state = self.base / 'usb/custom-backup'
         self.assertTrue((state / 'root/subs.json').exists())
+        self.assertEqual((state / 'root/ui.json').read_text(), UI_PREFERENCES)
         self.assertTrue((state / 'root/routing/backups/keep.json').exists())
         for name in ['log/engine.log', 'routing/engine.log.1', 'xray_releases_cache.json', 'run/manager.pid']:
             self.assertFalse((state / 'root' / name).exists(), name)
@@ -81,9 +86,11 @@ class PackageBackupTests(unittest.TestCase):
         result = self.run_script(feed.PREINST)
         self.assertEqual(result.returncode, 0, result.stderr)
         self.binary('1.0.12', fail=True)
+        self.put('ui.json', '{}')
         result = self.run_script(feed.POSTINST)
         self.assertNotEqual(result.returncode, 0)
         self.assertEqual((self.root / 'VERSION').read_text(), '1.0.11')
+        self.assertEqual((self.root / 'ui.json').read_text(), UI_PREFERENCES)
         state = self.base / 'opt/tmp/optiray-opkg-state'
         self.assertTrue((state / 'complete').exists())
         result = self.run_script(feed.POSTINST)
